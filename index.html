@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#030A1E" />
+    <title>PULSO by Lacteol</title>
+    <meta name="description" content="Confirme su asistencia a PULSO by Lacteol · 26 de noviembre de 2026, Ciudad de México." />
+    <meta property="og:title" content="PULSO by Lacteol" />
+    <meta property="og:description" content="El ritmo natural de la recuperación intestinal · 26 de noviembre de 2026" />
+    <meta property="og:image" content="./pulso-og.jpg" />
+    <link rel="preload" as="image" href="img/poster.jpg" />
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: { sans: ['Manrope', 'system-ui', 'sans-serif'] },
+            colors: {
+              noche: '#030A1E',
+              tinta: '#071433',
+              lacteol: '#1E46A8',
+              azul: '#2F6BFF',
+              celeste: '#5BC3F5',
+              coral: '#FF6B5B',
+              naranja: '#FF9A3C',
+              cian: '#49E6FF',
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      html, body { background: #030A1E; }
+      body {
+        font-family: 'Manrope', system-ui, sans-serif;
+        color: #EAF1FF;
+        -webkit-font-smoothing: antialiased;
+      }
+      /* Universo PULSO: azul Lacteol que cae a la noche del video */
+      .pulso-bg {
+        background:
+          radial-gradient(70vmax 50vmax at 50% -10%, rgba(30,70,168,.55), transparent 65%),
+          radial-gradient(40vmax 40vmax at 100% 40%, rgba(255,107,91,.10), transparent 60%),
+          radial-gradient(45vmax 40vmax at 0% 75%, rgba(73,230,255,.10), transparent 60%),
+          linear-gradient(180deg, #071433 0%, #030A1E 100%);
+      }
+      .hero-sky {
+        position: absolute; inset: 0 0 auto 0; height: min(110vh, 980px); pointer-events: none;
+        background: url('img/rio-luz.jpg') center 30% / cover no-repeat;
+        -webkit-mask-image: linear-gradient(180deg, rgba(0,0,0,.85) 0%, rgba(0,0,0,.55) 55%, transparent 100%);
+                mask-image: linear-gradient(180deg, rgba(0,0,0,.85) 0%, rgba(0,0,0,.55) 55%, transparent 100%);
+        opacity: .55;
+      }
+      .wordmark { text-shadow: 0 0 18px rgba(73,230,255,.55), 0 0 2px rgba(255,255,255,.6); }
+      .cta-glow { box-shadow: 0 0 0 1px rgba(255,255,255,.35) inset, 0 0 26px rgba(73,230,255,.55), 0 0 60px rgba(73,230,255,.25); }
+      @keyframes floaty { 0%,100% { transform: translateY(0) rotate(var(--r,0deg)); } 50% { transform: translateY(-14px) rotate(calc(var(--r,0deg) + 8deg)); } }
+      .floaty { animation: floaty var(--d,9s) ease-in-out infinite; }
+      .glass {
+        background: rgba(7, 20, 51, 0.72);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        border: 1px solid rgba(255, 255, 255, 0.10);
+      }
+      .brand-gradient { background: linear-gradient(90deg, #1E46A8, #49E6FF, #FF6B5B, #FF9A3C); }
+      .brand-text {
+        background: linear-gradient(90deg, #7FEFFF, #5BC3F5 45%, #FF9A3C);
+        -webkit-background-clip: text; background-clip: text; color: transparent;
+      }
+      .field {
+        width: 100%; background: rgba(3,10,30,.6); border: 1px solid rgba(255,255,255,.16);
+        border-radius: 12px; padding: 12px 14px; color: #fff; font-weight: 500; outline: none;
+        transition: border-color .2s, box-shadow .2s;
+      }
+      .field::placeholder { color: #6E7E9C; }
+      .field:focus { border-color: #49E6FF; box-shadow: 0 0 0 3px rgba(73,230,255,.2); }
+      .label { display:block; font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #9FB3D6; margin-bottom: 6px; }
+
+      @keyframes ecg { from { stroke-dashoffset: 1200; } to { stroke-dashoffset: 0; } }
+      .ecg path { stroke-dasharray: 1200; animation: ecg 3.2s linear infinite; }
+      @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+      .fade-up { animation: fadeUp .7s ease-out both; }
+      @keyframes slideIn { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: none; } }
+      .slide-in { animation: slideIn .4s ease-out both; }
+      @media (prefers-reduced-motion: reduce) { .ecg path, .fade-up, .slide-in { animation: none; } }
+
+      /* html5-qrcode */
+      #reader { border: none !important; }
+      #reader button {
+        background: #49E6FF !important; color: #071433 !important; border: none !important;
+        padding: 10px 20px !important; border-radius: 999px !important; font-family: 'Manrope', sans-serif !important;
+        font-weight: 800 !important; cursor: pointer !important; margin: 8px 4px !important;
+      }
+      #reader select {
+        background: #071433 !important; color: #fff !important; border: 1px solid #33456B !important;
+        padding: 6px !important; border-radius: 8px !important;
+      }
+      #reader__dashboard_section_csr span, #reader__dashboard_section_swaplink { color: #9FB3D6 !important; }
+    </style>
+    <script type="module" crossorigin src="./assets/index-jQcxiYoI.js"></script>
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
