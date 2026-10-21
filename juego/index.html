@@ -101,6 +101,11 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px soli
 #hud.pilot .holo span{visibility:hidden}
 .zone{position:absolute;left:50%;transform:translateX(-50%);top:46%;font-size:13px;font-weight:800;padding:7px 12px;border-radius:999px;background:rgba(216,67,79,.85);pointer-events:none;white-space:nowrap}
 
+#finale{position:fixed;left:0;right:0;top:18%;text-align:center;z-index:6;pointer-events:none;opacity:0;transform:translateY(16px);transition:opacity 1.2s,transform 1.2s;text-shadow:0 4px 30px rgba(10,20,80,.8)}
+#finale.show{opacity:1;transform:none}
+#finale h1{font-size:40px}
+#finale p{color:#fff;font-size:18px;font-weight:800;margin-top:6px}
+#finale .small{font-size:14px;color:var(--soft)}
 /* Tablero */
 #hud{position:fixed;inset:0;pointer-events:none}
 .board{position:absolute;left:0;right:0;top:0;display:flex;flex-direction:column;gap:8px;
@@ -300,7 +305,7 @@ textarea{resize:none;min-height:84px;line-height:1.45}
       <div class="clock">
         <svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="18" r="11" fill="none" stroke="#c6d600" stroke-width="2.6"/><path d="M16 18V11.5M13 3.5h6M16 3.5v3.5" stroke="#c6d600" stroke-width="2.6" stroke-linecap="round" fill="none"/><path d="M1 14h5M2 19h4" stroke="#c6d600" stroke-width="2.2" stroke-linecap="round"/></svg>
         <div><span class="k">Guardia</span><b id="clk">0:00</b><span class="pen" id="pen"></span><span class="lat" id="latTxt"></span></div>
-        <div class="unit"><span class="k">Unidad</span><b id="unitTxt">—</b><span class="kit empty" id="kitTxt">Botiquín vacío</span></div>
+        <div class="unit"><span class="k">Unidad</span><b id="unitTxt">—</b><span class="kit empty" id="kitTxt">Botiquín vacío</span><span class="kit" id="sobTxt"></span></div>
       </div>
       <div class="leo" id="leoBoard" aria-label="Leo, despacho"><canvas id="leoCv"></canvas><span id="leoLbl">Leo</span></div>
       <button class="icon-btn" id="btnMute" aria-label="Silenciar sonido">♪</button>
@@ -414,6 +419,7 @@ textarea{resize:none;min-height:84px;line-height:1.45}
     <div class="crew" id="syncCrew" style="justify-content:center"></div>
   </div>
 </div>
+<div id="finale" hidden><span class="eyebrow">Un solo pulso</span><h1>Guardia <span class="lime">cerrada</span></h1><p id="finUnit"></p><p class="small">Valentina, Sofía y Tomás ya están en casa.</p></div>
 <div class="sheet" id="sResult" hidden><div class="card" id="resCard"></div></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -718,14 +724,32 @@ function speedK(){let k=1;for(const s of SLOW){if(Math.hypot(S.pos.x-s.x,S.pos.z
 function inZone(){if(disHeal<1&&Math.hypot(S.pos.x-DIS.x,S.pos.z-DIS.z)<DIS.r)return 'Zona de disbiosis · avanzan despacio';for(const s of SLOW)if(Math.hypot(S.pos.x-s.x,S.pos.z-s.z)<s.r)return 'Pasto alto · la unidad frena';return ''}
 
 
+
+/* sobres de Lact1 en el camino: bonus que resta tiempo de guardia */
+const SOBRES=[[30,22],[78,36],[130,60],[176,50],[205,80],[240,50],[270,104],[318,66],[12,104],[100,92],[160,74],[300,30]].map(([a,r],i)=>{const p=polar(a,r);return{i,x:p.x,z:p.z}});
+function stickTex(){const c=document.createElement('canvas');c.width=512;c.height=180;const g=c.getContext('2d');
+ g.fillStyle='#f7f9fc';g.beginPath();g.moveTo(18,10);g.lineTo(494,10);g.lineTo(494,170);g.lineTo(18,170);g.closePath();g.fill();
+ g.fillStyle='#dfe6ef';for(let x=0;x<3;x++){g.fillRect(4+x*6,10,3,160);g.fillRect(490+x*6-12,10,3,160)}
+ g.fillStyle='#5db7e0';g.fillRect(300,64,180,22);g.fillStyle='#1d2f8f';g.fillRect(60,140,250,14);g.fillStyle='#5db7e0';g.fillRect(330,140,150,14);
+ g.font='600 64px Manrope, Arial, sans-serif';g.fillStyle='#1d2f8f';g.textBaseline='middle';g.fillText('Lact',58,64);
+ g.fillStyle='#5db7e0';g.beginPath();g.arc(232,62,30,0,Math.PI*2);g.fill();g.fillStyle='#fff';g.font='700 44px Manrope, Arial, sans-serif';g.textAlign='center';g.fillText('1',232,64);
+ g.textAlign='left';g.font='700 17px Manrope, Arial, sans-serif';g.fillStyle='#1d2f8f';g.fillText('Lactobacillus LB inactivados',60,104);g.fillText('+ Zinc  + Selenio',60,124);
+ g.font='800 22px Manrope, Arial, sans-serif';g.fillStyle='#fff';g.fillText('1 sobre al día',312,76);return new THREE.CanvasTexture(c)}
+const stickMat=new THREE.MeshBasicMaterial({map:stickTex(),side:THREE.DoubleSide});const stickGeo=new THREE.PlaneGeometry(2.6,.92);
+SOBRES.forEach(o=>{const g=new THREE.Group();g.position.set(o.x,1.6,o.z);scene.add(g);const m=new THREE.Mesh(stickGeo,stickMat);m.rotation.z=.35;g.add(m);
+ const halo=new THREE.Sprite(new THREE.SpriteMaterial({map:GLOW,color:0x5db7e0,transparent:true,opacity:.7,blending:ADD,depthWrite:false}));halo.scale.set(4,4,1);g.add(halo);
+ const ring=new THREE.Mesh(new THREE.RingGeometry(1.1,1.35,32),new THREE.MeshBasicMaterial({color:0x5db7e0,transparent:true,opacity:.7,depthWrite:false}));ring.rotation.x=-Math.PI/2;ring.position.set(o.x,.06,o.z);scene.add(ring);o.g=g;o.ring=ring;o.ph=o.i*.7});
+function updSobres(t){const taken=(G&&G.sobres)||[];SOBRES.forEach(o=>{const vis=!taken.includes(o.i);o.g.visible=vis;o.ring.visible=vis;if(!vis)return;o.g.rotation.y=t*1.6+o.ph;o.g.position.y=1.6+Math.sin(t*2+o.ph)*.3})}
+
 /* espectaculares de Lacteol fort entre los setos */
-const BILLS=[{a:60,r:46,k:'rap',c:'S'},{a:168,r:42,k:'seg',c:'V'},{a:252,r:80,k:'abx',c:'T'},{a:336,r:102,k:'post'},{a:100,r:120,k:'head'},{a:212,r:128,k:'seg',c:'V'}];
+const BILLS=[{a:60,r:46,k:'rap',c:'S'},{a:168,r:42,k:'seg',c:'V'},{a:252,r:80,k:'abx',c:'T'},{a:336,r:102,k:'post'},{a:100,r:120,k:'head'},{a:22,r:78,k:'lact1'},{a:212,r:128,k:'seg',c:'V'}];
 const BILLTXT={rap:{e:'Rapidez de acción',t:'La diarrea se detiene a las 8.2 h',s:'Con Lacteol® fort + SRO, frente a 30.4 h con placebo + SRO',ref:'Salazar E et al. J Pediatr Gastroenterol Nutr 2007;44:571-576.'},
  seg:{e:'Seguridad',t:'Seguro y confiable desde el nacimiento',s:'Para cualquier paciente, también los más pequeños',ref:'Vázquez R et al. Front Nutr 2025;12:1716791 (LASPGHAN).'},
  abx:{e:'Compatible con antibióticos',t:'Protección desde la primera dosis',s:'Se administra junto con el antibiótico',ref:'Yap J et al. Singapore Fam Physician 2010;36(4):46-49.'},
  post:{e:'Postbiótico',t:'#1 postbiótico recomendado por pediatras en Francia*',s:'Natural y amigable con la microbiota intestinal',ref:'*IQVIA, enero a febrero de 2025, 150 pediatras en Francia.'},
+ lact1:{e:'Lact1',t:'Listo para tomar · 1 sobre al día',s:'Lactobacillus LB inactivados + zinc + selenio. Junta los sobres del camino.',ref:'Suplemento alimenticio. Este producto no es un medicamento. El consumo de este producto es responsabilidad de quien lo recomienda y de quien lo usa.'},
  head:{e:'Lacteol® fort',t:'Activa naturalmente la microbiota de su paciente',s:'Una solución única para la salud intestinal',ref:'Campaña global Lacteol® fort.'}};
-const boxImg=new Image();boxImg.src='img/caja_sobres.webp';
+const boxImg=new Image();boxImg.src='img/caja_sobres.webp';const l1Img=new Image();l1Img.src='img/lact1_caja.jpg';
 function wrapText(g,txt,x,y,maxW,lh,maxL){const w=txt.split(' ');let line='',n=0;for(let i=0;i<w.length;i++){const tl=line?line+' '+w[i]:w[i];if(g.measureText(tl).width>maxW&&line){g.fillText(line,x,y+n*lh);n++;line=w[i];if(n>=maxL-1){line=w.slice(i).join(' ');break}}else line=tl}g.fillText(line,x,y+n*lh);return n+1}
 function billTex(k,hot){const T=BILLTXT[k];const c=document.createElement('canvas');c.width=1024;c.height=512;const g=c.getContext('2d');
  const gr=g.createLinearGradient(0,0,1024,512);gr.addColorStop(0,hot?'#c8323f':'#24337a');gr.addColorStop(1,hot?'#ff6a5b':'#2c63b3');g.fillStyle=gr;g.fillRect(0,0,1024,512);
@@ -734,9 +758,9 @@ function billTex(k,hot){const T=BILLTXT[k];const c=document.createElement('canva
  g.font='800 34px Manrope, system-ui, sans-serif';g.fillStyle='#c6d600';g.fillText(T.e.toUpperCase(),48,52);
  g.font='800 64px Manrope, system-ui, sans-serif';g.fillStyle='#ffffff';const n=wrapText(g,T.t,48,104,610,72,3);
  g.font='700 30px Manrope, system-ui, sans-serif';g.fillStyle='rgba(255,255,255,.88)';wrapText(g,T.s,48,118+n*72,600,38,2);
- g.font='700 19px Manrope, system-ui, sans-serif';g.fillStyle='rgba(255,255,255,.7)';g.fillText(T.ref,48,462);
- if(boxImg.complete&&boxImg.naturalWidth){const h=340,w=h*boxImg.naturalWidth/boxImg.naturalHeight;g.save();g.shadowColor='rgba(0,0,0,.35)';g.shadowBlur=24;g.drawImage(boxImg,1000-w,70,w,h);g.restore()}
- g.font='800 40px Manrope, system-ui, sans-serif';g.fillStyle='#ffffff';g.textAlign='right';g.fillText('Lacteol® fort',976,440);
+ g.font='700 19px Manrope, system-ui, sans-serif';g.fillStyle='rgba(255,255,255,.75)';if(k==='lact1'){wrapText(g,T.ref,48,436,640,24,3)}else g.fillText(T.ref,48,462);
+ const BI=k==='lact1'?l1Img:boxImg;if(BI.complete&&BI.naturalWidth){const h=340,w=h*BI.naturalWidth/BI.naturalHeight;g.save();g.shadowColor='rgba(0,0,0,.35)';g.shadowBlur=24;g.drawImage(BI,1000-w,70,w,h);g.restore()}
+ g.font='800 40px Manrope, system-ui, sans-serif';g.fillStyle='#ffffff';g.textAlign='right';if(k!=='lact1')g.fillText('Lacteol® fort',976,440);
  return new THREE.CanvasTexture(c)}
 BILLS.forEach(b=>{const p=polar(b.a,b.r);b.x=p.x;b.z=p.z;const grp=new THREE.Group();grp.position.set(p.x,0,p.z);grp.rotation.y=Math.atan2(-p.x,-p.z);scene.add(grp);b.grp=grp;
  const pm=new THREE.MeshLambertMaterial({color:0xdfe6ff});[-3.2,3.2].forEach(d=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(.28,.36,6.4,10),pm);m.position.set(d,3.2,0);grp.add(m)});
@@ -746,7 +770,7 @@ BILLS.forEach(b=>{const p=polar(b.a,b.r);b.x=p.x;b.z=p.z;const grp=new THREE.Gro
  const lamp=new THREE.Mesh(new THREE.BoxGeometry(11.6,.25,.9),new THREE.MeshBasicMaterial({color:0xc6d600}));lamp.position.set(0,11.9,0);grp.add(lamp);b.lamp=lamp;b.hot=false;
  OBST.push({x:p.x,z:p.z,r:1.6,h:0})});
 function repaintBills(){BILLS.forEach(b=>{b.mat.map.dispose();b.mat.map=billTex(b.k,b.hot);b.mat.needsUpdate=true})}
-boxImg.onload=repaintBills;if(document.fonts&&document.fonts.ready)document.fonts.ready.then(repaintBills).catch(()=>{});
+boxImg.onload=repaintBills;l1Img.onload=repaintBills;if(document.fonts&&document.fonts.ready)document.fonts.ready.then(repaintBills).catch(()=>{});
 function updBills(t){BILLS.forEach(b=>{const c=b.c&&CASES.find(x=>x.id===b.c);const hot=!!(c&&c.worse&&!c.done);if(hot!==b.hot){b.hot=hot;b.mat.map.dispose();b.mat.map=billTex(b.k,hot);b.mat.needsUpdate=true}
  b.lamp.material.color.setHex(hot?(Math.floor(t*3)%2?0xff6a5b:0xffffff):0xc6d600)})}
 
@@ -770,16 +794,28 @@ const look=new V3(0,6,0);
 let AC=null,muted=false;
 function ac(){if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext)()}catch(_){}}if(AC&&AC.state==='suspended')AC.resume()}
 function tone(f,d,type,g,w){if(!AC||muted)return;const t=AC.currentTime+(w||0),o=AC.createOscillator(),v=AC.createGain();o.type=type||'sine';o.frequency.setValueAtTime(f,t);v.gain.setValueAtTime(0,t);v.gain.linearRampToValueAtTime(g||.08,t+.02);v.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(v);v.connect(AC.destination);o.start(t);o.stop(t+d+.05)}
-const sfx={radio(){tone(880,.08,'square',.03);tone(660,.08,'square',.03,.1)},sign(){tone(1046,.15,'sine',.06)},alert(){tone(330,.3,'triangle',.08);tone(262,.4,'triangle',.07,.25)},
+const sfx={chime(){tone(1318,.18,'sine',.07);tone(1760,.25,'sine',.06,.09)},radio(){tone(880,.08,'square',.03);tone(660,.08,'square',.03,.1)},sign(){tone(1046,.15,'sine',.06)},alert(){tone(330,.3,'triangle',.08);tone(262,.4,'triangle',.07,.25)},
  bloom(){[523.25,659.25,783.99,1046.5].forEach((f,i)=>tone(f,1.3,'sine',.06,i*.11))},sync(){[261.6,329.6,392,523.25,659.25,783.99,1046.5].forEach((f,i)=>tone(f,2.2,'sine',.05,i*.09));tone(65,1.2,'sine',.3)}};
 $('#btnMute').addEventListener('click',()=>{muted=!muted;$('#btnMute').textContent=muted?'✕':'♪';$('#btnMute').setAttribute('aria-label',muted?'Activar sonido':'Silenciar sonido')});
+
+/* ---------------- Voces grabadas (ElevenLabs) ---------------- */
+const VOZ_KEYS=['leo_inicio','leo_alarma_V','leo_alarma_T','leo_llegada','leo_kit1','leo_kit0','leo_farmacia','leo_regreso','leo_nokit','leo_unidad','leo_sobre','leo_final','karla_pista','karla_open','karla_openD','karla_ret','lorena_1','lorena_2','lorena_3','lorena_4','lorena_5','lorena_open','lorena_ret','oscar_open','oscar_openD','oscar_ret'];
+const VOZ={};let vozLoaded=false;const vozQ=[];let vozBusy=false,vozSrc=null;
+function loadVoz(){if(vozLoaded||!AC)return;vozLoaded=true;VOZ_KEYS.forEach(k=>{fetch('voz/'+k+'.mp3').then(r=>r.arrayBuffer()).then(b=>AC.decodeAudioData(b)).then(buf=>{VOZ[k]=buf}).catch(()=>{})})}
+function playVoz(keys){if(!keys)return;(Array.isArray(keys)?keys:[keys]).forEach(k=>vozQ.push(k));if(vozQ.length>3)vozQ.splice(0,vozQ.length-3);nextVoz()}
+function nextVoz(){if(vozBusy||!vozQ.length)return;const k=vozQ.shift();const buf=VOZ[k];if(!buf||!AC||muted){nextVoz();return}
+ vozBusy=true;const src=AC.createBufferSource();src.buffer=buf;const g=AC.createGain();g.gain.value=1;src.connect(g);g.connect(AC.destination);vozSrc=src;
+ if(k.startsWith('leo'))LEO.until=performance.now()+buf.duration*1000;
+ src.onended=()=>{vozBusy=false;vozSrc=null;setTimeout(nextVoz,250)};src.start()}
+const FAMVOZ={V:'karla',S:'lorena',T:'oscar'};
+
 /* ================= Interfaz por jugador ================= */
 const SHEETS=['#sJoin','#sLobby','#sName','#sWave','#sPharm','#sConsult','#sOutcome','#sExplain','#sSync','#sResult'];
 function show(id){SHEETS.forEach(s=>$(s).hidden=(s!==id))}
 let toastT;function toast(top,txt,ms){const t=$('#toast');t.innerHTML=(top?`<small>${esc(top)}</small>`:'')+esc(txt);t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),ms||2600)}
 const FEED=[];
 function logFeed(txt,lv){FEED.unshift({t:G?gtime():0,txt,lv:lv||''});FEED.length=Math.min(FEED.length,3);$('#feed').innerHTML=FEED.map(f=>`<div class="${f.lv}"><time>${fmt(f.t)}</time><span>${esc(f.txt)}</span></div>`).join('')}
-let radioT;function radio(from,txt,lv){const r=$('#radio');const who=from==='Despacho'?'Leo · Despacho':'Leo · '+(from==='Monitor'?'Alarma':'enlace con '+from);$('#radTxt').innerHTML=`<small>${esc(who)}</small>${esc(txt)}`;leoSay(txt);
+let radioT;function radio(from,txt,lv,snd){if(snd)playVoz(snd);const r=$('#radio');const who=from==='Despacho'?'Leo · Despacho':'Leo · '+(from==='Monitor'?'Alarma':'enlace con '+from);$('#radTxt').innerHTML=`<small>${esc(who)}</small>${esc(txt)}`;leoSay(txt);
  const bb=document.querySelector('.board').getBoundingClientRect().bottom;r.style.top=(bb>80?bb+8:200)+'px';
  if($('#hud').classList.contains('pilot'))r.style.top='';
  r.classList.add('show');sfx.radio();clearTimeout(radioT);radioT=setTimeout(()=>r.classList.remove('show'),Math.max(5200,txt.length*60));logFeed(from+': '+txt,lv)}
@@ -815,7 +851,7 @@ function setupJoin(){$('#inName').value=MYNAME;$('#inMesa').value=MESA;$('#mesaR
  $('#joinLead').textContent=MESA?`Te invitaron a la mesa ${MESA}. Escribe tu nombre como quieres que te vea tu equipo.`:'Crea una mesa y comparte el enlace, o escribe el código de la mesa a la que te invitaron.';show('#sJoin')}
 function doJoin(code){const n=$('#inName').value.trim().replace(/\s+/g,' ').slice(0,28);if(n.length<2){$('#joinErr').textContent='Escribe tu nombre.';$('#joinErr').hidden=false;return}
  code=(code||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,8);if(code.length<3){$('#joinErr').textContent='Escribe el código de la mesa.';$('#joinErr').hidden=false;return}
- ac();MYNAME=n;LS.set('cp_name',n);MESA=code;try{const u=new URL(location.href);u.searchParams.set('mesa',MESA);history.replaceState(null,'',u.pathname+u.search)}catch(_){}
+ ac();loadVoz();MYNAME=n;LS.set('cp_name',n);MESA=code;try{const u=new URL(location.href);u.searchParams.set('mesa',MESA);history.replaceState(null,'',u.pathname+u.search)}catch(_){}
  show('#sLobby');renderLobby();connect()}
 $('#btnJoin').addEventListener('click',()=>doJoin(MESA||$('#inMesa').value));
 $('#btnCreate').addEventListener('click',()=>doJoin(newCode()));
@@ -832,7 +868,7 @@ function nm2(p){return (G&&G.names[p])||(present[p]&&present[p].name)||(p===PID?
 function dist(n){if(n>=8)return 'una sección del recetario por persona'+(n>8?' (los demás observan)':'');const a=Math.floor(8/n),b=8%n;return b?`${b} con ${a+1} secciones y ${n-b} con ${a}`:`${a} secciones cada quien`}
 $('#btnCopy').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(shareURL());toast('','Enlace copiado',1400)}catch(_){toast('',shareURL(),4000)}});
 $('#btnShare').addEventListener('click',async()=>{if(navigator.share){try{await navigator.share({title:'Código PULSO',text:'Entra a mi mesa de Código PULSO',url:shareURL()})}catch(_){}}else $('#btnCopy').click()});
-$('#btnStart').addEventListener('click',()=>{ac();send('start')});
+$('#btnStart').addEventListener('click',()=>{ac();loadVoz();send('start')});
 
 /* ---- bautizo con votación unánime ---- */
 function mySecs(){return G?SECTIONS.filter(s=>G.assign[s.id]===PID):[]}
@@ -934,7 +970,7 @@ function renderResult(){const sc=G.result;if(!sc)return;
   <span>Consulta · preguntas y exploraciones clave</span><b>${sc.con} / 250</b>
   <span>Receta al primer intento</span><b>${sc.rx} / 400</b>
   <span>Comunicación con la familia</span><b>${sc.comm} / 100</b>
-  <span>Tiempo de guardia</span><b>${sc.tim} / 100</b>
+  <span>Tiempo de guardia${(G.sobres||[]).length?` · ${G.sobres.length} sobres de Lact1 (−${G.sobres.length*5} s)`:''}</span><b>${sc.tim} / 100</b>
   <span class="tot">Total</span><b>${sc.total}</b></div></div>
  ${rec.length?`<h3>Reconocimientos para las 20:40</h3><div class="recog">${rec.map(r=>`<div class="rg">${icon}${r}</div>`).join('')}</div>`:''}
  <h3>Su recetario completo</h3>${PAGEORDER.map(k=>`<div class="rxpage"><span class="eyebrow">${esc(PAGES[k].t)}</span><p>${esc(PAGES[k].claim)}</p><small>${esc(PAGES[k].ref)}</small></div>`).join('')}
@@ -947,12 +983,12 @@ let lastPhase=null,evInit=false,lastEv=0;
 function onState(g){
  CASES.forEach(c=>{const st=g.cases[c.id];const w=!!st.worse,d=!!st.done;if(c.worse!==w||c.done!==d){const became=d&&!c.done;c.worse=w;c.done=d;paintMarker(c);if(became&&evInit)bloomCase(c)}c.target=g.target===c.id});updMon();
  if(!evInit){evInit=true;lastEv=g.evN;CASES.forEach(c=>{if(c.done)bloomCase(c)})}
- const fresh=g.ev.filter(e=>e.id>lastEv);if(fresh.length){fresh.slice(0,-1).forEach(e=>logFeed(e.from+': '+e.txt,e.lv));const e=fresh[fresh.length-1];if(g.phase==='drive'||g.phase==='consult')radio(e.from,e.txt,e.lv);else{logFeed(e.from+': '+e.txt,e.lv);leoSay(e.txt)}lastEv=g.evN}
+ const fresh=g.ev.filter(e=>e.id>lastEv);if(fresh.length){fresh.slice(0,-1).forEach(e=>logFeed(e.from+': '+e.txt,e.lv));const e=fresh[fresh.length-1];if(g.phase==='drive'||g.phase==='consult')radio(e.from,e.txt,e.lv,e.snd);else{logFeed(e.from+': '+e.txt,e.lv);leoSay(e.txt);if(e.snd)playVoz(e.snd)}lastEv=g.evN}
  $('#unitTxt').textContent=g.unit?'Unidad '+g.unit:'—';setSirenLocal(!!g.siren);
  const ph=g.phase,changed=ph!==lastPhase,prev=lastPhase;lastPhase=ph;
- if(ph==='lobby'&&changed&&prev){flowers.forEach(f=>f.target=f.open0);S.pages.clear();renderPages();$('#resCard').innerHTML='';FEED.length=0;$('#feed').innerHTML='';S.pos.set(0,0,16);S.heading=S.camYaw=0;carSeen=0}
+ if(ph==='lobby'&&changed&&prev){FIN=null;$('#finale').hidden=true;finLight.intensity=0;skyRing.material.opacity=0;flowers.forEach(f=>f.target=f.open0);S.pages.clear();renderPages();$('#resCard').innerHTML='';FEED.length=0;$('#feed').innerHTML='';S.pos.set(0,0,16);S.heading=S.camYaw=0;carSeen=0}
  $('#hud').hidden=!['drive','consult','outcome','pharmacy'].includes(ph);
- $('#kitTxt').textContent=g.kit?`Botiquín: ${g.kit} de 2`:'Botiquín vacío';$('#kitTxt').classList.toggle('empty',!g.kit);
+ $('#kitTxt').textContent=g.kit?`Botiquín: ${g.kit} de 2`:'Botiquín vacío';$('#kitTxt').classList.toggle('empty',!g.kit);$('#sobTxt').textContent=(g.sobres||[]).length?`Sobres Lact1: ${g.sobres.length}`:'';
  if(ph!=='drive'){joy.id=null;joy.x=joy.y=0;joyEl.hidden=true}
  if(ph==='lobby'){if(changed)show('#sLobby');renderLobby()}
  else if(ph==='name'){if(changed){show('#sName');sfx.radio()}renderName()}
@@ -963,8 +999,8 @@ function onState(g){
  else if(ph==='outcome'){if(changed){show('#sOutcome');renderOutcome()}}
  else if(ph==='explain'){if(changed){show('#sExplain');renderExplain()}}
  else if(ph==='sync'){if(changed){show('#sSync');holding=false}renderSync()}
- else if(ph==='finale'){if(changed)doFinale()}
- else if(ph==='done'){if(changed||!$('#resCard').innerHTML)show('#sResult');renderResult()}}
+ else if(ph==='finale'){if(changed)startFinale()}
+ else if(ph==='done'){if(changed||!$('#resCard').innerHTML){show('#sResult');FIN=null;$('#finale').hidden=true;$('#finale').classList.remove('show')}renderResult()}}
 
 /* ================= Red: mesa compartida (MQTT sobre WebSocket) ================= */
 const QS=new URLSearchParams(location.search);
@@ -1020,7 +1056,7 @@ setInterval(()=>{ /* relevo si el anfitrión se fue */
 function newState(keep){return{v:0,host:PID,phase:'lobby',players:keep?keep.players:[],names:keep?keep.names:{},off:{},assign:{},driver:null,siren:0,target:null,
  props:{},votes:{},unit:'',g0:0,pen:0,gEnd:0,cases:{V:{done:0,worse:0},S:{done:0,worse:0},T:{done:0,worse:0}},order:[],
  cur:null,cStart:0,cState:0,rx:{},fix:[],used:{},found:{},keys:{V:[],S:[],T:[]},chat:[],comm:{},rxFirst:{},returns:0,
- kit:0,kitUsed:{},crashes:0,lastCrash:0,noKitT:0,breaker:null,ev:[],evN:0,momIdx:0,lastMom:0,vHint:0,famLeave:0,out:null,holds:{},holdAll:0,result:null,hostNow:0}}
+ kit:0,kitUsed:{},sobres:[],crashes:0,lastCrash:0,noKitT:0,breaker:null,ev:[],evN:0,momIdx:0,lastMom:0,vHint:0,famLeave:0,out:null,holds:{},holdAll:0,result:null,hostNow:0}}
 let commitT=null;
 function commit(now_){if(!iAmHost||!G)return;if(commitT&&!now_)return;const go=()=>{commitT=null;G.v++;G.hostNow=Date.now();pub('state',G,true);if(QS.get('debug')==='1')console.log('pub',G.v,Date.now()%100000);onState(G)};if(now_){clearTimeout(commitT);go()}else commitT=setTimeout(go,90)}
 function gotState(st){if(QS.get('debug')==='1')console.log('got',st.v,Date.now()%100000);offset=(st.hostNow||Date.now())-Date.now();
@@ -1041,7 +1077,7 @@ function assignSecs(){const act=active();if(!act.length)return;const cnt={};act.
  SECIDS.forEach(s=>{if(!G.assign[s]){const p=minP();G.assign[s]=p;cnt[p]++}});
  for(let k=0;k<16;k++){const mx=act.reduce((a,b)=>cnt[b]>cnt[a]?b:a,act[0]),mn=minP();if(cnt[mx]-cnt[mn]<=1)break;
   const mv=SECIDS.filter(s=>G.assign[s]===mx).sort((a,b)=>(G.rx[a]?1:0)-(G.rx[b]?1:0))[0];G.assign[mv]=mn;cnt[mx]--;cnt[mn]++}}
-function evt(from,txt,lv){G.evN++;G.ev.push({id:G.evN,from,txt,lv:lv||''});if(G.ev.length>6)G.ev.shift()}
+function evt(from,txt,lv,snd){G.evN++;G.ev.push({id:G.evN,from,txt,lv:lv||'',snd:snd||null});if(G.ev.length>6)G.ev.shift()}
 function fx(o){pub('fx',o,false,0);gotFx(o)}
 const gtime=()=>G&&G.g0?((G.gEnd||now())-G.g0)/1000+G.pen:0;
 const caseById=id=>CASES.find(c=>c.id===id);
@@ -1055,13 +1091,14 @@ function handleAct(a){if(!G)return;const p=a.pid;const ph=G.phase;
    if(n.length<2||BAD.some(b=>n.toLowerCase().includes(b))){fx({to:p,toast:'Ese nombre no pasa el filtro. Prueben otro.'});break}
    G.props[p]=n;Object.keys(G.votes).forEach(v=>{if(G.votes[v]===p)delete G.votes[v]});G.votes[p]=p;checkVote();commit()}break;
  case 'vote':if(ph==='name'&&G.props[a.to]){G.votes[p]=a.to;checkVote();commit()}break;
- case 'go':if(ph==='wave'){G.phase='drive';G.g0=now();G.kit=2;G.lastMom=0;evt('Despacho',`Código PULSO, unidad ${G.unit}. Tres pacientes en espera: ustedes deciden a quién van primero.`,'info');commit()}break;
+ case 'go':if(ph==='wave'){G.phase='drive';G.g0=now();G.kit=2;G.lastMom=0;evt('Despacho',`Código PULSO, unidad ${G.unit}. Tres pacientes en espera: ustedes deciden a quién van primero.`,'info','leo_inicio');commit()}break;
  case 'wheel':if(ph==='drive'){const prev=G.driver;G.driver=a.on?p:(G.driver===p?null:G.driver);if(!a.on)G.siren=0;if(G.driver!==prev)fx({toast:G.driver?nm(G.driver)+' tomó el volante':'Volante libre',top:'Volante'});commit()}break;
  case 'siren':if(ph==='drive'&&G.driver===p){G.siren=a.on?1:0;commit()}break;
  case 'target':if(ph==='drive'&&caseById(a.c)&&!G.cases[a.c].done){G.target=a.c;commit()}break;
- case 'arrive':if(ph==='drive'&&G.driver===p&&caseById(a.c)&&!G.cases[a.c].done){if(G.kit<=0&&!G.kitUsed[a.c]){if(now()-G.noKitT>8000){G.noKitT=now();evt('Despacho',`Llegaron con ${caseById(a.c).name}, pero ya no queda Lacteol fort en el botiquín. Pasen a la farmacia: está marcada en el mapa.`,'bad');commit()}break}startConsult(a.c);commit(true)}break;
+ case 'arrive':if(ph==='drive'&&G.driver===p&&caseById(a.c)&&!G.cases[a.c].done){if(G.kit<=0&&!G.kitUsed[a.c]){if(now()-G.noKitT>8000){G.noKitT=now();evt('Despacho',`Llegaron con ${caseById(a.c).name}, pero ya no queda Lacteol fort en el botiquín. Pasen a la farmacia: está marcada en el mapa.`,'bad','leo_nokit');commit()}break}startConsult(a.c);commit(true)}break;
  case 'pharm':if(ph==='drive'&&G.driver===p&&G.kit<=0){G.phase='pharmacy';G.breaker=null;commit(true)}break;
- case 'break':if(ph==='pharmacy'){G.kit=2;G.breaker=p;G.phase='drive';G.driver=null;evt('Despacho',`${nm(p)} rompió el cristal. Botiquín cargado: 2 tratamientos de Lacteol fort.`,'info');fx({sfx:'bloom'});commit(true)}break;
+ case 'break':if(ph==='pharmacy'){G.kit=2;G.breaker=p;G.phase='drive';G.driver=null;evt('Despacho',`${nm(p)} rompió el cristal. Botiquín cargado: 2 tratamientos de Lacteol fort.`,'info','leo_farmacia');fx({sfx:'bloom'});commit(true)}break;
+ case 'sobre':if(ph==='drive'&&G.driver===p&&SOBRES[a.i]&&!G.sobres.includes(a.i)){G.sobres.push(a.i);G.pen-=5;const n=G.sobres.length;evt('Despacho',`Sobre de Lact1 (${n}). Cinco segundos menos de guardia.`,'info',n<=2?'leo_sobre':null);fx({sfx:'chime'});commit()}break;
  case 'crash':if(ph==='drive'&&G.driver===p&&now()-G.lastCrash>1200){G.lastCrash=now();G.crashes++;G.pen+=2;commit()}break;
  case 'ask':if(ph==='consult'&&G.assign[a.sec]===p){const c=caseById(G.cur),q=((c.s[a.sec]||{}).q||[])[a.i];if(!q||G.used[a.sec+'q'+a.i])break;
    G.used[a.sec+'q'+a.i]=1;chat('doc',q.t,nm(p));chat('fam',G.cState&&q.aD?q.aD:q.a);if(q.k&&!G.keys[c.id].includes(q.k))G.keys[c.id].push(q.k);commit()}break;
@@ -1074,26 +1111,26 @@ function handleAct(a){if(!G)return;const p=a.pid;const ph=G.phase;
  case 'hold':if(ph==='sync'){G.holds[p]=a.on?1:0;const all=active().every(x=>G.holds[x]);G.holdAll=all?(G.holdAll||now()):0;commit()}break;
  case 'restart':if(p===G.host){const keep={players:G.players.filter(x=>present[x]||x===PID),names:G.names};const v=G.v;G=newState(keep);G.v=v;G.host=PID;commit(true)}break;
  }}
-function checkVote(){const act=active();const t=G.votes[act[0]];if(t&&G.props[t]&&act.every(p=>G.votes[p]===t)){G.unit=G.props[t];G.phase='wave';evt('Despacho',`Unidad ${G.unit} registrada. Código PULSO: tres pacientes en espera.`,'info')}}
+function checkVote(){const act=active();const t=G.votes[act[0]];if(t&&G.props[t]&&act.every(p=>G.votes[p]===t)){G.unit=G.props[t];G.phase='wave';evt('Despacho',`Unidad ${G.unit} registrada. Código PULSO: tres pacientes en espera.`,'info','leo_unidad')}}
 function chat(who,txt,tag){G.chat.push({who,txt,tag:tag||''});if(G.chat.length>40)G.chat.splice(0,G.chat.length-40)}
 function startConsult(id){const c=caseById(id);G.phase='consult';G.cur=id;G.cState=G.cases[id].worse;G.cStart=now();G.rx={};G.fix=[];G.used={};G.found={};G.chat=[];G.famLeave=0;
- G.driver=null;G.siren=0;G.target=null;if(!G.kitUsed[id]){G.kitUsed[id]=1;G.kit=Math.max(0,G.kit-1);G.kitMsg=G.kit}if(!G.order.includes(id))G.order.push(id);chat('fam',G.cState&&c.openD?c.openD:c.open);evt('Despacho',`Llegada con ${c.name}. Cada quien a su sección.`,'info')}
+ G.driver=null;G.siren=0;G.target=null;if(!G.kitUsed[id]){G.kitUsed[id]=1;G.kit=Math.max(0,G.kit-1);G.kitMsg=G.kit}if(!G.order.includes(id))G.order.push(id);chat('fam',G.cState&&c.openD?c.openD:c.open);evt('Despacho',`Llegada con ${c.name}. Cada quien a su sección.`,'info',['leo_llegada',FAMVOZ[c.id]+'_open'+(G.cState&&c.openD?'D':'')])}
 function emitRx(){const c=caseById(G.cur);const okFor=id=>{const d=c.s[id];const ok=G.cState&&d.okD!=null?d.okD:d.ok;return G.rx[id]&&G.rx[id].o===ok};
  const wrong=SECIDS.filter(s=>s!=='fam'&&!okFor(s));if(G.rxFirst[c.id]==null)G.rxFirst[c.id]=7-wrong.length;
  const crit=wrong.filter(id=>CRITICAL.includes(id));
  if(crit.length){G.returns++;G.pen+=60;G.fix=wrong.slice();wrong.forEach(s=>delete G.rx[s]);G.chat=[];
   chat('sys','Receta emitida. Horas después…');chat('fam',c.ret.replace(/^[^:]+:\s*/,'').replace(/^"|"$/g,''),'Regreso');
   chat('sys','Leo: la familia regresó (+1:00 de guardia). Corrijan las secciones en rojo y vuelvan a firmar.');
-  evt('Despacho',`La familia de ${c.name} regresó. Corrijan las secciones en rojo.`,'bad');fx({sfx:'alert'});commit(true);return}
- G.cases[c.id].done=1;if(G.kitMsg!=null){const left=CASES.filter(k=>!G.cases[k.id].done).length;if(G.kit===1&&left)evt('Despacho','Les queda un tratamiento de Lacteol fort en el botiquín.','info');else if(G.kit===0&&left)evt('Despacho','Se acabó el Lacteol fort del botiquín. La farmacia ya está marcada en el mapa: pasen a romper el cristal de la caja de emergencia.','bad');G.kitMsg=null}G.out={c:c.id,wrong:wrong.length,comm:G.comm[c.id]};G.phase='outcome';commit(true)}
+  evt('Despacho',`La familia de ${c.name} regresó. Corrijan las secciones en rojo.`,'bad',[FAMVOZ[c.id]+'_ret','leo_regreso']);fx({sfx:'alert'});commit(true);return}
+ G.cases[c.id].done=1;if(G.kitMsg!=null){const left=CASES.filter(k=>!G.cases[k.id].done).length;if(G.kit===1&&left)evt('Despacho','Les queda un tratamiento de Lacteol fort en el botiquín.','info','leo_kit1');else if(G.kit===0&&left)evt('Despacho','Se acabó el Lacteol fort del botiquín. La farmacia ya está marcada en el mapa: pasen a romper el cristal de la caja de emergencia.','bad','leo_kit0');G.kitMsg=null}G.out={c:c.id,wrong:wrong.length,comm:G.comm[c.id]};G.phase='outcome';commit(true)}
 /* reloj del anfitrión: deterioro, radio de las familias, salida de la consulta */
 setInterval(()=>{if(!iAmHost||!G||!G.g0||G.gEnd)return;const gt=gtime();let ch=false;
- CASES.forEach(c=>{const st=G.cases[c.id];if(!st.done&&!st.worse&&c.detAt!=null&&gt>c.detAt&&G.phase!=='consult'){st.worse=1;ch=true;evt('Monitor',`Alarma: el pulso de ${c.name} se aceleró`,'bad')}});
- if(G.phase==='drive'&&!G.cases.S.done&&gt-G.lastMom>42){G.lastMom=gt;evt('Mamá de Sofía',MOM[G.momIdx%MOM.length]);G.momIdx++;ch=true}
- if(G.phase==='drive'&&!G.vHint&&gt>150&&!G.cases.V.done){G.vHint=1;evt('Mamá de Valentina','Doctora, Valentina está más dormilona. ¿Es normal?');ch=true}
+ CASES.forEach(c=>{const st=G.cases[c.id];if(!st.done&&!st.worse&&c.detAt!=null&&gt>c.detAt&&G.phase!=='consult'){st.worse=1;ch=true;evt('Monitor',`Alarma: el pulso de ${c.name} se aceleró`,'bad',c.id==='V'?'leo_alarma_V':c.id==='T'?'leo_alarma_T':null)}});
+ if(G.phase==='drive'&&!G.cases.S.done&&gt-G.lastMom>42){G.lastMom=gt;evt('Mamá de Sofía',MOM[G.momIdx%MOM.length],'','lorena_'+(G.momIdx%MOM.length+1));G.momIdx++;ch=true}
+ if(G.phase==='drive'&&!G.vHint&&gt>150&&!G.cases.V.done){G.vHint=1;evt('Mamá de Valentina','Doctora, Valentina está más dormilona. ¿Es normal?','','karla_pista');ch=true}
  if(G.phase==='consult'&&!G.famLeave&&(now()-G.cStart)/1000>360){G.famLeave=1;chat('fam','Doctor, ya me tengo que ir. ¿Qué le doy?');ch=true}
  if(ch)commit()},500);
-setInterval(()=>{if(!iAmHost||!G||G.phase!=='sync')return;if(G.holdAll&&now()-G.holdAll>1300&&active().every(x=>G.holds[x])){G.result=scores();G.phase='finale';commit(true);setTimeout(()=>{if(G.phase==='finale'){G.phase='done';commit(true)}},4300)}},150);
+setInterval(()=>{if(!iAmHost||!G||G.phase!=='sync')return;if(G.holdAll&&now()-G.holdAll>1300&&active().every(x=>G.holds[x])){G.result=scores();G.phase='finale';commit(true);setTimeout(()=>{if(G.phase==='finale'){G.phase='done';commit(true)}},17000)}},150);
 
 /* ---- auto: mensajes efímeros ---- */
 function gotFx(m){if(m.to&&m.to!==PID)return;if(m.toast)toast(m.top||'',m.toast,2000);if(m.sfx&&sfx[m.sfx])sfx[m.sfx]()}
@@ -1132,6 +1169,7 @@ function drawMini(t,tg){const g=mg,R=132;g.clearRect(0,0,280,280);g.save();g.beg
  SLOW.forEach(o=>{const p=toMap(o.x,o.z,R);if(p.d>MR+o.r)return;g.fillStyle='rgba(120,180,255,.18)';g.beginPath();g.arc(p.x,p.y,o.r*R/MR,0,Math.PI*2);g.fill()});
  if(disHeal<.98){const p=toMap(DIS.x,DIS.z,R);g.fillStyle=`rgba(255,90,100,${.35*(1-disHeal)})`;g.beginPath();g.arc(p.x,p.y,DIS.r*R/MR,0,Math.PI*2);g.fill()}
  g.fillStyle='rgba(10,24,80,.85)';OBST.forEach(o=>{const p=toMap(o.x,o.z,R);if(p.d>MR+4)return;g.beginPath();g.arc(p.x,p.y,Math.max(2,o.r*R/MR),0,Math.PI*2);g.fill()});
+ SOBRES.forEach(o=>{if((G.sobres||[]).includes(o.i))return;const p=toMap(o.x,o.z,R);if(p.d>MR)return;g.fillStyle='#5db7e0';g.beginPath();g.arc(p.x,p.y,4,0,Math.PI*2);g.fill()});
  BILLS.forEach(o=>{const p=toMap(o.x,o.z,R);if(p.d>MR)return;g.fillStyle=o.hot?'#ff6a5b':'#ffd84a';g.fillRect(p.x-6,p.y-3,12,6)});
  GATES.forEach(o=>{const p=toMap(o.x,o.z,R);if(p.d>MR)return;g.fillStyle=o.open?'#c6d600':'#ff6a5b';g.fillRect(p.x-5,p.y-2,10,4)});
  {const p=toMap(PHARM.x,PHARM.z,R);let x=p.x,y=p.y;const dd=Math.hypot(x-140,y-140);if(dd>R-16){x=140+(x-140)/dd*(R-16);y=140+(y-140)/dd*(R-16)}g.fillStyle='#ffffff';g.beginPath();g.arc(x,y,9,0,Math.PI*2);g.fill();g.fillStyle='#e23b3b';g.fillRect(x-5,y-1.6,10,3.2);g.fillRect(x-1.6,y-5,3.2,10)}
@@ -1170,6 +1208,38 @@ function updEdges(){const W=innerWidth,H=innerHeight;const top=document.querySel
   const ang=Math.atan2(-y,x)*180/Math.PI;el.hidden=false;el.style.left=px+'px';el.style.top=py+'px';el.style.color=c.worse?'#ff6a5b':'#c6d600';el.classList.toggle('bad',c.worse);
   el.querySelector('svg').style.transform=`rotate(${ang+180}deg)`;el.querySelector('b').textContent=Math.round(Math.hypot(c.x-S.pos.x,c.z-S.pos.z))+' m'})}
 
+
+/* ---------------- Final épico: un solo pulso ---------------- */
+let FIN=null;
+const finLight=new THREE.PointLight(0xc6d600,0,120);finLight.position.set(0,16,0);scene.add(finLight);
+const skyRing=new THREE.Mesh(new THREE.TorusGeometry(10,.35,10,90),new THREE.MeshBasicMaterial({color:0xc6d600,transparent:true,opacity:0,blending:ADD,depthWrite:false}));skyRing.position.y=15;skyRing.rotation.x=Math.PI/2;scene.add(skyRing);
+const FWN=900,fwPos=new Float32Array(FWN*3),fwCol=new Float32Array(FWN*3),fwVel=[],fwLife=new Float32Array(FWN);
+const fwGeo=new THREE.BufferGeometry();fwGeo.setAttribute('position',new THREE.BufferAttribute(fwPos,3));fwGeo.setAttribute('color',new THREE.BufferAttribute(fwCol,3));
+const fwPts=new THREE.Points(fwGeo,new THREE.PointsMaterial({size:1.6,map:GLOW,vertexColors:true,transparent:true,blending:ADD,depthWrite:false}));scene.add(fwPts);
+for(let i=0;i<FWN;i++){fwPos[i*3+1]=-50;fwVel.push(new V3())}
+let fwNext=0;const FWC=[0xc6d600,0x4aa8ff,0xff9b3d,0xff6a5b,0xffffff].map(h=>new THREE.Color(h));
+function burst(x,y,z,n){const col=FWC[Math.floor(Math.random()*FWC.length)];for(let k=0;k<n;k++){const i=fwNext;fwNext=(fwNext+1)%FWN;fwPos[i*3]=x;fwPos[i*3+1]=y;fwPos[i*3+2]=z;
+ const v=new V3(Math.random()-.5,Math.random()-.3,Math.random()-.5).normalize().multiplyScalar(8+Math.random()*10);fwVel[i].copy(v);fwLife[i]=1.6+Math.random()*.8;const c=Math.random()<.25?FWC[4]:col;fwCol[i*3]=c.r;fwCol[i*3+1]=c.g;fwCol[i*3+2]=c.b}}
+function heartbeat(when,vol){if(!AC||muted)return;const t=AC.currentTime+when;[0,.17].forEach((d,j)=>{const o=AC.createOscillator(),v=AC.createGain();o.type='sine';o.frequency.setValueAtTime(j?52:62,t+d);o.frequency.exponentialRampToValueAtTime(34,t+d+.18);v.gain.setValueAtTime(0,t+d);v.gain.linearRampToValueAtTime(vol*(j?.7:1),t+d+.015);v.gain.exponentialRampToValueAtTime(.0001,t+d+.3);o.connect(v);v.connect(AC.destination);o.start(t+d);o.stop(t+d+.35)})}
+function startFinale(){FIN={t0:performance.now(),bursts:0,lastBurst:0,said:false};show(null);$('#finale').hidden=false;$('#finUnit').textContent=G&&G.unit?'Unidad '+G.unit:'';
+ let tt=0,gap=1;for(let k=0;k<14;k++){heartbeat(tt,.35+k*.03);gap=Math.max(.34,gap*.86);tt+=gap}
+ try{navigator.vibrate&&navigator.vibrate([60,120,60,500,60,110,60,400,60,90,60,300,60,70,60,200,300])}catch(_){}
+ setTimeout(()=>{sfx.sync();playVoz('leo_final')},Math.round(tt*1000)-200)}
+function updFinale(t,dt){if(!FIN)return;const e=(performance.now()-FIN.t0)/1000;
+ /* cámara: espiral que sube desde la escultura */
+ const a=e*.32,r=14+Math.min(1,e/9)*78,h=5+Math.min(1,e/8)*52;camera.position.lerp(new V3(Math.sin(a)*r,h,Math.cos(a)*r),1-Math.exp(-dt*2.2));look.lerp(new V3(0,Math.max(4,12-e),0),1-Math.exp(-dt*2));
+ /* floración en onda desde la base */
+ const R=e<3.2?0:(e-3.2)*36;flowers.forEach(f=>{if(Math.hypot(f.x,f.z)<R)f.target=1});
+ /* latido de luz en la escultura */
+ const beat=Math.pow(Math.max(0,Math.sin(e*Math.PI*(1+e*.5))),8);finLight.intensity=e<3.4?beat*1.2:Math.max(0,1.4-(e-3.4)*.12);plinthRim.scale.setScalar(1+beat*.25);
+ if(e>3.2){skyRing.material.opacity=Math.max(0,.9-(e-3.2)*.12);skyRing.scale.setScalar(1+(e-3.2)*3.2)}
+ /* fuegos de pétalos */
+ if(e>3.4&&e<11&&e-FIN.lastBurst>.38){FIN.lastBurst=e;const ang=Math.random()*6.28,rr2=20+Math.random()*90;burst(Math.sin(ang)*rr2,22+Math.random()*25,Math.cos(ang)*rr2,70)}
+ if(e>3.3&&!FIN.big){FIN.big=true;for(let k=0;k<4;k++)burst(0,18+k*4,0,90);CASES.forEach(c=>{wave(c.x,c.z,40,0xc6d600,.2);burst(c.x,14,c.z,60)});BILLS.forEach(b=>b.lamp.material.color.setHex(0xc6d600))}
+ if(e>5.5)$('#finale').classList.add('show');
+ for(let i=0;i<FWN;i++){if(fwLife[i]<=0)continue;fwLife[i]-=dt;fwVel[i].y-=dt*6;fwVel[i].multiplyScalar(Math.exp(-dt*.9));fwPos[i*3]+=fwVel[i].x*dt;fwPos[i*3+1]+=fwVel[i].y*dt;fwPos[i*3+2]+=fwVel[i].z*dt;if(fwLife[i]<=0)fwPos[i*3+1]=-50}
+ fwGeo.attributes.position.needsUpdate=true;fwGeo.attributes.color.needsUpdate=true}
+
 /* ---------------- Bucle ---------------- */
 const lerpA=(a,b,t)=>{const d=((b-a+Math.PI)%(Math.PI*2)+Math.PI*2)%(Math.PI*2)-Math.PI;return a+d*t};
 let SPEED=14,iDrive=false,camD=11;let last=performance.now()/1000;let arriveSent=0,wasDriver=false;
@@ -1190,6 +1260,7 @@ function tick(ms){const t=ms/1000;const dt=Math.min(.05,Math.max(0,t-last));last
   else S.vel.multiplyScalar(Math.exp(-dt*4));
   S.pos.x+=S.vel.x*dt;S.pos.z+=S.vel.z*dt;{const R=Math.hypot(S.pos.x,S.pos.z);if(R>140){S.pos.x*=140/R;S.pos.z*=140/R}if(R<6.2){S.pos.x*=6.2/R;S.pos.z*=6.2/R}}
   collide();sendCar();
+  for(const o of SOBRES){if(G.sobres.includes(o.i)||o.sent&&performance.now()-o.sent<2000)continue;if(Math.hypot(S.pos.x-o.x,S.pos.z-o.z)<2.6){o.sent=performance.now();send('sobre',{i:o.i})}}
   if(G.kit<=0&&performance.now()-arriveSent>2500&&Math.hypot(S.pos.x-PHARM.x,S.pos.z-PHARM.z)<PHARM.r){arriveSent=performance.now();send('pharm')}
   {const z=inZone();const el=$('#zoneTxt');el.hidden=!z;if(z)el.textContent=z}
   if(performance.now()-arriveSent>1500)for(const c of CASES){if(c.done)continue;if(Math.hypot(S.pos.x-c.x,S.pos.z-c.z)<3.6){arriveSent=performance.now();send('arrive',{c:c.id});break}}}
@@ -1198,13 +1269,14 @@ function tick(ms){const t=ms/1000;const dt=Math.min(.05,Math.max(0,t-last));last
  else S.vel.multiplyScalar(Math.exp(-dt*5));
  if(!amDriver)$('#zoneTxt').hidden=true;
  $('#hud').classList.toggle('pilot',amDriver);
- updGates(t);updBills(t);disHeal+=(((G&&G.cases.T.done)?1:0)-disHeal)*Math.min(1,dt*.8);if(Math.floor(t*30)%2===0)drawVilli(t);
+ updGates(t);updBills(t);updSobres(t);disHeal+=(((G&&G.cases.T.done)?1:0)-disHeal)*Math.min(1,dt*.8);if(Math.floor(t*30)%2===0)drawVilli(t);
  if(G&&ph==='pharmacy')pharm.userData.glass.material.opacity=.05;else if(G&&G.kit<2)pharm.userData.glass.material.opacity=.25;pharm.userData.pad.material.opacity=.4+.35*Math.sin(t*3);
  const bob=Math.sin(t*2.4)*.12;unit.position.set(S.pos.x,1.2+bob,S.pos.z);unit.rotation.y=S.heading;uBody.rotation.z=-(amDriver?joy.x:0)*.2;
  crossMat.color.setHex((Math.floor(t*2.5)%2&&ph==='drive')?0xffffff:0xc6d600);uShadow.position.set(S.pos.x,.06,S.pos.z);
  hist.unshift(unit.position.clone());if(hist.length>TRAIL*2)hist.pop();const spd=Math.min(1.3,Math.hypot(S.vel.x,S.vel.z)/SPEED);trail.forEach((s,i)=>{const h=hist[i*2];if(!h){s.material.opacity=0;return}s.position.copy(h);const k=1-i/TRAIL;s.scale.setScalar(1.4*k+.2);s.material.opacity=.45*k*spd});
  /* cámara */
  if(!G||['lobby','name','wave'].includes(ph)&&!G.g0){const a=t*.05;camera.position.set(Math.sin(a)*30,10,Math.cos(a)*30);look.set(0,7.5,0)}
+ else if(ph==='finale'&&FIN){updFinale(t,dt)}
  else if(['explain','sync','finale','done'].includes(ph)){camera.position.lerp(new V3(0,9,30),1-Math.exp(-dt*1.4));look.lerp(new V3(0,8,0),1-Math.exp(-dt*2))}
  else{const fx=Math.sin(S.camYaw),fz=Math.cos(S.camYaw);let cd=11;for(const o of OBST){if(!o.h)continue;const ox=o.x-S.pos.x,oz=o.z-S.pos.z;const along=-(ox*fx+oz*fz);if(along<1||along>cd+o.r)continue;const perp=Math.abs(ox*fz-oz*fx);if(perp<o.r+1.6)cd=Math.max(7,Math.min(cd,along-o.r-1))}camD+=(cd-camD)*Math.min(1,dt*6);const ch=6.6+(11-camD)*.9;camera.position.lerp(new V3(S.pos.x-fx*camD,ch,S.pos.z-fz*camD),1-Math.exp(-dt*6));look.lerp(new V3(S.pos.x+fx*5,1.8,S.pos.z+fz*5),1-Math.exp(-dt*5))}
  if(QS.get('top')==='1'){camera.position.set(0,250,.01);look.set(0,0,0);camera.far=900;camera.updateProjectionMatrix()}
@@ -1227,7 +1299,7 @@ function tick(ms){const t=ms/1000;const dt=Math.min(.05,Math.max(0,t-last));last
 const LOWFPS=QS.get('lowfps')==='1';let lastR=0;
 requestAnimationFrame(tick);
 setupJoin();
-if(QS.get('debug')==='1')window.__cp={S,get G(){return G},PID,CASES,send};
+if(QS.get('debug')==='1')window.__cp={S,get G(){return G},PID,CASES,send,commit:()=>commit(true)};
 if(MESA&&MYNAME&&QS.get('auto')==='1')doJoin(MESA);
 
 /* ===== Leo: orbe animado (mismo de invitaciones y boletos) ===== */
