@@ -685,7 +685,7 @@ function updGates(t){GATES.forEach(g=>{const o=gateOpen(g);g.open=o;const cyc=((
 /* casas y escenarios por paciente */
 function house(x,z,rot,w,d,h,col,roof){const g=new THREE.Group();g.position.set(x,0,z);g.rotation.y=rot;const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),new THREE.MeshLambertMaterial({color:col}));b.position.y=h/2;g.add(b);
  const r=new THREE.Mesh(new THREE.ConeGeometry(Math.max(w,d)*.78,h*.7,4),new THREE.MeshLambertMaterial({color:roof}));r.position.y=h+h*.35;r.rotation.y=Math.PI/4;g.add(r);
- const door=new THREE.Mesh(new THREE.PlaneGeometry(w*.22,h*.5),new THREE.MeshBasicMaterial({color:0x1479c7}));door.position.set(0,h*.25,d/2+.01);g.add(door);scene.add(g);OBST.push({x,z,r:Math.max(w,d)*.62,h:0});return g}
+ const door=new THREE.Mesh(new THREE.PlaneGeometry(w*.22,h*.5),new THREE.MeshBasicMaterial({color:0x1479c7}));door.position.set(0,h*.25,d/2+.01);g.add(door);scene.add(g);OBST.push({x,z,r:Math.max(w,d)*.45,h:0});return g}
 {const V=CASES.find(c=>c.id==='V'),S_=CASES.find(c=>c.id==='S'),T=CASES.find(c=>c.id==='T');
  const back=(c,dist)=>{const q=polar(c.gapAng+180,dist);return{x:c.x+q.x,z:c.z+q.z,rot:Math.atan2(-q.x,-q.z)}};
  let p=back(V,6.5);house(p.x,p.z,p.rot,5,4,3.4,0xf6efe6,0xff6a5b);
@@ -1138,9 +1138,13 @@ function gotFx(m){if(m.to&&m.to!==PID)return;if(m.toast)toast(m.top||'',m.toast,
 /* ---- auto del volante ---- */
 let carTx=0;const carT=new V3();let carH=0,carYaw=0,carV=new V3(),carSeen=0;
 let carAt=0;
-function gotCar(m){if(m.t&&m.t<carAt)return;carT.set(+m.x||0,0,+m.z||0);carH=+m.h||0;carYaw=+m.y||0;carV.set(+m.vx||0,0,+m.vz||0);carAt=+m.t||now();carSeen=performance.now()}
-function sendCar(){if(!G||!iDrive||G.phase!=='drive')return;const t=performance.now();if(t-carTx<110)return;carTx=t;
- pub('car',{pid:PID,x:+S.pos.x.toFixed(2),z:+S.pos.z.toFixed(2),h:+S.heading.toFixed(3),y:+S.camYaw.toFixed(3),vx:+S.vel.x.toFixed(2),vz:+S.vel.z.toFixed(2),t:Math.round(now())},true,0)}
+let carLag=null;
+function gotCar(m){if(m.t&&m.t<carAt)return;if(m.t){const l=Math.max(0,(now()-m.t)/1000);carLag=carLag==null?l:carLag*.7+l*.3;const el=$('#latTxt');if(el&&LAT!=null)el.textContent=`Conexión ${LAT.toFixed(1)} s · volante ${carLag.toFixed(1)} s`}carT.set(+m.x||0,0,+m.z||0);carH=+m.h||0;carYaw=+m.y||0;carV.set(+m.vx||0,0,+m.vz||0);carAt=+m.t||now();carSeen=performance.now()}
+let carStillSent=false;
+function netBacklog(){try{const st=client&&client.stream;if(!st)return 0;return (st.writableLength||0)+((st.socket&&st.socket.bufferedAmount)||0)}catch(_){return 0}}
+function sendCar(){if(!G||!iDrive||G.phase!=='drive')return;const t=performance.now();const moving=Math.hypot(S.vel.x,S.vel.z)>.3;
+ if(!moving&&carStillSent&&t-carTx<1500)return;if(t-carTx<(moving?200:600))return;if(netBacklog()>1500)return;carTx=t;carStillSent=!moving;
+ pub('car',{pid:PID,x:+S.pos.x.toFixed(2),z:+S.pos.z.toFixed(2),h:+S.heading.toFixed(3),y:+S.camYaw.toFixed(3),vx:+S.vel.x.toFixed(2),vz:+S.vel.z.toFixed(2),t:Math.round(now())},!moving,0)}
 
 /* ---------------- Aditamentos de manejo ---------------- */
 S.siren=false;let sirenIv=null;
@@ -1253,7 +1257,7 @@ function tick(ms){const t=ms/1000;const dt=Math.min(.05,Math.max(0,t-last));last
  /* manejo: solo el celular del volante simula; los demás siguen al auto */
  if(localTake&&performance.now()-localTake.t>4000){localTake=null;renderWheel()}
  const amDriver=!!(G&&ph==='drive'&&(localTake?localTake.on:G.driver===PID));iDrive=amDriver;
- if(amDriver&&!wasDriver){S.vel.set(0,0,0)}wasDriver=amDriver;
+ if(amDriver&&!wasDriver){S.vel.set(0,0,0);if(carSeen&&performance.now()-carSeen<20000){const age=Math.max(0,Math.min(1,(now()-carAt)/1000));S.pos.set(carT.x+carV.x*age,0,carT.z+carV.z*age);S.heading=carH;S.camYaw=carYaw}}wasDriver=amDriver;
  if(amDriver){let ix=joy.x+((keys.d||keys.arrowright)?1:0)-((keys.a||keys.arrowleft)?1:0),iy=joy.y+((keys.w||keys.arrowup)?1:0)-((keys.s||keys.arrowdown)?1:0);
   const l=Math.hypot(ix,iy);if(l>1){ix/=l;iy/=l}const mag=Math.min(1,l);const fx=Math.sin(S.camYaw),fz=Math.cos(S.camYaw),rx=-Math.cos(S.camYaw),rz=Math.sin(S.camYaw);const mx=fx*iy+rx*ix,mz=fz*iy+rz*ix;
   if(mag>.06){S.heading=lerpA(S.heading,Math.atan2(mx,mz),1-Math.exp(-dt*9));const SP=SPEED*speedK();S.vel.x+=(mx*SP-S.vel.x)*Math.min(1,dt*5);S.vel.z+=(mz*SP-S.vel.z)*Math.min(1,dt*5);S.camYaw=lerpA(S.camYaw,S.heading,1-Math.exp(-dt*1.7*mag*(iy<-.2?.3:1)))}
