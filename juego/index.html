@@ -87,6 +87,17 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px soli
 .kit{display:block;font-size:11px;font-weight:800;color:var(--sky);white-space:nowrap}
 .kit.empty{color:var(--coral)}
 #hud.pilot .holo,#hud.pilot .compass,#hud.pilot #edges{visibility:hidden}
+#hud.pilot .monitors,#hud.pilot .pages,#hud.pilot.driving .feed.drv,#hud.pilot .leo,#hud.pilot #btnMute{display:none!important}
+#hud.pilot .clock{padding:5px 10px;gap:8px;flex:0 1 auto}
+#hud.pilot .clock svg{width:20px;height:20px}
+#hud.pilot .clock b{font-size:16px}
+#hud.pilot .clock .unit,#hud.pilot .clock .pen{display:none}
+#hud.pilot .board-row{justify-content:center}
+#hud.pilot #radio{top:auto!important;bottom:calc(env(safe-area-inset-bottom,0px) + 76px);width:min(86%,380px);padding:7px 11px;font-size:12.5px;background:rgba(255,255,255,.9)}
+#hud.pilot #radio .rorb{width:28px;height:28px}
+#hud.pilot #hint{bottom:calc(env(safe-area-inset-bottom,0px) + 140px)}
+#hud.pilot .zone{top:auto;bottom:calc(env(safe-area-inset-bottom,0px) + 180px)}
+.lat{display:block;font-size:10px;font-weight:800;color:var(--soft);font-variant-numeric:tabular-nums}
 #hud.pilot .holo span{visibility:hidden}
 .zone{position:absolute;left:50%;transform:translateX(-50%);top:46%;font-size:13px;font-weight:800;padding:7px 12px;border-radius:999px;background:rgba(216,67,79,.85);pointer-events:none;white-space:nowrap}
 
@@ -288,7 +299,7 @@ textarea{resize:none;min-height:84px;line-height:1.45}
     <div class="board-row">
       <div class="clock">
         <svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="18" r="11" fill="none" stroke="#c6d600" stroke-width="2.6"/><path d="M16 18V11.5M13 3.5h6M16 3.5v3.5" stroke="#c6d600" stroke-width="2.6" stroke-linecap="round" fill="none"/><path d="M1 14h5M2 19h4" stroke="#c6d600" stroke-width="2.2" stroke-linecap="round"/></svg>
-        <div><span class="k">Guardia</span><b id="clk">0:00</b><span class="pen" id="pen"></span></div>
+        <div><span class="k">Guardia</span><b id="clk">0:00</b><span class="pen" id="pen"></span><span class="lat" id="latTxt"></span></div>
         <div class="unit"><span class="k">Unidad</span><b id="unitTxt">—</b><span class="kit empty" id="kitTxt">Botiquín vacío</span></div>
       </div>
       <div class="leo" id="leoBoard" aria-label="Leo, despacho"><canvas id="leoCv"></canvas><span id="leoLbl">Leo</span></div>
@@ -337,6 +348,7 @@ textarea{resize:none;min-height:84px;line-height:1.45}
     <h3>En la mesa</h3>
     <div class="roster" id="roster"></div>
     <p class="small" id="lobbyInfo"></p>
+    <p class="small" id="lobbyLat"></p>
     <button class="btn" id="btnStart" hidden>Arrancar Código PULSO</button>
     <p class="small" id="waitHost" hidden>Esperando a que arranque quien lleva la mesa.</p>
   </div>
@@ -360,7 +372,7 @@ textarea{resize:none;min-height:84px;line-height:1.45}
     <div class="leo-cap" id="leoWaveCap">Leo · Despacho</div>
     <span class="eyebrow">Radio · Código PULSO</span>
     <h2>Tres pacientes en espera</h2>
-    <p>Decidan en la mesa a quién van primero. Quien tome el volante maneja pero no ve el mapa: los demás lo guían desde su celular. Antes de la primera consulta pasen a la farmacia por Lacteol® fort.</p>
+    <p>Decidan en la mesa a quién van primero. Quien tome el volante maneja pero no ve el mapa: los demás lo guían desde su celular. El botiquín sale con Lacteol® fort para dos pacientes; cuando se acabe, Leo les marca la farmacia.</p>
     <div class="pcards" id="waveCards"></div>
     <button class="btn" id="btnWave">Salir a la guardia</button>
   </div>
@@ -371,7 +383,7 @@ textarea{resize:none;min-height:84px;line-height:1.45}
     <span class="eyebrow">Farmacia · caja de emergencia</span>
     <h2>Cuando la diarrea ataca…</h2>
     <div class="ebox"><div class="eglass" id="eGlass"><img src="img/caja_sobres.webp" alt="Lacteol fort polvo para suspensión, caja con 6 sobres"></div></div>
-    <p>Rompan el cristal para cargar el botiquín. Lleva Lacteol® fort para dos pacientes: después tendrán que volver por más.</p>
+    <p>Se les acabó el Lacteol® fort del botiquín. Rompan el cristal para recargarlo y sigan con el siguiente paciente.</p>
     <button class="btn" id="btnBreak">Romper el cristal</button>
   </div>
 </div>
@@ -705,6 +717,39 @@ function speedK(){let k=1;for(const s of SLOW){if(Math.hypot(S.pos.x-s.x,S.pos.z
  if(disHeal<1&&Math.hypot(S.pos.x-DIS.x,S.pos.z-DIS.z)<DIS.r)k=Math.min(k,S.siren?.55:.35);return k}
 function inZone(){if(disHeal<1&&Math.hypot(S.pos.x-DIS.x,S.pos.z-DIS.z)<DIS.r)return 'Zona de disbiosis · avanzan despacio';for(const s of SLOW)if(Math.hypot(S.pos.x-s.x,S.pos.z-s.z)<s.r)return 'Pasto alto · la unidad frena';return ''}
 
+
+/* espectaculares de Lacteol fort entre los setos */
+const BILLS=[{a:60,r:46,k:'rap',c:'S'},{a:168,r:42,k:'seg',c:'V'},{a:252,r:80,k:'abx',c:'T'},{a:336,r:102,k:'post'},{a:100,r:120,k:'head'},{a:212,r:128,k:'seg',c:'V'}];
+const BILLTXT={rap:{e:'Rapidez de acción',t:'La diarrea se detiene a las 8.2 h',s:'Con Lacteol® fort + SRO, frente a 30.4 h con placebo + SRO',ref:'Salazar E et al. J Pediatr Gastroenterol Nutr 2007;44:571-576.'},
+ seg:{e:'Seguridad',t:'Seguro y confiable desde el nacimiento',s:'Para cualquier paciente, también los más pequeños',ref:'Vázquez R et al. Front Nutr 2025;12:1716791 (LASPGHAN).'},
+ abx:{e:'Compatible con antibióticos',t:'Protección desde la primera dosis',s:'Se administra junto con el antibiótico',ref:'Yap J et al. Singapore Fam Physician 2010;36(4):46-49.'},
+ post:{e:'Postbiótico',t:'#1 postbiótico recomendado por pediatras en Francia*',s:'Natural y amigable con la microbiota intestinal',ref:'*IQVIA, enero a febrero de 2025, 150 pediatras en Francia.'},
+ head:{e:'Lacteol® fort',t:'Activa naturalmente la microbiota de su paciente',s:'Una solución única para la salud intestinal',ref:'Campaña global Lacteol® fort.'}};
+const boxImg=new Image();boxImg.src='img/caja_sobres.webp';
+function wrapText(g,txt,x,y,maxW,lh,maxL){const w=txt.split(' ');let line='',n=0;for(let i=0;i<w.length;i++){const tl=line?line+' '+w[i]:w[i];if(g.measureText(tl).width>maxW&&line){g.fillText(line,x,y+n*lh);n++;line=w[i];if(n>=maxL-1){line=w.slice(i).join(' ');break}}else line=tl}g.fillText(line,x,y+n*lh);return n+1}
+function billTex(k,hot){const T=BILLTXT[k];const c=document.createElement('canvas');c.width=1024;c.height=512;const g=c.getContext('2d');
+ const gr=g.createLinearGradient(0,0,1024,512);gr.addColorStop(0,hot?'#c8323f':'#24337a');gr.addColorStop(1,hot?'#ff6a5b':'#2c63b3');g.fillStyle=gr;g.fillRect(0,0,1024,512);
+ g.fillStyle='rgba(255,255,255,.1)';g.beginPath();g.ellipse(860,120,260,200,-.4,0,Math.PI*2);g.fill();
+ g.fillStyle='#c6d600';g.fillRect(0,0,1024,14);g.textBaseline='top';
+ g.font='800 34px Manrope, system-ui, sans-serif';g.fillStyle='#c6d600';g.fillText(T.e.toUpperCase(),48,52);
+ g.font='800 64px Manrope, system-ui, sans-serif';g.fillStyle='#ffffff';const n=wrapText(g,T.t,48,104,610,72,3);
+ g.font='700 30px Manrope, system-ui, sans-serif';g.fillStyle='rgba(255,255,255,.88)';wrapText(g,T.s,48,118+n*72,600,38,2);
+ g.font='700 19px Manrope, system-ui, sans-serif';g.fillStyle='rgba(255,255,255,.7)';g.fillText(T.ref,48,462);
+ if(boxImg.complete&&boxImg.naturalWidth){const h=340,w=h*boxImg.naturalWidth/boxImg.naturalHeight;g.save();g.shadowColor='rgba(0,0,0,.35)';g.shadowBlur=24;g.drawImage(boxImg,1000-w,70,w,h);g.restore()}
+ g.font='800 40px Manrope, system-ui, sans-serif';g.fillStyle='#ffffff';g.textAlign='right';g.fillText('Lacteol® fort',976,440);
+ return new THREE.CanvasTexture(c)}
+BILLS.forEach(b=>{const p=polar(b.a,b.r);b.x=p.x;b.z=p.z;const grp=new THREE.Group();grp.position.set(p.x,0,p.z);grp.rotation.y=Math.atan2(-p.x,-p.z);scene.add(grp);b.grp=grp;
+ const pm=new THREE.MeshLambertMaterial({color:0xdfe6ff});[-3.2,3.2].forEach(d=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(.28,.36,6.4,10),pm);m.position.set(d,3.2,0);grp.add(m)});
+ const frame=new THREE.Mesh(new THREE.BoxGeometry(11.6,6,.5),new THREE.MeshLambertMaterial({color:0x15225c}));frame.position.y=8.8;grp.add(frame);
+ b.mat=new THREE.MeshBasicMaterial({map:billTex(b.k,false)});const f1=new THREE.Mesh(new THREE.PlaneGeometry(11,5.5),b.mat);f1.position.set(0,8.8,.27);grp.add(f1);
+ const f2=new THREE.Mesh(new THREE.PlaneGeometry(11,5.5),b.mat);f2.position.set(0,8.8,-.27);f2.rotation.y=Math.PI;grp.add(f2);
+ const lamp=new THREE.Mesh(new THREE.BoxGeometry(11.6,.25,.9),new THREE.MeshBasicMaterial({color:0xc6d600}));lamp.position.set(0,11.9,0);grp.add(lamp);b.lamp=lamp;b.hot=false;
+ OBST.push({x:p.x,z:p.z,r:1.6,h:0})});
+function repaintBills(){BILLS.forEach(b=>{b.mat.map.dispose();b.mat.map=billTex(b.k,b.hot);b.mat.needsUpdate=true})}
+boxImg.onload=repaintBills;if(document.fonts&&document.fonts.ready)document.fonts.ready.then(repaintBills).catch(()=>{});
+function updBills(t){BILLS.forEach(b=>{const c=b.c&&CASES.find(x=>x.id===b.c);const hot=!!(c&&c.worse&&!c.done);if(hot!==b.hot){b.hot=hot;b.mat.map.dispose();b.mat.map=billTex(b.k,hot);b.mat.needsUpdate=true}
+ b.lamp.material.color.setHex(hot?(Math.floor(t*3)%2?0xff6a5b:0xffffff):0xc6d600)})}
+
 /* ondas */
 const waves=[];
 function wave(x,z,max,col,delay){const m=new THREE.Mesh(new THREE.RingGeometry(.9,1,96),new THREE.MeshBasicMaterial({color:col||0xc6d600,transparent:true,opacity:0,depthWrite:false}));m.rotation.x=-Math.PI/2;m.position.set(x,.08,z);m.scale.setScalar(.1);scene.add(m);waves.push({m,t:-(delay||0),max:max||26,dur:3})}
@@ -736,6 +781,7 @@ const FEED=[];
 function logFeed(txt,lv){FEED.unshift({t:G?gtime():0,txt,lv:lv||''});FEED.length=Math.min(FEED.length,3);$('#feed').innerHTML=FEED.map(f=>`<div class="${f.lv}"><time>${fmt(f.t)}</time><span>${esc(f.txt)}</span></div>`).join('')}
 let radioT;function radio(from,txt,lv){const r=$('#radio');const who=from==='Despacho'?'Leo · Despacho':'Leo · '+(from==='Monitor'?'Alarma':'enlace con '+from);$('#radTxt').innerHTML=`<small>${esc(who)}</small>${esc(txt)}`;leoSay(txt);
  const bb=document.querySelector('.board').getBoundingClientRect().bottom;r.style.top=(bb>80?bb+8:200)+'px';
+ if($('#hud').classList.contains('pilot'))r.style.top='';
  r.classList.add('show');sfx.radio();clearTimeout(radioT);radioT=setTimeout(()=>r.classList.remove('show'),Math.max(5200,txt.length*60));logFeed(from+': '+txt,lv)}
 function leafSVG(c){const id='lg'+c.id+Math.floor(Math.random()*1e5);
  if(PORTRAIT[c.id])return `<svg class="leaf" viewBox="0 0 100 116" aria-hidden="true"><defs><clipPath id="${id}c"><path d="M55 2 C92 20 104 74 70 108 C40 120 6 100 4 66 C2 36 22 10 55 2Z"/></clipPath></defs><path d="M55 2 C92 20 104 74 70 108 C40 120 6 100 4 66 C2 36 22 10 55 2Z" fill="#1479c7"/><image href="${PORTRAIT[c.id]}" x="-4" y="0" width="112" height="116" preserveAspectRatio="xMidYMid slice" clip-path="url(#${id}c)"/><path d="M55 2 C92 20 104 74 70 108 C40 120 6 100 4 66 C2 36 22 10 55 2Z" fill="none" stroke="#c6d600" stroke-width="3"/></svg>`;
@@ -807,10 +853,11 @@ $('#btnBreak').addEventListener('click',()=>{ac();$('#eGlass').classList.add('br
 
 /* ---- volante ---- */
 const wheelBtn=$('#btnWheel');
-function renderWheel(){if(!G)return;const me=G.driver===PID;wheelBtn.classList.toggle('mine',me);
+function renderWheel(){if(!G)return;if(localTake&&((localTake.on&&G.driver===PID)||(!localTake.on&&G.driver!==PID)||G.phase!=='drive'))localTake=null;if(localTake)return;const me=G.driver===PID;wheelBtn.classList.toggle('mine',me);
  wheelBtn.textContent=me?'Soltar el volante':'Tomar el volante';$('#driverTxt').textContent=G.driver?(me?'Al volante: tú':'Al volante: '+nm(G.driver)):'Volante libre';
  $('#hint').textContent=me?'Arrastra el dedo para manejar. Tu copiloto tiene el mapa.':G.driver?`Maneja ${nm(G.driver)}. Denle direcciones.`:'Alguien tome el volante';$('#btnSiren').disabled=!me}
-wheelBtn.addEventListener('click',()=>{if(!G||G.phase!=='drive')return;ac();send('wheel',{on:G.driver!==PID})});
+let localTake=null;
+wheelBtn.addEventListener('click',()=>{if(!G||G.phase!=='drive')return;ac();const on=!(G.driver===PID||(localTake&&localTake.on));localTake={on,t:performance.now()};send('wheel',{on});wheelBtn.textContent=on?'Soltar el volante':'Tomar el volante';wheelBtn.classList.toggle('mine',on);$('#hint').style.opacity=1;$('#hint').textContent=on?'Arrastra el dedo para manejar. Tu copiloto tiene el mapa.':'Soltaste el volante'});
 const keys={};addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true});addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false});
 const joy={x:0,y:0,id:null,ox:0,oy:0},joyEl=$('#joy'),knob=$('#joyKnob');
 stage.addEventListener('pointerdown',e=>{if(!G||G.phase!=='drive')return;if(G.driver!==PID){toast('',G.driver?`Maneja ${nm(G.driver)}`:'Primero toma el volante',1400);return}joy.id=e.pointerId;joy.ox=e.clientX;joy.oy=e.clientY;joyEl.style.left=e.clientX+'px';joyEl.style.top=e.clientY+'px';joyEl.hidden=false;knob.style.transform='';try{stage.setPointerCapture(e.pointerId)}catch(_){}$('#hint').style.opacity=0});
@@ -933,6 +980,9 @@ let hostMissingSince=0,offset=0;
 const now=()=>Date.now()+offset;
 const SECIDS=SECTIONS.map(s=>s.id);
 
+let LAT=null;
+function showLat(){if(LAT==null)return;const t=`Conexión: ${LAT.toFixed(1)} s`;const q=LAT<.5?'buena':LAT<1.2?'regular':'lenta';$('#latTxt').textContent=t;if(netUp)netStatus('En línea · '+LAT.toFixed(1)+' s',LAT<1.2);const li=$('#lobbyLat');if(li)li.textContent=`${t} (${q}). Es el tiempo de ida y vuelta al servidor.`}
+setInterval(()=>{if(netUp)pub('ping/'+PID,{t:performance.now()},false,0)},3000);
 function netStatus(txt,ok){const el=$('#netPill');if(el){el.textContent=txt;el.classList.toggle('ok',!!ok)}}
 function connect(){
  NS='polarmm/codigopulso/v1/'+MESA;
@@ -941,7 +991,7 @@ function connect(){
   will:{topic:NS+'/hello/'+PID,payload:'',retain:true,qos:1}})}catch(e){netStatus('Sin conexión');return}
  let everUp=false;
  client.on('connect',()=>{everUp=true;netUp=true;netStatus('En línea',true);
-  client.subscribe([NS+'/state',NS+'/hello/+',NS+'/act',NS+'/car',NS+'/fx'],{qos:1});
+  client.subscribe([NS+'/state',NS+'/hello/+',NS+'/act',NS+'/fx'],{qos:1});client.subscribe([NS+'/car',NS+'/ping/'+PID],{qos:0});
   sayHello();
   if(!hostDecided)setTimeout(decideHost,2200)});
  client.on('close',()=>{if(netUp){netUp=false;netStatus('Reconectando…');toast('Red','Se perdió la conexión, reintentando…',2200)}});
@@ -953,8 +1003,9 @@ function connect(){
   if(sub==='state'){if(m)gotState(m)}
   else if(sub.startsWith('hello/')){const pid=sub.slice(6);if(m&&m.name){present[pid]={name:String(m.name).slice(0,40),t:Date.now()};if(iAmHost)hostRoster()}else{if(pid===PID){sayHello();return}delete present[pid];if(iAmHost)setTimeout(hostRoster,8000)}renderLobby()}
   else if(sub==='act'){if(iAmHost&&m&&m.pid&&m.pid!==PID)handleAct(m)}
-  else if(sub==='car'){if(m&&G&&m.pid===G.driver&&m.pid!==PID)gotCar(m)}
-  else if(sub==='fx'){if(m)gotFx(m)}})}
+  else if(sub==='car'){if(m&&G&&m.pid!==PID&&(m.pid===G.driver||(m.t&&m.t>carAt+300)))gotCar(m)}
+  else if(sub==='fx'){if(m)gotFx(m)}
+  else if(sub==='ping/'+PID){if(m&&m.t){const r=(performance.now()-m.t)/1000;LAT=LAT==null?r:LAT*.6+r*.4;showLat()}}})}
 function pub(sub,obj,retain,qos){if(client&&netUp)client.publish(NS+'/'+sub,obj==null?'':JSON.stringify(obj),{retain:!!retain,qos:qos==null?1:qos})}
 function sayHello(){pub('hello/'+PID,{name:MYNAME||'Médico',t:Date.now()},true)}
 setInterval(()=>{if(netUp)sayHello()},20000);
@@ -1004,11 +1055,11 @@ function handleAct(a){if(!G)return;const p=a.pid;const ph=G.phase;
    if(n.length<2||BAD.some(b=>n.toLowerCase().includes(b))){fx({to:p,toast:'Ese nombre no pasa el filtro. Prueben otro.'});break}
    G.props[p]=n;Object.keys(G.votes).forEach(v=>{if(G.votes[v]===p)delete G.votes[v]});G.votes[p]=p;checkVote();commit()}break;
  case 'vote':if(ph==='name'&&G.props[a.to]){G.votes[p]=a.to;checkVote();commit()}break;
- case 'go':if(ph==='wave'){G.phase='drive';G.g0=now();G.lastMom=0;evt('Despacho',`Código PULSO, unidad ${G.unit}. Tres pacientes en espera: ustedes deciden a quién van primero.`,'info');commit()}break;
+ case 'go':if(ph==='wave'){G.phase='drive';G.g0=now();G.kit=2;G.lastMom=0;evt('Despacho',`Código PULSO, unidad ${G.unit}. Tres pacientes en espera: ustedes deciden a quién van primero.`,'info');commit()}break;
  case 'wheel':if(ph==='drive'){const prev=G.driver;G.driver=a.on?p:(G.driver===p?null:G.driver);if(!a.on)G.siren=0;if(G.driver!==prev)fx({toast:G.driver?nm(G.driver)+' tomó el volante':'Volante libre',top:'Volante'});commit()}break;
  case 'siren':if(ph==='drive'&&G.driver===p){G.siren=a.on?1:0;commit()}break;
  case 'target':if(ph==='drive'&&caseById(a.c)&&!G.cases[a.c].done){G.target=a.c;commit()}break;
- case 'arrive':if(ph==='drive'&&G.driver===p&&caseById(a.c)&&!G.cases[a.c].done){if(G.kit<=0&&!G.kitUsed[a.c]){if(now()-G.noKitT>8000){G.noKitT=now();evt('Despacho',`Llegaron con ${caseById(a.c).name}, pero el botiquín no trae Lacteol fort. Pasen primero a la farmacia.`,'bad');commit()}break}startConsult(a.c);commit(true)}break;
+ case 'arrive':if(ph==='drive'&&G.driver===p&&caseById(a.c)&&!G.cases[a.c].done){if(G.kit<=0&&!G.kitUsed[a.c]){if(now()-G.noKitT>8000){G.noKitT=now();evt('Despacho',`Llegaron con ${caseById(a.c).name}, pero ya no queda Lacteol fort en el botiquín. Pasen a la farmacia: está marcada en el mapa.`,'bad');commit()}break}startConsult(a.c);commit(true)}break;
  case 'pharm':if(ph==='drive'&&G.driver===p&&G.kit<=0){G.phase='pharmacy';G.breaker=null;commit(true)}break;
  case 'break':if(ph==='pharmacy'){G.kit=2;G.breaker=p;G.phase='drive';G.driver=null;evt('Despacho',`${nm(p)} rompió el cristal. Botiquín cargado: 2 tratamientos de Lacteol fort.`,'info');fx({sfx:'bloom'});commit(true)}break;
  case 'crash':if(ph==='drive'&&G.driver===p&&now()-G.lastCrash>1200){G.lastCrash=now();G.crashes++;G.pen+=2;commit()}break;
@@ -1026,7 +1077,7 @@ function handleAct(a){if(!G)return;const p=a.pid;const ph=G.phase;
 function checkVote(){const act=active();const t=G.votes[act[0]];if(t&&G.props[t]&&act.every(p=>G.votes[p]===t)){G.unit=G.props[t];G.phase='wave';evt('Despacho',`Unidad ${G.unit} registrada. Código PULSO: tres pacientes en espera.`,'info')}}
 function chat(who,txt,tag){G.chat.push({who,txt,tag:tag||''});if(G.chat.length>40)G.chat.splice(0,G.chat.length-40)}
 function startConsult(id){const c=caseById(id);G.phase='consult';G.cur=id;G.cState=G.cases[id].worse;G.cStart=now();G.rx={};G.fix=[];G.used={};G.found={};G.chat=[];G.famLeave=0;
- G.driver=null;G.siren=0;G.target=null;if(!G.kitUsed[id]){G.kitUsed[id]=1;G.kit=Math.max(0,G.kit-1)}if(!G.order.includes(id))G.order.push(id);chat('fam',G.cState&&c.openD?c.openD:c.open);evt('Despacho',`Llegada con ${c.name}. Cada quien a su sección.`,'info')}
+ G.driver=null;G.siren=0;G.target=null;if(!G.kitUsed[id]){G.kitUsed[id]=1;G.kit=Math.max(0,G.kit-1);G.kitMsg=G.kit}if(!G.order.includes(id))G.order.push(id);chat('fam',G.cState&&c.openD?c.openD:c.open);evt('Despacho',`Llegada con ${c.name}. Cada quien a su sección.`,'info')}
 function emitRx(){const c=caseById(G.cur);const okFor=id=>{const d=c.s[id];const ok=G.cState&&d.okD!=null?d.okD:d.ok;return G.rx[id]&&G.rx[id].o===ok};
  const wrong=SECIDS.filter(s=>s!=='fam'&&!okFor(s));if(G.rxFirst[c.id]==null)G.rxFirst[c.id]=7-wrong.length;
  const crit=wrong.filter(id=>CRITICAL.includes(id));
@@ -1034,7 +1085,7 @@ function emitRx(){const c=caseById(G.cur);const okFor=id=>{const d=c.s[id];const
   chat('sys','Receta emitida. Horas después…');chat('fam',c.ret.replace(/^[^:]+:\s*/,'').replace(/^"|"$/g,''),'Regreso');
   chat('sys','Leo: la familia regresó (+1:00 de guardia). Corrijan las secciones en rojo y vuelvan a firmar.');
   evt('Despacho',`La familia de ${c.name} regresó. Corrijan las secciones en rojo.`,'bad');fx({sfx:'alert'});commit(true);return}
- G.cases[c.id].done=1;G.out={c:c.id,wrong:wrong.length,comm:G.comm[c.id]};G.phase='outcome';commit(true)}
+ G.cases[c.id].done=1;if(G.kitMsg!=null){const left=CASES.filter(k=>!G.cases[k.id].done).length;if(G.kit===1&&left)evt('Despacho','Les queda un tratamiento de Lacteol fort en el botiquín.','info');else if(G.kit===0&&left)evt('Despacho','Se acabó el Lacteol fort del botiquín. La farmacia ya está marcada en el mapa: pasen a romper el cristal de la caja de emergencia.','bad');G.kitMsg=null}G.out={c:c.id,wrong:wrong.length,comm:G.comm[c.id]};G.phase='outcome';commit(true)}
 /* reloj del anfitrión: deterioro, radio de las familias, salida de la consulta */
 setInterval(()=>{if(!iAmHost||!G||!G.g0||G.gEnd)return;const gt=gtime();let ch=false;
  CASES.forEach(c=>{const st=G.cases[c.id];if(!st.done&&!st.worse&&c.detAt!=null&&gt>c.detAt&&G.phase!=='consult'){st.worse=1;ch=true;evt('Monitor',`Alarma: el pulso de ${c.name} se aceleró`,'bad')}});
@@ -1049,9 +1100,10 @@ function gotFx(m){if(m.to&&m.to!==PID)return;if(m.toast)toast(m.top||'',m.toast,
 
 /* ---- auto del volante ---- */
 let carTx=0;const carT=new V3();let carH=0,carYaw=0,carV=new V3(),carSeen=0;
-function gotCar(m){carT.set(+m.x||0,0,+m.z||0);carH=+m.h||0;carYaw=+m.y||0;carV.set(+m.vx||0,0,+m.vz||0);carSeen=performance.now()}
-function sendCar(){if(!G||G.driver!==PID||G.phase!=='drive')return;const t=performance.now();if(t-carTx<110)return;carTx=t;
- pub('car',{pid:PID,x:+S.pos.x.toFixed(2),z:+S.pos.z.toFixed(2),h:+S.heading.toFixed(3),y:+S.camYaw.toFixed(3),vx:+S.vel.x.toFixed(2),vz:+S.vel.z.toFixed(2)},true,0)}
+let carAt=0;
+function gotCar(m){if(m.t&&m.t<carAt)return;carT.set(+m.x||0,0,+m.z||0);carH=+m.h||0;carYaw=+m.y||0;carV.set(+m.vx||0,0,+m.vz||0);carAt=+m.t||now();carSeen=performance.now()}
+function sendCar(){if(!G||!iDrive||G.phase!=='drive')return;const t=performance.now();if(t-carTx<110)return;carTx=t;
+ pub('car',{pid:PID,x:+S.pos.x.toFixed(2),z:+S.pos.z.toFixed(2),h:+S.heading.toFixed(3),y:+S.camYaw.toFixed(3),vx:+S.vel.x.toFixed(2),vz:+S.vel.z.toFixed(2),t:Math.round(now())},true,0)}
 
 /* ---------------- Aditamentos de manejo ---------------- */
 S.siren=false;let sirenIv=null;
@@ -1080,6 +1132,7 @@ function drawMini(t,tg){const g=mg,R=132;g.clearRect(0,0,280,280);g.save();g.beg
  SLOW.forEach(o=>{const p=toMap(o.x,o.z,R);if(p.d>MR+o.r)return;g.fillStyle='rgba(120,180,255,.18)';g.beginPath();g.arc(p.x,p.y,o.r*R/MR,0,Math.PI*2);g.fill()});
  if(disHeal<.98){const p=toMap(DIS.x,DIS.z,R);g.fillStyle=`rgba(255,90,100,${.35*(1-disHeal)})`;g.beginPath();g.arc(p.x,p.y,DIS.r*R/MR,0,Math.PI*2);g.fill()}
  g.fillStyle='rgba(10,24,80,.85)';OBST.forEach(o=>{const p=toMap(o.x,o.z,R);if(p.d>MR+4)return;g.beginPath();g.arc(p.x,p.y,Math.max(2,o.r*R/MR),0,Math.PI*2);g.fill()});
+ BILLS.forEach(o=>{const p=toMap(o.x,o.z,R);if(p.d>MR)return;g.fillStyle=o.hot?'#ff6a5b':'#ffd84a';g.fillRect(p.x-6,p.y-3,12,6)});
  GATES.forEach(o=>{const p=toMap(o.x,o.z,R);if(p.d>MR)return;g.fillStyle=o.open?'#c6d600':'#ff6a5b';g.fillRect(p.x-5,p.y-2,10,4)});
  {const p=toMap(PHARM.x,PHARM.z,R);let x=p.x,y=p.y;const dd=Math.hypot(x-140,y-140);if(dd>R-16){x=140+(x-140)/dd*(R-16);y=140+(y-140)/dd*(R-16)}g.fillStyle='#ffffff';g.beginPath();g.arc(x,y,9,0,Math.PI*2);g.fill();g.fillStyle='#e23b3b';g.fillRect(x-5,y-1.6,10,3.2);g.fillRect(x-1.6,y-5,3.2,10)}
  const b=toMap(0,0,R);g.fillStyle='rgba(255,255,255,.9)';for(let k=0;k<6;k++){const a=k*Math.PI/3;g.beginPath();g.ellipse(b.x+Math.cos(a)*5,b.y+Math.sin(a)*5,4,2.4,a,0,Math.PI*2);g.fill()}
@@ -1119,7 +1172,7 @@ function updEdges(){const W=innerWidth,H=innerHeight;const top=document.querySel
 
 /* ---------------- Bucle ---------------- */
 const lerpA=(a,b,t)=>{const d=((b-a+Math.PI)%(Math.PI*2)+Math.PI*2)%(Math.PI*2)-Math.PI;return a+d*t};
-let SPEED=14;let last=performance.now()/1000;let arriveSent=0,wasDriver=false;
+let SPEED=14,iDrive=false,camD=11;let last=performance.now()/1000;let arriveSent=0,wasDriver=false;
 function tick(ms){const t=ms/1000;const dt=Math.min(.05,Math.max(0,t-last));last=t;const ph=G?G.phase:'lobby';
  const pa=pGeo.attributes.position.array;for(let i=0;i<NP;i++){pa[i*3+1]+=Math.sin(t*pv[i*2]+pv[i*2+1])*dt*.35;pa[i*3]+=Math.cos(t*.3+pv[i*2+1])*dt*.2}pGeo.attributes.position.needsUpdate=true;
  CASES.forEach(c=>{const p=c.done?0:(Math.sin(t*(c.worse?6:3)+c.i)*.5+.5);c.ring.scale.setScalar(1+p*.2);c.core.scale.setScalar(3.6+p*1.6)});
@@ -1128,7 +1181,8 @@ function tick(ms){const t=ms/1000;const dt=Math.min(.05,Math.max(0,t-last));last
  for(let i=waves.length-1;i>=0;i--){const w=waves[i];w.t+=dt;if(w.t<0)continue;const k=w.t/w.dur;if(k>=1){scene.remove(w.m);w.m.geometry.dispose();w.m.material.dispose();waves.splice(i,1);continue}w.m.scale.setScalar(.5+k*w.max);w.m.material.opacity=.8*(1-k)}
  if(ph==='consult'&&G){const ct=(now()-G.cStart)/1000;const el=$('#cTimer');el.textContent='Consulta '+fmt(ct);el.classList.toggle('warn',ct>300)}
  /* manejo: solo el celular del volante simula; los demás siguen al auto */
- const amDriver=!!(G&&ph==='drive'&&G.driver===PID);
+ if(localTake&&performance.now()-localTake.t>4000){localTake=null;renderWheel()}
+ const amDriver=!!(G&&ph==='drive'&&(localTake?localTake.on:G.driver===PID));iDrive=amDriver;
  if(amDriver&&!wasDriver){S.vel.set(0,0,0)}wasDriver=amDriver;
  if(amDriver){let ix=joy.x+((keys.d||keys.arrowright)?1:0)-((keys.a||keys.arrowleft)?1:0),iy=joy.y+((keys.w||keys.arrowup)?1:0)-((keys.s||keys.arrowdown)?1:0);
   const l=Math.hypot(ix,iy);if(l>1){ix/=l;iy/=l}const mag=Math.min(1,l);const fx=Math.sin(S.camYaw),fz=Math.cos(S.camYaw),rx=-Math.cos(S.camYaw),rz=Math.sin(S.camYaw);const mx=fx*iy+rx*ix,mz=fz*iy+rz*ix;
@@ -1139,12 +1193,12 @@ function tick(ms){const t=ms/1000;const dt=Math.min(.05,Math.max(0,t-last));last
   if(G.kit<=0&&performance.now()-arriveSent>2500&&Math.hypot(S.pos.x-PHARM.x,S.pos.z-PHARM.z)<PHARM.r){arriveSent=performance.now();send('pharm')}
   {const z=inZone();const el=$('#zoneTxt');el.hidden=!z;if(z)el.textContent=z}
   if(performance.now()-arriveSent>1500)for(const c of CASES){if(c.done)continue;if(Math.hypot(S.pos.x-c.x,S.pos.z-c.z)<3.6){arriveSent=performance.now();send('arrive',{c:c.id});break}}}
- else if(carSeen){const k=1-Math.exp(-dt*8);S.pos.x+=(carT.x-S.pos.x)*k;S.pos.z+=(carT.z-S.pos.z)*k;S.heading=lerpA(S.heading,carH,k);S.camYaw=lerpA(S.camYaw,carYaw,k);
+ else if(carSeen){const k=1-Math.exp(-dt*10);const age=ph==='drive'?Math.max(0,Math.min(.6,(now()-carAt)/1000)):0;const tx=carT.x+carV.x*age,tz=carT.z+carV.z*age;S.pos.x+=(tx-S.pos.x)*k;S.pos.z+=(tz-S.pos.z)*k;S.heading=lerpA(S.heading,carH,k);S.camYaw=lerpA(S.camYaw,carYaw,k);
   if(ph==='drive'&&performance.now()-carSeen<600)S.vel.copy(carV);else S.vel.multiplyScalar(Math.exp(-dt*5))}
  else S.vel.multiplyScalar(Math.exp(-dt*5));
  if(!amDriver)$('#zoneTxt').hidden=true;
  $('#hud').classList.toggle('pilot',amDriver);
- updGates(t);disHeal+=(((G&&G.cases.T.done)?1:0)-disHeal)*Math.min(1,dt*.8);if(Math.floor(t*30)%2===0)drawVilli(t);
+ updGates(t);updBills(t);disHeal+=(((G&&G.cases.T.done)?1:0)-disHeal)*Math.min(1,dt*.8);if(Math.floor(t*30)%2===0)drawVilli(t);
  if(G&&ph==='pharmacy')pharm.userData.glass.material.opacity=.05;else if(G&&G.kit<2)pharm.userData.glass.material.opacity=.25;pharm.userData.pad.material.opacity=.4+.35*Math.sin(t*3);
  const bob=Math.sin(t*2.4)*.12;unit.position.set(S.pos.x,1.2+bob,S.pos.z);unit.rotation.y=S.heading;uBody.rotation.z=-(amDriver?joy.x:0)*.2;
  crossMat.color.setHex((Math.floor(t*2.5)%2&&ph==='drive')?0xffffff:0xc6d600);uShadow.position.set(S.pos.x,.06,S.pos.z);
@@ -1152,7 +1206,7 @@ function tick(ms){const t=ms/1000;const dt=Math.min(.05,Math.max(0,t-last));last
  /* cámara */
  if(!G||['lobby','name','wave'].includes(ph)&&!G.g0){const a=t*.05;camera.position.set(Math.sin(a)*30,10,Math.cos(a)*30);look.set(0,7.5,0)}
  else if(['explain','sync','finale','done'].includes(ph)){camera.position.lerp(new V3(0,9,30),1-Math.exp(-dt*1.4));look.lerp(new V3(0,8,0),1-Math.exp(-dt*2))}
- else{const fx=Math.sin(S.camYaw),fz=Math.cos(S.camYaw);camera.position.lerp(new V3(S.pos.x-fx*11,6.6,S.pos.z-fz*11),1-Math.exp(-dt*4));look.lerp(new V3(S.pos.x+fx*5,1.8,S.pos.z+fz*5),1-Math.exp(-dt*5))}
+ else{const fx=Math.sin(S.camYaw),fz=Math.cos(S.camYaw);let cd=11;for(const o of OBST){if(!o.h)continue;const ox=o.x-S.pos.x,oz=o.z-S.pos.z;const along=-(ox*fx+oz*fz);if(along<1||along>cd+o.r)continue;const perp=Math.abs(ox*fz-oz*fx);if(perp<o.r+1.6)cd=Math.max(7,Math.min(cd,along-o.r-1))}camD+=(cd-camD)*Math.min(1,dt*6);const ch=6.6+(11-camD)*.9;camera.position.lerp(new V3(S.pos.x-fx*camD,ch,S.pos.z-fz*camD),1-Math.exp(-dt*6));look.lerp(new V3(S.pos.x+fx*5,1.8,S.pos.z+fz*5),1-Math.exp(-dt*5))}
  if(QS.get('top')==='1'){camera.position.set(0,250,.01);look.set(0,0,0);camera.far=900;camera.updateProjectionMatrix()}
  if(camShake>0){camShake=Math.max(0,camShake-dt);camera.position.x+=Math.sin(t*60)*camShake*.5;camera.position.y+=Math.cos(t*47)*camShake*.4}
  camera.lookAt(look);
