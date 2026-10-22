@@ -234,6 +234,7 @@ textarea{resize:none;min-height:84px;line-height:1.45}
 
 /* Paciente */
 .band{display:flex;align-items:center;gap:12px;margin-inline:-20px;padding:10px 20px;background:linear-gradient(90deg,var(--band),rgba(20,121,199,0))}
+.leafp{position:relative;display:block}.leafp i{position:absolute;inset:0;background-size:cover;background-position:center;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 116'%3E%3Cpath d='M55%202%20C92%2020%20104%2074%2070%20108%20C40%20120%206%20100%204%2066%20C2%2036%2022%2010%2055%202Z'/%3E%3C/svg%3E") center/100% 100% no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 116'%3E%3Cpath d='M55%202%20C92%2020%20104%2074%2070%20108%20C40%20120%206%20100%204%2066%20C2%2036%2022%2010%2055%202Z'/%3E%3C/svg%3E") center/100% 100% no-repeat}.leafp svg{position:absolute;inset:0;width:100%;height:100%}
 .band .leaf{width:54px;height:62px;flex:none}
 .band .who{min-width:0}
 .band .who b{display:block;font-size:20px;font-weight:800;line-height:1.1}
@@ -589,8 +590,9 @@ const SKYPAL={
  coral:{g:'#d9644f',gm:0xf0e6e2,dk:'rgba(140,40,40,.32)',lt:'rgba(255,170,120,.28)',s1:'rgba(255,215,180,.32)',s2:'rgba(110,30,40,.32)',top:0x2b2d7a,mid:0x9a4a8a,hor:0xffb070,fog:0xc06a78,hill:0x8a3f6e,hemi:0xb85a58,bush:0x2a4fb0,grass:0x9a3a32,blade:0xff9b70},
  lavanda:{g:'#7b62c4',gm:0xe4e0f2,dk:'rgba(50,30,120,.33)',lt:'rgba(180,150,250,.25)',s1:'rgba(220,200,255,.3)',s2:'rgba(40,25,100,.35)',top:0x1f2c72,mid:0x5a5fc0,hor:0xd0b0f2,fog:0x6a6ac8,hill:0x5a4fae,hemi:0x6a52b0,bush:0x2f3f9e,grass:0x4a3290,blade:0xb090f0},
  turquesa:{g:'#148e9a',gm:0xe0eef0,dk:'rgba(10,70,90,.33)',lt:'rgba(90,220,220,.25)',s1:'rgba(180,250,250,.3)',s2:'rgba(5,50,70,.35)',top:0x1f2c72,mid:0x2d7cc0,hor:0x9fe6ee,fog:0x2d8ab0,hill:0x1c6f8f,hemi:0x1f8a96,bush:0x2a4fb0,grass:0x0c6670,blade:0x40c8d0}};
+SKYPAL.magrosa=Object.assign({},SKYPAL.magenta,{top:SKYPAL.rosa.top,mid:SKYPAL.rosa.mid,hor:SKYPAL.rosa.hor,fog:SKYPAL.rosa.fog,hill:SKYPAL.rosa.hill});
 SKYPAL.lavarosa=Object.assign({},SKYPAL.lavanda,{top:SKYPAL.rosa.top,mid:SKYPAL.rosa.mid,hor:SKYPAL.rosa.hor,fog:SKYPAL.rosa.fog,hill:SKYPAL.rosa.hill});
-const PAL=SKYPAL[QS0.get("pal")]||SKYPAL.lavarosa;
+const PAL=SKYPAL[QS0.get("pal")]||SKYPAL.magrosa;
 scene.fog=new THREE.Fog(PAL.fog,80,280);
 const camera=new THREE.PerspectiveCamera(60,innerWidth/innerHeight,.1,800);
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);if(COMP){COMP.setSize(innerWidth,innerHeight);BLOOM.setSize(innerWidth/2,innerHeight/2)}});
@@ -1042,11 +1044,11 @@ let radioT;function radio(from,txt,lv,snd){if(snd)playVoz(snd);{const ks=[].conc
  const bb=document.querySelector('.board').getBoundingClientRect().bottom;r.style.top=(bb>80?bb+8:200)+'px';
  if($('#hud').classList.contains('pilot'))r.style.top='';
  r.classList.add('show');sfx.radio();clearTimeout(radioT);radioT=setTimeout(()=>r.classList.remove('show'),Math.max(5200,txt.length*60));logFeed(from+': '+txt,lv)}
-function leafSVG(c){const id='lg'+c.id+Math.floor(Math.random()*1e5);
- if(PORTRAIT[c.id])return `<svg class="leaf" viewBox="0 0 100 116" aria-hidden="true"><defs><clipPath id="${id}c"><path d="M55 2 C92 20 104 74 70 108 C40 120 6 100 4 66 C2 36 22 10 55 2Z"/></clipPath></defs><path d="M55 2 C92 20 104 74 70 108 C40 120 6 100 4 66 C2 36 22 10 55 2Z" fill="#1479c7"/><image href="${PORTRAIT[c.id]}" x="-4" y="0" width="112" height="116" preserveAspectRatio="xMidYMid slice" clip-path="url(#${id}c)"/><path d="M55 2 C92 20 104 74 70 108 C40 120 6 100 4 66 C2 36 22 10 55 2Z" fill="none" stroke="#c6d600" stroke-width="3"/></svg>`;
+function leafSVG(c){const DOCU=location.href.split('#')[0];/* con <base>, los url(#id) del SVG deben ser absolutos */const id='lg'+c.id+Math.floor(Math.random()*1e5);
+ if(PORTRAIT[c.id])return `<span class="leaf leafp"><i style="background-image:url(${PORTRAIT[c.id]})"></i><svg viewBox="0 0 100 116" aria-hidden="true"><path d="M55 2 C92 20 104 74 70 108 C40 120 6 100 4 66 C2 36 22 10 55 2Z" fill="none" stroke="#c6d600" stroke-width="3"/></svg></span>`;
  return `<svg class="leaf" viewBox="0 0 100 116" aria-hidden="true"><defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4aa8ff"/><stop offset="1" stop-color="#1479c7"/></linearGradient><radialGradient id="${id}p"><stop offset="0" stop-color="#3d8bff"/><stop offset=".55" stop-color="#5aa0ff"/><stop offset="1" stop-color="#ff9b3d"/></radialGradient></defs>
- <path d="M55 2 C92 20 104 74 70 108 C40 120 6 100 4 66 C2 36 22 10 55 2Z" fill="url(#${id})"/>
- <g transform="translate(52 58)">${[0,1,2,3,4,5].map(k=>`<ellipse cx="0" cy="-17" rx="9" ry="17" fill="url(#${id}p)" transform="rotate(${k*60})"/>`).join('')}<circle r="7" fill="#ff8a2a"/></g>
+ <path d="M55 2 C92 20 104 74 70 108 C40 120 6 100 4 66 C2 36 22 10 55 2Z" fill="url(${DOCU}#${id})"/>
+ <g transform="translate(52 58)">${[0,1,2,3,4,5].map(k=>`<ellipse cx="0" cy="-17" rx="9" ry="17" fill="url(${DOCU}#${id}p)" transform="rotate(${k*60})"/>`).join('')}<circle r="7" fill="#ff8a2a"/></g>
  <text x="52" y="104" text-anchor="middle" font-family="Manrope,system-ui,sans-serif" font-weight="800" font-size="13" fill="#fff">${c.name[0]}</text></svg>`}
 const ini=n=>String(n||'?').replace(/^(Dra?\.)\s*/i,'').trim().split(/\s+/).map(w=>w[0]||'').join('').slice(0,2).toUpperCase()||'?';
 const BAD=['pend','ching','verg','puta','puto','culo','mierd','cabr','joto','naco','idiot','estup'];
