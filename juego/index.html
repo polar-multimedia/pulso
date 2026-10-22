@@ -912,6 +912,14 @@ function holoMat(col,seed,k){return new THREE.ShaderMaterial({transparent:true,d
  uniforms:{uT:HOLO_T,uC:{value:new THREE.Color(col)},uS:{value:seed},uK:{value:k||1}},
  vertexShader:'varying vec3 vN;varying vec3 vV;varying float vY;void main(){vec4 w=modelMatrix*vec4(position,1.);vY=w.y;vec4 mv=viewMatrix*w;vN=normalize(normalMatrix*normal);vV=normalize(-mv.xyz);gl_Position=projectionMatrix*mv;}',
  fragmentShader:'uniform float uT;uniform vec3 uC;uniform float uS;uniform float uK;varying vec3 vN;varying vec3 vV;varying float vY;void main(){float f=pow(1.-abs(dot(normalize(vN),normalize(vV))),1.7);float sc=.62+.38*step(.45,fract(vY*70.-uT*1.5));float band=smoothstep(.93,1.,fract(vY*1.6-uT*.45+uS));float fl=.88+.12*sin(uT*23.+uS*40.);float a=(.3+.75*f)*sc*fl*uK+band*.3;gl_FragColor=vec4(min(vec3(.92),uC*(.62+f*.55)+band*.25),min(.9,a));}'})}
+function shortName(n){n=String(n||'').trim().replace(/^(dra?\.?|doctora?|la dra\.?|el dr\.?)\s+/i,'');const w=n.split(/\s+/)[0]||'Médico';return w.length>11?w.slice(0,10)+'…':w}
+function nameTex(txt,pilot,me){const c=document.createElement('canvas');c.width=512;c.height=128;const x=c.getContext('2d');const col=pilot?'#d4ff3a':'#7ff3ff';
+ x.font='800 58px system-ui,sans-serif';x.textAlign='center';x.textBaseline='middle';const w=Math.min(470,x.measureText(txt).width+56);
+ x.fillStyle='rgba(6,20,60,.55)';x.beginPath();x.roundRect?x.roundRect(256-w/2,20,w,84,42):x.rect(256-w/2,20,w,84);x.fill();
+ x.lineWidth=me?6:3.5;x.strokeStyle=me?'#ffffff':col;x.shadowColor=col;x.shadowBlur=18;x.stroke();
+ x.fillStyle=me?'#ffffff':col;x.shadowBlur=22;x.fillText(txt,256,64);x.shadowBlur=0;x.fillText(txt,256,64);
+ const t=new THREE.CanvasTexture(c);t.anisotropy=4;return t}
+function nameOf(p){return (G&&G.names&&G.names[p])||(present[p]&&present[p].name)||(p===PID?MYNAME:'')}
 function mkHolo(pid,g,pilot,me){const h=hsh(pid),G2=new THREE.Group();const col=pilot?0xd4ff3a:0x5ef0ff;const seed=(h%1000)/1000;const mat=holoMat(col,seed,me?1.25:1);
  const add=(geo,y,sx,sy,sz,rx,z)=>{const m=new THREE.Mesh(geo,mat);m.position.set(0,y,z||0);m.scale.set(sx||1,sy||1,sz||1);if(rx)m.rotation.x=rx;m.renderOrder=2;G2.add(m);return m};
  add(new THREE.CylinderGeometry(.12,.2,.2,24,1,true),.12);add(new THREE.SphereGeometry(.22,24,12,0,Math.PI*2,0,Math.PI/2),.2,1,.45,.66);
@@ -931,6 +939,7 @@ function mkHolo(pid,g,pilot,me){const h=hsh(pid),G2=new THREE.Group();const col=
  const NPt=14,pos=new Float32Array(NPt*3),pv=[];for(let i=0;i<NPt;i++){const a=Math.random()*6.28,r=Math.random()*.18;pos[i*3]=Math.sin(a)*r;pos[i*3+1]=Math.random()*.9;pos[i*3+2]=Math.cos(a)*r;pv.push(.15+Math.random()*.25)}
  const pg=new THREE.BufferGeometry();pg.setAttribute('position',new THREE.BufferAttribute(pos,3));const pts=new THREE.Points(pg,new THREE.PointsMaterial({size:.045,map:GLOW,color:0xbef5ff,transparent:true,opacity:.9,blending:THREE.AdditiveBlending,depthWrite:false}));pts.renderOrder=2;G2.add(pts);
  if(pilot){const w=new THREE.Mesh(new THREE.TorusGeometry(.12,.016,8,24),holoMat(col,seed,1.4));w.position.set(0,.22,.24);w.rotation.x=-1.0;G2.add(w)}
+ {const lab=new THREE.Sprite(new THREE.SpriteMaterial({map:nameTex(shortName(nameOf(pid))+(pilot?' · piloto':''),pilot,me),transparent:true,depthWrite:false,depthTest:false}));lab.scale.set(.7,.175,1);lab.position.y=.86;lab.renderOrder=5;G2.add(lab);G2.userData.lab=lab}
  G2.scale.setScalar(1.12);G2.userData.holo={ring,pets,pts,pv,pr,me};return G2}
 function updHolo(t,dt){uCrew.children.forEach(d=>{const H=d.userData.holo;if(!H)return;H.ring.rotation.z=t*.8;H.pr.material.opacity=.35+.2*Math.sin(t*3+H.pv[0]*20);
  H.pets.forEach(p=>{p.a+=p.sp2*dt;p.sp.position.set(Math.cos(p.a)*p.r,p.y+Math.sin(t*1.6+p.a)*.03,Math.sin(p.a)*p.r);p.sp.material.rotation=t*.7+p.a});
@@ -960,9 +969,9 @@ const uCrew=new THREE.Group();uTilt.add(uCrew);let crewKey='';
 function crewList(){let ids;if(G)ids=G.players.filter(p=>!G.off[p]&&(present[p]||p===PID));else ids=Object.keys(present);if(!ids.includes(PID)&&MYNAME)ids=[PID,...ids];
  const drv=G&&G.driver&&ids.includes(G.driver)?G.driver:null;const rest=ids.filter(p=>p!==drv).sort();const seats=drv?[drv,...rest]:[null,...rest];return {seats:seats.slice(0,SEATS.length),drv}}
 function genOf(p){const pr=present[p];if(p===PID)return MYGEN||inferG(MYNAME)||'M';return (pr&&pr.g)||inferG(pr&&pr.name)||inferG(G&&G.names&&G.names[p])||((hsh(p)%2)?'F':'M')}
-function updCrew(){const {seats,drv}=crewList();const key=seats.map(p=>p?p+genOf(p):'-').join('|')+'#'+drv+PID;if(key===crewKey)return;crewKey=key;
- while(uCrew.children.length){const c=uCrew.children.pop();c.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material)o.material.dispose()})}
- seats.forEach((p,i)=>{if(!p)return;const d=mkHolo(p,genOf(p),p===drv,p===PID);d.position.set(SEATS[i][0],.02,SEATS[i][1]);uCrew.add(d)})}
+function updCrew(){const {seats,drv}=crewList();const key=seats.map(p=>p?p+genOf(p)+nameOf(p):'-').join('|')+'#'+drv+PID;if(key===crewKey)return;crewKey=key;
+ while(uCrew.children.length){const c=uCrew.children.pop();c.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material){if(o.material.map&&o.material.map.isCanvasTexture)o.material.map.dispose();o.material.dispose()}})}
+ seats.forEach((p,i)=>{if(!p)return;const d=mkHolo(p,genOf(p),p===drv,p===PID);d.position.set(SEATS[i][0],.02,SEATS[i][1]);if(d.userData.lab)d.userData.lab.position.y=.86+(SEATS[i][1]>.3?.16:SEATS[i][1]>-.3?.08:0);uCrew.add(d)})}
 const uShadow=new THREE.Mesh(new THREE.RingGeometry(1,1.45,48),new THREE.MeshBasicMaterial({color:0xc6d600,transparent:true,opacity:.6,depthWrite:false}));uShadow.rotation.x=-Math.PI/2;scene.add(uShadow);
 const TRAIL=22,trail=[],hist=[];for(let i=0;i<TRAIL;i++){const s=new THREE.Sprite(new THREE.SpriteMaterial({map:GLOW,color:0xffffff,transparent:true,opacity:0,depthWrite:false}));scene.add(s);trail.push(s)}
 
