@@ -177,6 +177,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px soli
 .edge b{font-variant-numeric:tabular-nums;font-size:10px;color:var(--white)}
 .siren{pointer-events:auto;flex:none;width:46px;height:46px;border-radius:50%;border:1.5px solid var(--line);background:var(--panel);cursor:pointer;display:grid;place-items:center}
 .siren svg{width:24px;height:24px}
+.camb.fixed{border-color:var(--lime);background:rgba(198,214,0,.18)}
 .siren.on{background:var(--coral);border-color:var(--coral);animation:siren .5s steps(2) infinite}
 @keyframes siren{50%{background:var(--sky);border-color:var(--sky)}}
 @media (prefers-reduced-motion:reduce){.siren.on{animation:none}}
@@ -335,6 +336,7 @@ textarea{resize:none;min-height:84px;line-height:1.45}
   <div class="driver" id="driverTxt" hidden>Volante libre</div>
   <div class="bottom">
     <div class="compass"><svg viewBox="0 0 24 24" id="arrow" aria-hidden="true"><path d="M12 2 L19 20 L12 16 L5 20 Z" fill="#c6d600"/></svg><span id="compTxt">Elige a quién ir primero</span></div>
+    <button class="siren camb" id="btnCam" aria-label="Cámara: sigue a la nave"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9a8.5 8.5 0 0 1 15-2.5M20 15a8.5 8.5 0 0 1-15 2.5" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/><path d="M19.5 3v4h-4M4.5 21v-4h4" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="2.6" fill="#c6d600"/></svg></button>
     <button class="siren" id="btnSiren" aria-label="Encender sirena" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 17v-5a6 6 0 0 1 12 0v5" fill="none" stroke="#fff" stroke-width="2.2"/><path d="M4 17h16v3H4z" fill="#fff"/><path d="M12 2v2M4.2 5.2l1.4 1.4M19.8 5.2l-1.4 1.4" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></button>
     <button class="wheel" id="btnWheel">Tomar el volante</button>
   </div>
@@ -1099,14 +1101,23 @@ $('#btnBreak').addEventListener('click',()=>{ac();$('#eGlass').classList.add('br
 const wheelBtn=$('#btnWheel');
 function renderWheel(){if(!G)return;if(localTake&&((localTake.on&&G.driver===PID)||(!localTake.on&&G.driver!==PID)||G.phase!=='drive'))localTake=null;if(localTake)return;const me=G.driver===PID;wheelBtn.classList.toggle('mine',me);
  wheelBtn.textContent=me?'Soltar el volante':'Tomar el volante';$('#driverTxt').textContent=G.driver?(me?'Al volante: tú':'Al volante: '+nm(G.driver)):'Volante libre';
- $('#hint').textContent=me?'Arrastra el dedo para manejar. Tu copiloto tiene el mapa.':G.driver?`Maneja ${nm(G.driver)}. Denle direcciones.`:'Alguien tome el volante';$('#btnSiren').disabled=!me}
+ $('#hint').textContent=me?'Arrastra un dedo para manejar; con un segundo dedo giras la cámara.':G.driver?`Maneja ${nm(G.driver)}. Denle direcciones; arrastra para mirar alrededor.`:'Alguien tome el volante';$('#btnSiren').disabled=!me}
 let localTake=null;
 wheelBtn.addEventListener('click',()=>{if(!G||G.phase!=='drive')return;ac();const on=!(G.driver===PID||(localTake&&localTake.on));localTake={on,t:performance.now()};send('wheel',{on});wheelBtn.textContent=on?'Soltar el volante':'Tomar el volante';wheelBtn.classList.toggle('mine',on);$('#hint').style.opacity=1;$('#hint').textContent=on?'Arrastra el dedo para manejar. Tu copiloto tiene el mapa.':'Soltaste el volante'});
 const keys={};addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true});addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false});
 const joy={x:0,y:0,id:null,ox:0,oy:0},joyEl=$('#joy'),knob=$('#joyKnob');
-stage.addEventListener('pointerdown',e=>{if(!G||G.phase!=='drive')return;if(G.driver!==PID){toast('',G.driver?`Maneja ${nm(G.driver)}`:'Primero toma el volante',1400);return}joy.id=e.pointerId;joy.ox=e.clientX;joy.oy=e.clientY;joyEl.style.left=e.clientX+'px';joyEl.style.top=e.clientY+'px';joyEl.hidden=false;knob.style.transform='';try{stage.setPointerCapture(e.pointerId)}catch(_){}$('#hint').style.opacity=0});
-stage.addEventListener('pointermove',e=>{if(e.pointerId!==joy.id)return;let dx=(e.clientX-joy.ox)/55,dy=(e.clientY-joy.oy)/55;const l=Math.hypot(dx,dy);if(l>1){dx/=l;dy/=l}joy.x=dx;joy.y=-dy;knob.style.transform=`translate(${dx*36}px,${dy*36}px)`});
-const endJoy=e=>{if(e.pointerId!==joy.id)return;joy.id=null;joy.x=joy.y=0;joyEl.hidden=true};stage.addEventListener('pointerup',endJoy);stage.addEventListener('pointercancel',endJoy);
+/* cámara: girar con el dedo (dos dedos si manejas), modo sigue / fija */
+let camOff=0,camMode=(()=>{try{return localStorage.getItem('cp_cam')==='fixed'?'fixed':'follow'}catch(_){return 'follow'}})(),lastOrbit=0,orbitHinted=false,lastTap=0;const orbit={id:null,x:0,x0:0,t0:0};
+function viewYaw(){return S.camYaw+camOff}
+function setCamMode(m){camMode=m;try{localStorage.setItem('cp_cam',m)}catch(_){}const b=$('#btnCam');b.classList.toggle('fixed',m==='fixed');b.setAttribute('aria-label',m==='fixed'?'Cámara fija':'Cámara: sigue a la nave');toast('',m==='fixed'?'Cámara fija: no gira con la nave. Arrastra para girarla.':'Cámara detrás de la nave',2200)}
+$('#btnCam').addEventListener('click',()=>{ac();setCamMode(camMode==='fixed'?'follow':'fixed');sfx.sign()});setTimeout(()=>{$('#btnCam').classList.toggle('fixed',camMode==='fixed')},0);
+addEventListener('keydown',e=>{if(e.key==='q'||e.key==='Q'){camOff+=.12;lastOrbit=performance.now()}if(e.key==='e'||e.key==='E'){camOff-=.12;lastOrbit=performance.now()}if(e.key==='c'||e.key==='C')setCamMode(camMode==='fixed'?'follow':'fixed')});
+stage.addEventListener('pointerdown',e=>{if(!G||G.phase!=='drive')return;const pilot=G.driver===PID;
+ if(!pilot||joy.id!==null){if(orbit.id===null){orbit.id=e.pointerId;orbit.x=orbit.x0=e.clientX;orbit.t0=performance.now();try{stage.setPointerCapture(e.pointerId)}catch(_){}}
+  if(!pilot&&!orbitHinted){orbitHinted=true;toast('',(G.driver?`Maneja ${nm(G.driver)}. `:'Primero alguien toma el volante. ')+'Arrastra para mirar alrededor.',2000)}return}
+ joy.id=e.pointerId;joy.ox=e.clientX;joy.oy=e.clientY;joyEl.style.left=e.clientX+'px';joyEl.style.top=e.clientY+'px';joyEl.hidden=false;knob.style.transform='';try{stage.setPointerCapture(e.pointerId)}catch(_){}$('#hint').style.opacity=0});
+stage.addEventListener('pointermove',e=>{if(e.pointerId===orbit.id){camOff-=(e.clientX-orbit.x)*.009;orbit.x=e.clientX;lastOrbit=performance.now();return}if(e.pointerId!==joy.id)return;let dx=(e.clientX-joy.ox)/55,dy=(e.clientY-joy.oy)/55;const l=Math.hypot(dx,dy);if(l>1){dx/=l;dy/=l}joy.x=dx;joy.y=-dy;knob.style.transform=`translate(${dx*36}px,${dy*36}px)`});
+const endJoy=e=>{if(e.pointerId===orbit.id){orbit.id=null;const t=performance.now();if(Math.abs(e.clientX-orbit.x0)<8&&t-orbit.t0<300){if(t-lastTap<350){camOff=0;toast('','Cámara centrada',1000)}lastTap=t}return}if(e.pointerId!==joy.id)return;joy.id=null;joy.x=joy.y=0;joyEl.hidden=true};stage.addEventListener('pointerup',endJoy);stage.addEventListener('pointercancel',endJoy);
 
 /* ---- consulta compartida ---- */
 let curSec=null,chatSig='',consultFor=null;
@@ -1371,7 +1382,7 @@ function updChevs(t,tg){const on=false;let dx=0,dz=0,dist=0;if(on){dx=tg.x-S.pos
  const col=tg&&tg.worse?0xff6a5b:0xc6d600;
  chevs.forEach((m,i)=>{const s=2.6+i*3.2+((t*7)%3.2);if(!on||s>dist-3.2||s>46){m.material.opacity=0;return}m.position.x=S.pos.x+dx*s;m.position.z=S.pos.z+dz*s;m.rotation.y=Math.atan2(-dx,-dz);m.material.color.setHex(col);m.material.opacity=.85*Math.min(1,(s-2.6)/3)*(1-s/48)})}
 const mini=$('#mini'),mg=mini.getContext('2d');const MR=130;
-function toMap(x,z,R){const dx=x-S.pos.x,dz=z-S.pos.z,sn=Math.sin(S.camYaw),cs=Math.cos(S.camYaw);const fwd=dx*sn+dz*cs,rgt=-dx*cs+dz*sn;return{x:140+rgt*R/MR,y:140-fwd*R/MR,d:Math.hypot(dx,dz)}}
+function toMap(x,z,R){const dx=x-S.pos.x,dz=z-S.pos.z,VY=viewYaw(),sn=Math.sin(VY),cs=Math.cos(VY);const fwd=dx*sn+dz*cs,rgt=-dx*cs+dz*sn;return{x:140+rgt*R/MR,y:140-fwd*R/MR,d:Math.hypot(dx,dz)}}
 function drawMini(t,tg){const g=mg,R=132;g.clearRect(0,0,280,280);g.save();g.beginPath();g.arc(140,140,R,0,Math.PI*2);g.clip();
  const bg=g.createRadialGradient(140,140,10,140,140,R);bg.addColorStop(0,'rgba(60,150,255,.55)');bg.addColorStop(1,'rgba(18,40,120,.82)');g.fillStyle=bg;g.fillRect(0,0,280,280);
  g.strokeStyle='rgba(150,230,255,.32)';g.lineWidth=1.5;[40,80,120].forEach(r=>{g.beginPath();g.arc(140,140,r*R/MR,0,Math.PI*2);g.stroke()});
@@ -1467,8 +1478,8 @@ function tick(ms){const t=ms/1000;const dt=Math.min(.05,Math.max(0,t-last));last
  const amDriver=!!(G&&ph==='drive'&&(localTake?localTake.on:G.driver===PID));iDrive=amDriver;
  if(amDriver&&!wasDriver){S.vel.set(0,0,0);if(carSeen&&performance.now()-carSeen<20000){const age=Math.max(0,Math.min(1,(now()-carAt)/1000));S.pos.set(carT.x+carV.x*age,0,carT.z+carV.z*age);S.heading=carH;S.camYaw=carYaw}}wasDriver=amDriver;
  if(amDriver){let ix=joy.x+((keys.d||keys.arrowright)?1:0)-((keys.a||keys.arrowleft)?1:0),iy=joy.y+((keys.w||keys.arrowup)?1:0)-((keys.s||keys.arrowdown)?1:0);
-  const l=Math.hypot(ix,iy);if(l>1){ix/=l;iy/=l}const mag=Math.min(1,l);const fx=Math.sin(S.camYaw),fz=Math.cos(S.camYaw),rx=-Math.cos(S.camYaw),rz=Math.sin(S.camYaw);const mx=fx*iy+rx*ix,mz=fz*iy+rz*ix;
-  if(mag>.06){S.heading=lerpA(S.heading,Math.atan2(mx,mz),1-Math.exp(-dt*9));const SP=SPEED*speedK();S.vel.x+=(mx*SP-S.vel.x)*Math.min(1,dt*5);S.vel.z+=(mz*SP-S.vel.z)*Math.min(1,dt*5);S.camYaw=lerpA(S.camYaw,S.heading,1-Math.exp(-dt*1.7*mag*(iy<-.2?.3:1)))}
+  const l=Math.hypot(ix,iy);if(l>1){ix/=l;iy/=l}const mag=Math.min(1,l);const VY=viewYaw();const fx=Math.sin(VY),fz=Math.cos(VY),rx=-Math.cos(VY),rz=Math.sin(VY);const mx=fx*iy+rx*ix,mz=fz*iy+rz*ix;
+  if(mag>.06){S.heading=lerpA(S.heading,Math.atan2(mx,mz),1-Math.exp(-dt*9));const SP=SPEED*speedK();S.vel.x+=(mx*SP-S.vel.x)*Math.min(1,dt*5);S.vel.z+=(mz*SP-S.vel.z)*Math.min(1,dt*5);if(camMode==='follow'){S.camYaw=lerpA(S.camYaw,S.heading,1-Math.exp(-dt*1.4*mag*(iy<-.2?.3:1)));if(orbit.id===null)camOff=lerpA(camOff,0,1-Math.exp(-dt*2))}}
   else S.vel.multiplyScalar(Math.exp(-dt*4));
   S.pos.x+=S.vel.x*dt;S.pos.z+=S.vel.z*dt;{const R=Math.hypot(S.pos.x,S.pos.z);if(R>140){S.pos.x*=140/R;S.pos.z*=140/R}if(R<6.2){S.pos.x*=6.2/R;S.pos.z*=6.2/R}}
   collide();sendCar();
@@ -1476,7 +1487,7 @@ function tick(ms){const t=ms/1000;const dt=Math.min(.05,Math.max(0,t-last));last
   if(G.kit<=0&&performance.now()-arriveSent>2500&&Math.hypot(S.pos.x-PHARM.x,S.pos.z-PHARM.z)<PHARM.r){arriveSent=performance.now();send('pharm')}
   {const z=inZone();const el=$('#zoneTxt');el.hidden=!z;if(z)el.textContent=z}
   if(performance.now()-arriveSent>1500)for(const c of CASES){if(c.done)continue;if(Math.hypot(S.pos.x-c.x,S.pos.z-c.z)<3.6){arriveSent=performance.now();send('arrive',{c:c.id});break}}}
- else if(carSeen){const k=1-Math.exp(-dt*10);const age=ph==='drive'?Math.max(0,Math.min(.6,(now()-carAt)/1000)):0;const tx=carT.x+carV.x*age,tz=carT.z+carV.z*age;S.pos.x+=(tx-S.pos.x)*k;S.pos.z+=(tz-S.pos.z)*k;S.heading=lerpA(S.heading,carH,k);S.camYaw=lerpA(S.camYaw,carYaw,k);
+ else if(carSeen){const k=1-Math.exp(-dt*10);const age=ph==='drive'?Math.max(0,Math.min(.6,(now()-carAt)/1000)):0;const tx=carT.x+carV.x*age,tz=carT.z+carV.z*age;S.pos.x+=(tx-S.pos.x)*k;S.pos.z+=(tz-S.pos.z)*k;S.heading=lerpA(S.heading,carH,k);if(camMode==='follow')S.camYaw=lerpA(S.camYaw,carYaw,k);
   if(ph==='drive'&&performance.now()-carSeen<600)S.vel.copy(carV);else S.vel.multiplyScalar(Math.exp(-dt*5))}
  else S.vel.multiplyScalar(Math.exp(-dt*5));
  if(!amDriver)$('#zoneTxt').hidden=true;
@@ -1492,7 +1503,7 @@ function tick(ms){const t=ms/1000;const dt=Math.min(.05,Math.max(0,t-last));last
  if(!G||['lobby','name','wave'].includes(ph)&&!G.g0){const a=t*.05;camera.position.set(Math.sin(a)*30,10,Math.cos(a)*30);look.set(0,7.5,0)}
  else if(ph==='finale'&&FIN){updFinale(t,dt)}
  else if(['explain','sync','finale','done'].includes(ph)){camera.position.lerp(new V3(0,9,30),1-Math.exp(-dt*1.4));look.lerp(new V3(0,8,0),1-Math.exp(-dt*2))}
- else{const fx=Math.sin(S.camYaw),fz=Math.cos(S.camYaw);let cd=11;for(const o of OBST){if(!o.h)continue;const ox=o.x-S.pos.x,oz=o.z-S.pos.z;const along=-(ox*fx+oz*fz);if(along<1||along>cd+o.r)continue;const perp=Math.abs(ox*fz-oz*fx);if(perp<o.r+1.6)cd=Math.max(7,Math.min(cd,along-o.r-1))}camD+=(cd-camD)*Math.min(1,dt*6);const ch=6.6+(11-camD)*.9;camera.position.lerp(new V3(S.pos.x-fx*camD,ch,S.pos.z-fz*camD),1-Math.exp(-dt*6));look.lerp(new V3(S.pos.x+fx*5,1.8,S.pos.z+fz*5),1-Math.exp(-dt*5))}
+ else{if(camMode==='follow'&&orbit.id===null&&performance.now()-lastOrbit>3500)camOff=lerpA(camOff,0,1-Math.exp(-dt*1.2));const VY=viewYaw();const fx=Math.sin(VY),fz=Math.cos(VY);let cd=13;for(const o of OBST){if(!o.h)continue;const ox=o.x-S.pos.x,oz=o.z-S.pos.z;const along=-(ox*fx+oz*fz);if(along<1||along>cd+o.r)continue;const perp=Math.abs(ox*fz-oz*fx);if(perp<o.r+1.6)cd=Math.max(9,Math.min(cd,along-o.r-1))}camD+=(cd-camD)*Math.min(1,dt*6);const ch=5.2+(13-camD)*.3;camera.position.lerp(new V3(S.pos.x-fx*camD,ch,S.pos.z-fz*camD),1-Math.exp(-dt*6));look.lerp(new V3(S.pos.x+fx*10,3.2,S.pos.z+fz*10),1-Math.exp(-dt*5))}
  if(QS.get('top')==='1'){camera.position.set(0,250,.01);look.set(0,0,0);camera.far=900;camera.updateProjectionMatrix()}
  if(camShake>0){camShake=Math.max(0,camShake-dt);camera.position.x+=Math.sin(t*60)*camShake*.5;camera.position.y+=Math.cos(t*47)*camShake*.4}
  camera.lookAt(look);
@@ -1506,7 +1517,7 @@ function tick(ms){const t=ms/1000;const dt=Math.min(.05,Math.max(0,t-last));last
  if(S.siren&&driving){const blink=Math.floor(t*4)%2;sirenLight.color.setHex(blink?0xff6a5b:0x4aa8ff);sirenLight.intensity=2.2;crossMat.color.setHex(blink?0xff6a5b:0x4aa8ff)}else sirenLight.intensity=0;
  const tg2=routeTarget();updChevs(t,tg2);
  if(driving){drawMini(t,tg2);drawSpd(Math.hypot(S.vel.x,S.vel.z)*3.6*1.6,110);
-  if(tg2){const wa=Math.atan2(tg2.x-S.pos.x,tg2.z-S.pos.z);const rel=lerpA(0,wa-S.camYaw,1);$('#arrow').style.transform=`rotate(${(-rel*180/Math.PI).toFixed(1)}deg)`;
+  if(tg2){const wa=Math.atan2(tg2.x-S.pos.x,tg2.z-S.pos.z);const rel=lerpA(0,wa-viewYaw(),1);$('#arrow').style.transform=`rotate(${(-rel*180/Math.PI).toFixed(1)}deg)`;
    const sp=Math.max(Math.hypot(S.vel.x,S.vel.z),6);const dd=Math.hypot(tg2.x-S.pos.x,tg2.z-S.pos.z);$('#compTxt').textContent=`${tg2.target?'Ruta':'Cerca'}: ${tg2.name} · ${Math.round(dd)} m · ${fmt(dd/sp)}`}}
  updEdges();
  if(!LOWFPS||t-lastR>.6){lastR=t;renderFrame()}adaptQ(dt);requestAnimationFrame(tick)}
