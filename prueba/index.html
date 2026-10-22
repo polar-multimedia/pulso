@@ -672,12 +672,12 @@ const SLOW=[];   // {x,z,r,k} zonas que frenan
 const GATES=[];  // {x,z,r,ph,c} compuertas al ritmo del pulso
 /* setos: macizos de flores gigantes que obligan a rodear */
 function hedgeArc(cx,cz,R,a0,a1,step){for(let a=a0;a<=a1;a+=step){const p=polar(a,R);OBST.push({x:cx+p.x,z:cz+p.z,r:2.3,h:1})}}
-CASES.forEach(c=>{const toBase=Math.atan2(-c.x,-c.z)*180/Math.PI;const gap=toBase+150;c.gapAng=gap;
- hedgeArc(c.x,c.z,11.5,gap+28,gap+332,15);const gp=polar(gap,11.5);c.gx=c.x+gp.x;c.gz=c.z+gp.z});
+CASES.forEach(c=>{const toBase=Math.atan2(-c.x,-c.z)*180/Math.PI;const gap=toBase+35;c.gapAng=gap;
+ hedgeArc(c.x,c.z,11.5,gap+50,gap+310,15);const gp=polar(gap,11.5);c.gx=c.x+gp.x;c.gz=c.z+gp.z});
 /* muros entre zonas */
 hedgeArc(0,0,30,18,74,7);hedgeArc(0,0,58,176,236,6);hedgeArc(0,0,66,330,388,6);hedgeArc(0,0,92,60,120,6);hedgeArc(0,0,40,215,262,7);
 /* compuertas al ritmo del pulso en las entradas de Valentina y Tomás */
-['V','T'].forEach((id,i)=>{const c=CASES.find(k=>k.id===id);GATES.push({x:c.gx,z:c.gz,r:3.2,ph:i*1.7,c:id})});
+/* (v6) sin compuertas: acceso libre a las casas */
 const gateOpen=g=>(((now()/1000)+g.ph)%6)<3.2;
 /* pasto alto: frena */
 [[80,98,11],[165,72,10],[250,52,9],[12,112,12],[290,124,10]].forEach(([a,r,rad])=>{const p=polar(a,r);SLOW.push({x:p.x,z:p.z,r:rad,k:.45,kind:'pasto'})});
@@ -775,7 +775,7 @@ const HOUSES=[];
  let p=back(V,6.5);house(p.x,p.z,p.rot,5,4,3.4,0xf6efe6,0xff6a5b);
  p=back(S_,6.5);house(p.x,p.z,p.rot,5.5,4,3,0xfff4d9,0x2a62e0);
  /* cerquita blanca del patio de Sofía */
- {const post=new THREE.BoxGeometry(.18,1,.18);const fm=new THREE.MeshLambertMaterial({color:0xffffff});for(let a=0;a<360;a+=12){{const dd=((a-S_.gapAng)%360+540)%360-180;if(Math.abs(dd)<35)continue}const q=polar(a,8.3);const m=new THREE.Mesh(post,fm);m.position.set(S_.x+q.x,.5,S_.z+q.z);scene.add(m)}}
+ {const post=new THREE.BoxGeometry(.18,1,.18);const fm=new THREE.MeshLambertMaterial({color:0xffffff});for(let a=0;a<360;a+=12){{const dd=((a-S_.gapAng)%360+540)%360-180;if(Math.abs(dd)<55)continue}const q=polar(a,8.3);const m=new THREE.Mesh(post,fm);m.position.set(S_.x+q.x,.5,S_.z+q.z);scene.add(m)}}
  /* guardería de Tomás: bloques de colores */
  p=back(T,6.8);house(p.x,p.z,p.rot,6.5,4.5,3.2,0xc6e8ff,0xff9b3d);
  const cols=[0xff6a5b,0xc6d600,0x4aa8ff,0xff9b3d];for(let i=0;i<6;i++){const a=rnd()*6.28,r=rr(4,6.5);const m=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),new THREE.MeshLambertMaterial({color:cols[i%4]}));m.position.set(T.x+Math.sin(a)*r,.5+(i%2)*1,T.z+Math.cos(a)*r);m.rotation.y=rnd()*3;scene.add(m)}}
