@@ -184,7 +184,7 @@ body.cine #cineCap{opacity:1}#cineCap b{display:block;font-size:22px;font-weight
 .gauge{position:absolute;right:max(10px,env(safe-area-inset-right,0px));bottom:calc(env(safe-area-inset-bottom,0px) + 68px);width:108px;height:108px}
 .gauge canvas{width:100%;height:100%;display:block}
  #edges{display:none}
-#wps{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+#wps{position:fixed;inset:0;pointer-events:none;overflow:hidden}#hud[hidden]~#wps,#wps.off{display:none}
 .wp{position:absolute;left:0;top:0;display:flex;flex-direction:column;align-items:center;pointer-events:auto;cursor:pointer;transform:translate(-50%,-100%);will-change:left,top}
 .wp .chip{display:flex;align-items:center;gap:7px;padding:3px 11px 3px 3px;border-radius:999px;background:rgba(21,34,92,.9);border:2.5px solid var(--lime);font-weight:800;font-size:13px;white-space:nowrap;box-shadow:0 4px 14px rgba(10,10,60,.35)}
 .wp .ph{width:34px;height:34px;border-radius:50%;background:#fff center/cover no-repeat;flex:none;border:2px solid #fff;display:grid;place-items:center}
@@ -343,6 +343,7 @@ textarea{resize:none;min-height:84px;line-height:1.45}
 </head><body>
 <div id="stage"></div>
 
+<div id="wps"></div>
 <div id="cineCap"><b id="cineTxt">Tres pacientes en espera</b><span>Toca para saltar</span></div>
 <div id="hud" hidden>
   <div class="board">
@@ -360,7 +361,6 @@ textarea{resize:none;min-height:84px;line-height:1.45}
     <div class="feed drv" id="feed" aria-live="polite"></div>
   </div>
   <div id="edges"></div>
-  <div id="wps"></div>
   <div id="goal" hidden><i id="goalTag">Ahora</i><span id="goalTxt"></span></div>
   <div class="holo drv"><canvas id="mini" width="280" height="280"></canvas><span>Mapa · 130 m</span></div>
   <div class="gauge drv"><canvas id="spd" width="216" height="216"></canvas></div>
@@ -453,7 +453,7 @@ textarea{resize:none;min-height:84px;line-height:1.45}
     <span class="eyebrow">Farmacia · caja de emergencia</span>
     <h2>Cuando la diarrea ataca…</h2>
     <div class="ebox"><div class="eglass" id="eGlass"><img src="img/caja_sobres.webp" alt="Lacteol fort polvo para suspensión, caja con 6 sobres"></div></div>
-    <p>Se les acabó el Lacteol® fort del botiquín. Rompan el cristal para recargarlo y sigan con el siguiente paciente.</p>
+    <p id="pharmTxt">Recarguen el botiquín con Lacteol® fort: rompan el cristal y sigan con sus pacientes.</p>
     <button class="btn" id="btnBreak">Romper el cristal</button>
   </div>
 </div>
@@ -522,7 +522,7 @@ const CASES=[
  openD:'Doctora, qué bueno que llegó. Valentina está muy dormida y casi no ha mojado el pañal.',
  facts:'Valentina, 4 meses, prematura de 34 semanas. Tres evacuaciones líquidas desde anoche, sin sangre. Toma pecho pero lo suelta rápido. Le dieron agua de arroz. Cuatro pañales mojados hoy. Llora con lágrimas. No ha tomado medicamentos. Vacunas al corriente. Está algo más dormilona de lo normal.',
  factsD:'Valentina, 4 meses, prematura de 34 semanas. Diarrea líquida desde anoche, ya van cinco evacuaciones, sin sangre. Casi no quiere el pecho. Solo un pañal mojado en ocho horas. Llora sin lágrimas. Está muy dormida. Le dieron agua de arroz. Vacunas al corriente.',
- ret:'Karla llama a las tres horas: "Valentina casi no ha mojado el pañal y está muy dormida."',
+ ret:'Karla llama más tarde: "Doctores, disculpen… Valentina sigue igual y me preocupa. ¿Podemos revisar otra vez la receta?"',
  conductor:'Lactante menor de seis meses y prematura: se deshidrata más rápido que un niño mayor. Se mantiene el pecho, se hidrata con SRO, se vigila de cerca y el umbral para referir es bajo.',
  keys:['ev','sv','diu','muc','somn','riesgo'],
  s:{
@@ -549,7 +549,7 @@ const CASES=[
  line:'La mamá pide antibiótico',ang:40,r:62,hr:104,hrD:104,detAt:null,pages:['rap'],
  open:'¡Por fin, doctor! Sofía ya lleva dos días con diarrea. Mi cuñada dice que con un antibiótico se le quita en un día, ¿me lo receta?',
  facts:'Sofía, 5 años. Diarrea acuosa de dos días, cinco a seis evacuaciones al día, sin sangre ni moco. Ayer 37.8 °C en la noche, hoy sin fiebre. Vomitó una vez ayer. Orina normal y pide agua. Come poco: caldo y galletas. Ya le dieron suero de farmacia y té de manzanilla. Su hermanito tuvo lo mismo la semana pasada y se le quitó solo.',
- ret:'Lorena regresa al día siguiente: "Le di lo que me dijo y sigue igual. ¿Ahora sí el antibiótico?"',
+ ret:'Lorena regresa: "Doctores, Sofía no mejoró como esperábamos. ¿Nos ayudan a revisar de nuevo lo que nos indicaron?"',
  conductor:'Diarrea acuosa sin sangre en una niña hidratada: el antibiótico no está indicado. SRO, alimentación habitual y explicar a la familia por qué no se receta antibiótico.',
  keys:['ev','sangre','diu','muc','sv','vom'],
  s:{
@@ -577,7 +577,7 @@ const CASES=[
  openD:'Doctor, Tomás ya lleva seis evacuaciones hoy y está más decaído. ¿Le quito la amoxicilina?',
  facts:'Tomás, 3 años. Va a la guardería desde hace seis meses y ha recibido varios ciclos de antibióticos. Otitis media derecha diagnosticada hace cuatro días, amoxicilina por diez días. Tres o cuatro evacuaciones blandas al día, sin sangre. Sin fiebre ahora. Toma agua y orina normal. Come un poco menos. Dolor leve antes de ir al baño.',
  factsD:'Tomás, 3 años. Va a la guardería desde hace seis meses y ha recibido varios ciclos de antibióticos. Otitis media derecha diagnosticada hace cuatro días, amoxicilina por diez días. Hoy seis evacuaciones más aguadas, sin sangre. Sin fiebre. Toma menos agua pero sí orina. Un poco decaído.',
- ret:'Óscar llama en la noche: "Le quité el antibiótico como me dijeron y ahora le volvió a doler el oído."',
+ ret:'Óscar llama más tarde: "Doctores, Tomás volvió a sentirse mal. ¿Podemos revisar otra vez la receta?"',
  conductor:'Diarrea asociada a antibióticos, leve: se completa el esquema indicado, se cuida la hidratación y se vigilan los datos de alarma. Se puede proteger desde la primera dosis.',
  keys:['indic','ciclos','ev','sv','muc','oido'],
  s:{
@@ -757,8 +757,8 @@ CASES.forEach(c=>{const g=new THREE.Group();g.position.set(c.x,0,c.z);scene.add(
  c.pad=new THREE.Mesh(new THREE.CircleGeometry(2.3,48),new THREE.MeshBasicMaterial({color:0x1e4592,transparent:true,opacity:.6}));c.pad.rotation.x=-Math.PI/2;c.pad.position.y=.04;g.add(c.pad);
  c.core=new THREE.Sprite(new THREE.SpriteMaterial({map:GLOW,color:0xe8ff6a,transparent:true,blending:ADD,depthWrite:false}));c.core.position.y=1.5;c.core.scale.set(4,4,1);g.add(c.core);
  c.label=new THREE.Sprite(new THREE.SpriteMaterial({map:labelTex(c.name,c.age,'wait'),transparent:true,depthWrite:false}));c.label.position.y=7.5;c.label.scale.set(11,3.4,1);g.add(c.label)});
-function paintMarker(c){const st=c.done?'done':c.worse?'bad':'wait';const col=st==='done'?0x4aa8ff:st==='bad'?0xff6a5b:0xc6d600;
- c.beam.material.color.setHex(col);c.beam.material.opacity=c.done?.1:.22;c.ring.material.color.setHex(col);c.core.material.color.setHex(st==='done'?0x9fd0ff:st==='bad'?0xff8a7a:0xe8ff6a);
+function paintMarker(c){const st=c.done?'done':c.worse?'bad':'wait';const col=st==='done'?0xffd84a:st==='bad'?0xff6a5b:0xc6d600;
+ c.beam.material.color.setHex(col);c.beam.material.opacity=c.done?.32:.22;c.ring.material.color.setHex(col);c.core.material.color.setHex(st==='done'?0xfff0a0:st==='bad'?0xff8a7a:0xe8ff6a);
  c.label.material.map.dispose();c.label.material.map=labelTex(c.name,c.age,st,c.id);c.label.material.needsUpdate=true}
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>CASES.forEach(paintMarker)).catch(()=>{});
 
@@ -1260,7 +1260,7 @@ function renderResult(){const sc=G.result;if(!sc)return;
 /* ---- aplicar el estado de la mesa ---- */
 let lastPhase=null,evInit=false,lastEv=0;
 function onState(g){
- CASES.forEach(c=>{const st=g.cases[c.id];const w=!!st.worse,d=!!st.done;if(c.worse!==w||c.done!==d){const became=d&&!c.done;c.worse=w;c.done=d;paintMarker(c);if(became&&evInit)bloomCase(c)}c.target=g.target===c.id});updMon();
+ CASES.forEach(c=>{const st=g.cases[c.id];const w=!!st.worse,d=!!st.done;if(c.worse!==w||c.done!==d){const became=d&&!c.done;c.worse=w;c.done=d;paintMarker(c);if(became&&evInit)bloomCase(c);if(d)deliverBox(c,became&&evInit);else removeDeliv(c.id)}c.target=g.target===c.id});updMon();
  if(!evInit){evInit=true;lastEv=g.evN;CASES.forEach(c=>{if(c.done)bloomCase(c)})}
  const fresh=g.ev.filter(e=>e.id>lastEv);if(fresh.length){fresh.slice(0,-1).forEach(e=>logFeed(e.from+': '+e.txt,e.lv));const e=fresh[fresh.length-1];if(g.phase==='drive'||g.phase==='consult')radio(e.from,e.txt,e.lv,e.snd);else{logFeed(e.from+': '+e.txt,e.lv);leoSay(e.txt);if(e.snd)playVoz(e.snd)}lastEv=g.evN}
  $('#unitTxt').textContent=g.unit?'Unidad '+g.unit:'—';setSirenLocal(!!g.siren);
@@ -1375,7 +1375,7 @@ function handleAct(a){if(!G)return;const p=a.pid;const ph=G.phase;
  case 'siren':if(ph==='drive'&&G.driver===p){G.siren=a.on?1:0;commit()}break;
  case 'target':if(ph==='drive'&&caseById(a.c)&&!G.cases[a.c].done){G.target=a.c;commit()}break;
  case 'arrive':if(ph==='drive'&&G.driver===p&&caseById(a.c)&&!G.cases[a.c].done){if(G.kit<=0&&!G.kitUsed[a.c]){if(now()-G.noKitT>8000){G.noKitT=now();evt('Despacho',`Llegaron con ${caseById(a.c).name}, pero ya no queda Lacteol fort en el botiquín. Pasen a la farmacia: está marcada en el mapa.`,'bad','leo_nokit');commit()}break}startConsult(a.c);commit(true)}break;
- case 'pharm':if(ph==='drive'&&G.driver===p&&G.kit<=0){G.phase='pharmacy';G.breaker=null;commit(true)}break;
+ case 'pharm':if(ph==='drive'&&G.driver===p&&G.kit<2){G.phase='pharmacy';G.breaker=null;commit(true)}break;
  case 'break':if(ph==='pharmacy'){G.kit=2;G.breaker=p;G.phase='drive';G.driver=null;evt('Despacho',`${nm(p)} rompió el cristal. Botiquín cargado: 2 tratamientos de Lacteol fort.`,'info','leo_farmacia');fx({sfx:'bloom'});commit(true)}break;
  case 'sobre':if(ph==='drive'&&G.driver===p&&SOBRES[a.i]&&!G.sobres.includes(a.i)){G.sobres.push(a.i);G.pen-=5;const n=G.sobres.length;evt('Despacho',`Sobre de Lact1 (${n}). Cinco segundos menos de guardia.`,'info',n<=2?'leo_sobre':null);fx({sfx:'chime'});commit()}break;
  case 'crash':if(ph==='drive'&&G.driver===p&&now()-G.lastCrash>1200){G.lastCrash=now();G.crashes++;G.pen+=2;commit()}break;
@@ -1463,7 +1463,7 @@ function drawMini(t,tg){const g=mg,R=132;g.clearRect(0,0,280,280);g.save();g.beg
  if(tg&&isDrive()){const p=toMap(tg.x,tg.z,R);let ex=p.x,ey=p.y;const dd=Math.hypot(ex-140,ey-140);if(dd>R-16){ex=140+(ex-140)/dd*(R-16);ey=140+(ey-140)/dd*(R-16)}
   g.setLineDash([7,7]);g.lineDashOffset=-t*30;g.strokeStyle=tg.worse?'#ff6a5b':'#c6d600';g.lineWidth=3;g.beginPath();g.moveTo(140,140);g.lineTo(ex,ey);g.stroke();g.setLineDash([])}
  CASES.forEach(c=>{const p=toMap(c.x,c.z,R);let x=p.x,y=p.y;const dd=Math.hypot(x-140,y-140),out=dd>R-16;if(out){x=140+(x-140)/dd*(R-16);y=140+(y-140)/dd*(R-16)}
-  const col=c.done?'#4aa8ff':c.worse?'#ff6a5b':'#c6d600';
+  const col=c.done?'#ffd84a':c.worse?'#ff6a5b':'#c6d600';
   if(!c.done){const pr=(t*(c.worse?2.2:1.2)+c.i*.3)%1;g.strokeStyle=col;g.globalAlpha=1-pr;g.lineWidth=2.5;g.beginPath();g.arc(x,y,9+pr*(c.worse?22:14),0,Math.PI*2);g.stroke();g.globalAlpha=1}
   g.fillStyle=col;g.beginPath();g.arc(x,y,14,0,Math.PI*2);g.fill();const im=PIMG[c.id];if(im){g.save();g.beginPath();g.arc(x,y,11.5,0,Math.PI*2);g.clip();const sc=23/Math.min(im.width,im.height);g.drawImage(im,x-im.width*sc/2,y-im.height*sc/2,im.width*sc,im.height*sc);g.restore()}else{g.fillStyle='#15225c';g.fillText(c.name[0],x,y+1)}
   if(out&&!c.done){const a=Math.atan2(y-140,x-140);g.save();g.translate(x+Math.cos(a)*13,y+Math.sin(a)*13);g.rotate(a);g.fillStyle=col;g.beginPath();g.moveTo(5,0);g.lineTo(-3,-5);g.lineTo(-3,5);g.fill();g.restore()}});
@@ -1501,25 +1501,25 @@ WPS.forEach(w=>{const d=document.createElement('div');d.className='wp'+(w.pharm?
  d.addEventListener('click',e=>{e.stopPropagation();if(!G||G.phase!=='drive')return;if(w.pharm){toast('','La farmacia recarga el botiquín cuando se acaba',1600);return}if(w.c.done)return;send('target',{c:w.c.id});sfx.sign()});
  d.addEventListener('pointerdown',e=>e.stopPropagation());$('#wps').appendChild(d);w.el=d;w.small=d.querySelector('small')});
 function needPharm(){return !!(G&&G.kit<=0&&CASES.some(c=>!c.done&&!(G.kitUsed||{})[c.id]))}
-function updWaypoints(){const show=isDrive()&&DR.k<.5&&!document.body.classList.contains('cine');const pilot=!!(G&&G.driver===PID);const W=innerWidth,H=innerHeight;
- const bd=document.querySelector('.board').getBoundingClientRect();const top=(pilot?110:bd.bottom+52),bot=H-(pilot?150:250);const np=needPharm();
+function updWaypoints(){const show=isDrive();const aerial=DR.k>=.5;const pilot=!!(G&&G.driver===PID)&&!aerial;const W=innerWidth,H=innerHeight;
+ const bd=document.querySelector('.board').getBoundingClientRect();const top=aerial?70:(pilot?110:bd.bottom+52),bot=H-(aerial?90:pilot?150:250);const np=needPharm();
  WPS.forEach(w=>{const el=w.el;if(!show||(w.c&&w.c.done)){el.hidden=true;return}
   const dist=Math.round(Math.hypot(w.x-S.pos.x,w.z-S.pos.z));
   PV.set(w.x,w.pharm?9:7.5,w.z).project(camera);let x=PV.x,y=PV.y;const behind=PV.z>1;const on=!behind&&Math.abs(x)<.94&&y<.95&&y>-.95;
   const important=w.pharm?np:true;
-  if(!on&&(pilot||!important)){el.hidden=true;return}
+  if(!on&&(pilot||aerial||!important)){el.hidden=true;return}
   el.hidden=false;
   if(on){const px=(x*.5+.5)*W,py=(-y*.5+.5)*H;el.classList.remove('out');el.style.left=px+'px';el.style.top=Math.max(top-30,py)+'px'}
   else{if(behind){x=-x;y=-y;if(Math.abs(y)<.05)y=-.9}const k=1/Math.max(Math.abs(x)/.84,Math.abs(y)/.84,1e-6);x*=k;y*=k;
    el.classList.add('out');const hw=(el.offsetWidth||120)/2+6;let px=(x*.5+.5)*W,py=(-y*.5+.5)*H;px=Math.max(hw,Math.min(W-hw,px));py=Math.max(top,Math.min(bot,py));el.style.left=px+'px';el.style.top=py+'px';
    const ang=Math.atan2(x,y)*180/Math.PI;el.querySelector('.arr').style.transform=`rotate(${ang}deg)`}
   w._out=!on;w._px=parseFloat(el.style.left);w._py=parseFloat(el.style.top);
-  if(w.pharm){el.classList.toggle('need',np);el.classList.toggle('dim',!np);w.small.textContent=np?`¡Recarga aquí! · ${dist} m`:`${dist} m`;el.querySelector('.arr').style.color='#ff5a5a'}
+  if(w.pharm){const part=G.kit<2&&!np;el.classList.toggle('need',np);el.classList.toggle('dim',!np&&!part&&!aerial);w.small.textContent=np?`¡Recarga aquí! · ${dist} m`:part?`Puedes recargar · ${dist} m`:`${dist} m`;el.querySelector('.arr').style.color='#ff5a5a'}
   else{const c=w.c;el.classList.toggle('bad',!!c.worse);el.classList.toggle('tgt',!!c.target);el.classList.toggle('dim',np);w.small.textContent=(c.worse?'Empeora · ':c.target?'Ruta · ':'')+dist+' m';el.querySelector('.arr').style.color=c.worse?'#ff6a5b':'#c6d600'}});
  {const outs=WPS.filter(w=>!w.el.hidden&&w._out);[0,1].forEach(side=>{const L=outs.filter(w=>(w._px<W/2)===(side===0)).sort((a,b)=>a._py-b._py);for(let i=1;i<L.length;i++){if(L[i]._py-L[i-1]._py<50){L[i]._py=L[i-1]._py+50;L[i].el.style.top=L[i]._py+'px'}}});
   const ons=WPS.filter(w=>!w.el.hidden&&!w._out).sort((a,b)=>a._px-b._px);for(let i=1;i<ons.length;i++){const a=ons[i-1],b=ons[i];if(Math.abs(b._px-a._px)<120&&Math.abs(b._py-a._py)<46){b._py=a._py-48;b.el.style.top=b._py+'px'}}}
  /* objetivo actual */
- const gl=$('#goal');if(!show||!G.driver){gl.hidden=true;return}gl.hidden=false;gl.style.top=(pilot?96:bd.bottom+10)+'px';
+ const gl=$('#goal');if(!show||!G.driver||aerial||document.body.classList.contains('cine')){gl.hidden=true;return}gl.hidden=false;gl.style.top=(pilot?96:bd.bottom+10)+'px';
  let tag='Ahora',txt='',cls='';
  if(np){tag='Botiquín vacío';txt=`Vayan a la farmacia · ${Math.round(Math.hypot(PHARM.x-S.pos.x,PHARM.z-S.pos.z))} m`;cls='pharm'}
  else{const pend=CASES.filter(c=>!c.done);const tg=pend.find(c=>c.target);
@@ -1604,7 +1604,7 @@ function updDrone(t,dt,ph){
 let SPEED=14,iDrive=false,camD=11;let last=performance.now()/1000;let arriveSent=0,wasDriver=false;
 function tick(ms){const t=ms/1000;const dt=Math.min(.05,Math.max(0,t-last));last=t;const ph=G?G.phase:'lobby';
  const pa=pGeo.attributes.position.array;for(let i=0;i<NP;i++){pa[i*3+1]+=Math.sin(t*pv[i*2]+pv[i*2+1])*dt*.35;pa[i*3]+=Math.cos(t*.3+pv[i*2+1])*dt*.2}pGeo.attributes.position.needsUpdate=true;
- CASES.forEach(c=>{const p=c.done?0:(Math.sin(t*(c.worse?6:3)+c.i)*.5+.5);c.ring.scale.setScalar(1+p*.2);c.core.scale.setScalar(3.6+p*1.6)});
+ CASES.forEach(c=>{const p=c.done?(Math.sin(t*1.2+c.i)*.5+.5)*.4:(Math.sin(t*(c.worse?6:3)+c.i)*.5+.5);c.ring.scale.setScalar(1+p*.2);c.core.scale.setScalar(3.6+p*1.6)});
  plinthRim.material.opacity=.6+.35*Math.sin(t*2);
  let dirty=false;flowers.forEach((f,i)=>{if(Math.abs(f.target-f.open)>.002){f.open+=(f.target-f.open)*Math.min(1,dt*.6);dirty=true;writeFlower(f,i)}});if(dirty)flush();
  for(let i=waves.length-1;i>=0;i--){const w=waves[i];w.t+=dt;if(w.t<0)continue;const k=w.t/w.dur;if(k>=1){scene.remove(w.m);w.m.geometry.dispose();w.m.material.dispose();waves.splice(i,1);continue}w.m.scale.setScalar(.5+k*w.max);w.m.material.opacity=.8*(1-k)}
@@ -1620,7 +1620,7 @@ function tick(ms){const t=ms/1000;const dt=Math.min(.05,Math.max(0,t-last));last
   S.pos.x+=S.vel.x*dt;S.pos.z+=S.vel.z*dt;{const R=Math.hypot(S.pos.x,S.pos.z);if(R>140){S.pos.x*=140/R;S.pos.z*=140/R}if(R<6.2){S.pos.x*=6.2/R;S.pos.z*=6.2/R}}
   collide();sendCar();
   for(const o of SOBRES){if(G.sobres.includes(o.i)||o.sent&&performance.now()-o.sent<2000)continue;if(Math.hypot(S.pos.x-o.x,S.pos.z-o.z)<2.6){o.sent=performance.now();send('sobre',{i:o.i})}}
-  if(G.kit<=0&&performance.now()-arriveSent>2500&&Math.hypot(S.pos.x-PHARM.x,S.pos.z-PHARM.z)<PHARM.r){arriveSent=performance.now();send('pharm')}
+  if(G.kit<2&&performance.now()-arriveSent>2500&&Math.hypot(S.pos.x-PHARM.x,S.pos.z-PHARM.z)<PHARM.r){arriveSent=performance.now();send('pharm')}
   {const z=inZone();const el=$('#zoneTxt');el.hidden=!z;if(z)el.textContent=z}
   if(performance.now()-arriveSent>1500)for(const c of CASES){if(c.done)continue;if(Math.hypot(S.pos.x-c.x,S.pos.z-c.z)<3.6){arriveSent=performance.now();send('arrive',{c:c.id});break}}}
  else if(carSeen){const k=1-Math.exp(-dt*10);const age=ph==='drive'?Math.max(0,Math.min(.6,(now()-carAt)/1000)):0;const tx=carT.x+carV.x*age,tz=carT.z+carV.z*age;S.pos.x+=(tx-S.pos.x)*k;S.pos.z+=(tz-S.pos.z)*k;S.heading=lerpA(S.heading,carH,k);if(camMode==='follow')S.camYaw=lerpA(S.camYaw,carYaw,k);
@@ -1631,7 +1631,7 @@ function tick(ms){const t=ms/1000;const dt=Math.min(.05,Math.max(0,t-last));last
  updGates(t);updBills(t);updSobres(t);disHeal+=(((G&&G.cases.T.done)?1:0)-disHeal)*Math.min(1,dt*.8);if(Math.floor(t*30)%2===0)drawVilli(t);
  if(G&&ph==='pharmacy')pharm.userData.glass.material.opacity=.05;else if(G&&G.kit<2)pharm.userData.glass.material.opacity=.25;pharm.userData.pad.material.opacity=.4+.35*Math.sin(t*3);
  if(t-(window._crewT||0)>.4){window._crewT=t;updCrew();const un=(G&&G.unit)||'';if(un!==plateName)drawPlate(un)}
- WIND.value=t;HOLO_T.value=t;updPharmBeacon(t);updHolo(t,dt);updDisplays(t,dt);updKids(t,dt);updBfly(t);updGlbFl(t);clouds.rotation.y=t*.004;sun.position.set(S.pos.x+40,80,S.pos.z+30);sun.target.position.set(S.pos.x,0,S.pos.z);
+ WIND.value=t;HOLO_T.value=t;updPharmBeacon(t);updDeliv(t,ph);updCarpet(ph);updHolo(t,dt);updDisplays(t,dt);updKids(t,dt);updBfly(t);updGlbFl(t);clouds.rotation.y=t*.004;sun.position.set(S.pos.x+40,80,S.pos.z+30);sun.target.position.set(S.pos.x,0,S.pos.z);
  const bob=Math.sin(t*2.4)*.12;unit.position.set(S.pos.x,1.2+bob,S.pos.z);unit.rotation.y=S.heading;uTilt.rotation.z=-(amDriver?joy.x:0)*.2;
  crossMat.color.setHex((Math.floor(t*2.5)%2&&ph==='drive')?0xffffff:0xc6d600);uShadow.position.set(S.pos.x,.06,S.pos.z);
  hist.unshift(unit.position.clone());if(hist.length>TRAIL*2)hist.pop();const spd=Math.min(1.3,Math.hypot(S.vel.x,S.vel.z)/SPEED);trail.forEach((s,i)=>{const h=hist[i*2];if(!h){s.material.opacity=0;return}s.position.copy(h);const k=1-i/TRAIL;s.scale.setScalar(1.4*k+.2);s.material.opacity=.45*k*spd});
@@ -1712,10 +1712,10 @@ function mkKidHolo(c,H){const root=new THREE.Group();const hp=H.g.position;root.
  KIDH[c.id]={lab,H,root,bust,mat,pr,beam,pts,pv,call,cm,ecgM,cg,wave,col:new THREE.Color(0x5ef0ff)}}
 CASES.forEach((c,i)=>{if(HOUSES[i])mkKidHolo(c,HOUSES[i])});
 function callFlash(id,ms){CALLS[id]=performance.now()+(ms||9000)}
-const KCOL={ok:new THREE.Color(0x5ef0ff),bad:new THREE.Color(0xff8a7a),done:new THREE.Color(0xd4ff3a)};
+const KCOL={ok:new THREE.Color(0x5ef0ff),bad:new THREE.Color(0xff8a7a),done:new THREE.Color(0xffd84a)};
 function updKids(t,dt){CASES.forEach(c=>{const K=KIDH[c.id];if(!K)return;const tgt=c.done?KCOL.done:c.worse?KCOL.bad:KCOL.ok;K.col.lerp(tgt,Math.min(1,dt*3));K.mat.uniforms.uC.value.copy(K.col);K.pr.material.color.copy(K.col);K.beam.material.color.copy(K.col);
  if(!K.top&&!K.H.parts[0].visible){const bb=new THREE.Box3().setFromObject(K.H.g);if(isFinite(bb.max.y)){K.root.position.y=bb.max.y+.35;K.top=1}}
- K.bust.rotation.y+=dt*(c.worse&&!c.done?1.1:.55);{const z=1+(typeof DR!=='undefined'?DR.k:0)*11;K.lab.scale.set(3.4*z,.85*z,1);K.lab.position.y=3.9+(z-1)*1.2}K.bust.position.y=Math.sin(t*1.4+c.i)*.08;K.pr.material.opacity=.5+.25*Math.sin(t*3+c.i);
+ K.bust.rotation.y+=dt*(c.worse&&!c.done?1.1:.55);K.lab.visible=(typeof DR==='undefined'||DR.k<.5);K.bust.position.y=Math.sin(t*1.4+c.i)*.08;K.pr.material.opacity=.5+.25*Math.sin(t*3+c.i);
  const P=K.pts.geometry.attributes.position;for(let i=0;i<P.count;i++){let y=P.getY(i)+K.pv[i]*dt;if(y>2.8)y=0;P.setY(i,y)}P.needsUpdate=true;
  const on=(CALLS[c.id]||0)>performance.now();K.call.visible=on;if(on){K.call.rotation.y=Math.sin(t*1.2)*.6;const beat=Math.pow(Math.max(0,Math.sin(t*6.3)),8);K.call.scale.setScalar(1.6+beat*.25);K.cg.material.opacity=.3+beat*.4;const w=(t*1.2)%1;K.wave.scale.setScalar(1+w*1.2);K.wave.material.opacity=(1-w)*.7}})}
 /* ---- cajas gigantes de producto (exhibidores giratorios) ---- */
@@ -1743,6 +1743,41 @@ const PHB=(()=>{const g=new THREE.Group();g.position.set(PHARM.x,0,PHARM.z);scen
  const beam=new THREE.Mesh(new THREE.CylinderGeometry(1.2,1.6,11,24,1,true),new THREE.MeshBasicMaterial({color:0xff5a5a,transparent:true,opacity:.1,blending:ADD,depthWrite:false,side:THREE.DoubleSide}));beam.position.y=5.5;g.add(beam);
  const glow=new THREE.Sprite(new THREE.SpriteMaterial({map:GLOW,color:0xff5a5a,transparent:true,opacity:.5,blending:ADD,depthWrite:false}));glow.position.y=11.5;glow.scale.set(8,8,1);g.add(glow);return{g,cr,ring,beam,glow,m}})();
 function updPharmBeacon(t){const np=needPharm();PHB.cr.rotation.y=t*(np?2.2:.8);PHB.ring.rotation.x=Math.PI/2;PHB.ring.rotation.z=t;const b=np?.75+.25*Math.sin(t*6):.35;PHB.m.opacity=.85*b+.1;PHB.beam.material.opacity=np?.16+.08*Math.sin(t*6):.05;PHB.glow.material.opacity=np?.6:.2;PHB.cr.scale.setScalar(np?1.25+.1*Math.sin(t*6):1)}
+/* ---- entrega del paquete de Lacteol fort en la casa del paciente atendido ---- */
+const DELIV={};let delTex=null;
+function delLabelTex(){const c=document.createElement('canvas');c.width=512;c.height=128;const x=c.getContext('2d');x.font='800 36px system-ui,sans-serif';x.textAlign='center';x.textBaseline='middle';const t='✓ Lacteol® fort entregado';const w=Math.min(500,x.measureText(t).width+50);
+ x.fillStyle='rgba(28,41,103,.9)';x.beginPath();x.roundRect?x.roundRect(256-w/2,18,w,92,46):x.rect(256-w/2,18,w,92);x.fill();x.lineWidth=5;x.strokeStyle='#ffd84a';x.shadowColor='#ffd84a';x.shadowBlur=14;x.stroke();x.shadowBlur=0;x.fillStyle='#ffffff';x.fillText(t,256,65);return new THREE.CanvasTexture(c)}
+function deliverBox(c,anim){if(DELIV[c.id])return;const H=HOUSES[c.i];if(!H)return;if(!delTex){delTex=new THREE.TextureLoader().load('img/caja_sobres_front.jpg');delTex.anisotropy=4}
+ const hp=H.g.position;const dx=c.x-hp.x,dz=c.z-hp.z,dd=Math.hypot(dx,dz)||1;const px=-dz/dd,pz=dx/dd;const end=new V3(hp.x+dx/dd*(H.d/2+2.6)+px*4,0,hp.z+dz/dd*(H.d/2+2.6)+pz*4);
+ const side=new THREE.MeshStandardMaterial({color:0xf7f8fc,roughness:.4}),fm=new THREE.MeshStandardMaterial({map:delTex,roughness:.35});
+ const g=new THREE.Group();const box=new THREE.Mesh(new THREE.BoxGeometry(2.3,2.9,1.2),[side,side,side,side,fm,fm]);box.position.y=1.45;box.castShadow=QUAL!=='lo';g.add(box);
+ const ring=new THREE.Mesh(new THREE.RingGeometry(1.8,2.1,48),new THREE.MeshBasicMaterial({color:0xffd84a,transparent:true,opacity:.9,blending:ADD,depthWrite:false,side:THREE.DoubleSide}));ring.rotation.x=-Math.PI/2;ring.position.y=.06;g.add(ring);
+ const glow=new THREE.Sprite(new THREE.SpriteMaterial({map:GLOW,color:0xffd84a,transparent:true,opacity:.5,blending:ADD,depthWrite:false}));glow.position.y=1;glow.scale.set(5,5,1);g.add(glow);
+ const lab=new THREE.Sprite(new THREE.SpriteMaterial({map:delLabelTex(),transparent:true,depthWrite:false}));lab.scale.set(5.2,1.3,1);lab.position.y=4.2;g.add(lab);
+ g.rotation.y=Math.atan2(dx,dz);scene.add(g);OBST.push({x:end.x,z:end.z,r:1.4,h:0,deliv:c.id});
+ const D={g,box,ring,glow,lab,end,pending:!!anim,t0:0,start:new V3()};DELIV[c.id]=D;
+ if(anim){g.visible=false}else g.position.copy(end)}
+function removeDeliv(id){const D=DELIV[id];if(!D)return;scene.remove(D.g);delete DELIV[id];for(let i=OBST.length-1;i>=0;i--)if(OBST[i].deliv===id)OBST.splice(i,1)}
+function updDeliv(t,ph){Object.values(DELIV).forEach(D=>{
+ if(D.pending&&ph==='drive'){D.pending=false;D.t0=performance.now();D.start.copy(unit.position);D.g.visible=true;D.lab.visible=false;try{whoosh(true)}catch(_){}}
+ if(D.t0){const u=(performance.now()-D.t0)/1800;if(u<1){const e=ease(u);D.g.position.set(D.start.x+(D.end.x-D.start.x)*e,(D.start.y)*(1-e)+Math.sin(Math.PI*u)*7,D.start.z+(D.end.z-D.start.z)*e);D.box.rotation.y=u*Math.PI*4;D.ring.visible=false}
+  else{D.t0=0;D.g.position.copy(D.end);D.box.rotation.y=0;D.ring.visible=true;D.lab.visible=true;burst(D.end.x,2.2,D.end.z,70);sfx.chime();setTimeout(()=>sfx.bloom(),200)}}
+ const p=Math.sin(t*2)*.5+.5;D.ring.scale.setScalar(1+p*.25);D.ring.material.opacity=.5+.4*p;D.glow.material.opacity=.3+.25*p;D.lab.position.y=4.2+Math.sin(t*1.5)*.12})}
+/* ---- el campo florece más al cerrar la guardia ---- */
+const CARPET=(()=>{const N=QUAL==='lo'?700:1500;const cv=document.createElement('canvas');cv.width=cv.height=128;const x=cv.getContext('2d');x.translate(64,64);
+ for(let i=0;i<6;i++){x.rotate(Math.PI/3);const gr=x.createLinearGradient(0,0,0,-60);gr.addColorStop(0,'#ffffff');gr.addColorStop(1,'#e8e8e8');x.fillStyle=gr;x.beginPath();x.ellipse(0,-32,15,30,0,0,7);x.fill()}
+ x.fillStyle='#ffd84a';x.beginPath();x.arc(0,0,13,0,7);x.fill();const tex=new THREE.CanvasTexture(cv);
+ const geo=new THREE.PlaneGeometry(1,1);geo.rotateX(-Math.PI/2);const mat=new THREE.MeshBasicMaterial({map:tex,transparent:true,alphaTest:.35,depthWrite:false});
+ const m=new THREE.InstancedMesh(geo,mat,N);m.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(N*3),3);const cols=[0xff6aa8,0xff9b3d,0xc6d600,0x5ec8ff,0xffffff,0xff6a5b,0xb58cff].map(h=>new THREE.Color(h));
+ const D=[],dm=new THREE.Object3D();for(let i=0;i<N;i++){const a=rnd()*6.28,r=8+Math.sqrt(rnd())*130;const px=Math.sin(a)*r,pz=Math.cos(a)*r;D.push({x:px,z:pz,d:r,s:rr(1.8,4.2),rot:rnd()*6.28});const c=cols[i%cols.length];m.instanceColor.setXYZ(i,c.r,c.g,c.b);dm.position.set(px,.08,pz);dm.scale.setScalar(.001);dm.updateMatrix();m.setMatrixAt(i,dm.matrix)}
+ m.visible=false;m.renderOrder=1;scene.add(m);return{m,D,N,dm,t0:0,doneAt:0}})();
+function updCarpet(ph){const C=CARPET;
+ if(ph==='lobby'||ph==='name'){if(C.t0){C.t0=0;C.m.visible=false;C.doneAt=0;for(let i=0;i<C.N;i++){C.dm.position.set(C.D[i].x,.08,C.D[i].z);C.dm.scale.setScalar(.001);C.dm.updateMatrix();C.m.setMatrixAt(i,C.dm.matrix)}C.m.instanceMatrix.needsUpdate=true}return}
+ const fe=FIN?(performance.now()-FIN.t0)/1000:0;if(!C.t0&&((ph==='finale'&&fe>7)||ph==='done')){C.t0=performance.now();C.m.visible=true}
+ if(!C.t0||C.doneAt)return;const e=(performance.now()-C.t0)/1000;let all=true;
+ for(let i=0;i<C.N;i++){const d=C.D[i];let k=(e*28-d.d)/10;if(k<1)all=false;k=Math.max(0,Math.min(1,k));const sc=d.s*(k<1?k*(1.25-.25*k)*1.0:1);C.dm.position.set(d.x,.08+i*.00004,d.z);C.dm.rotation.set(0,d.rot+e*.05*(1-k),0);C.dm.scale.setScalar(Math.max(.001,sc));C.dm.updateMatrix();C.m.setMatrixAt(i,C.dm.matrix)}
+ C.m.instanceMatrix.needsUpdate=true;if(all)C.doneAt=performance.now();
+ if(ph==='done')flowers.forEach(f=>f.target=1)}
 (function shadowCasters(){scene.traverse(o=>{if(!o.isMesh||o===ground)return;const m=o.material;if(!m||Array.isArray(m)||m.transparent||m.isMeshBasicMaterial)return;if(!o.geometry.boundingSphere)o.geometry.computeBoundingSphere();if(o.geometry.boundingSphere.radius>40)return;o.castShadow=true})})();
 requestAnimationFrame(tick);
 setupJoin();
