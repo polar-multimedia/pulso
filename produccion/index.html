@@ -76,6 +76,7 @@ main{min-width:0;display:grid;gap:22px;align-content:start}
 .meta div{min-width:0;overflow-wrap:anywhere}
 .meta span{color:var(--muted);font-weight:700;font-size:11px;letter-spacing:.08em;text-transform:uppercase;display:block}
 .falta{font-size:13.5px;color:var(--coral)}
+.dl{color:var(--cyan);font-weight:700;text-decoration:underline;text-underline-offset:2px}
 .who{font-size:12.5px;color:var(--ok);font-weight:700}
 .nav2{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:16px}
 .nav2 a{color:var(--fg);text-decoration:none;font-weight:800;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 14px}
@@ -126,51 +127,49 @@ const S=[
  {id:'resumen',grp:'Inicio',t:'Resumen',eyebrow:'Tablero de producción',h:'Todo lo que hay que producir, área por área',
   p:'Recorre las áreas en el orden en que las vive el invitado. Cada pieza tiene su medida, el archivo y la carpeta de Drive donde vive. Palomea una pieza cuando su archivo final esté en la carpeta, listo para mandar a impresión o al proveedor. El avance se comparte con todo el equipo.',
   img:[['plano','Plano general: llegada en cian, breaks en naranja, arañas del bar en amarillo.']],items:[],
-  list:['Junta de producción 13 nov · Calle: la cortina de servicio se cubre con lona con ojillos colgada desde arriba; preguntar a Vero por el cajón de valet.','Recepción: el mostrador se forra con lona sobre bastidor delgado; barrita con LED azul al frente.','Foyer: mamparas de 3 y 4 m a 1.90 m de alto, en lona mate.','Bar: arañas de 3.00 × 2.40 m en tela, del inventario de Polar; el pasillo es de doble altura.','Escenario: 5 × 2 m a 0.80 m, faldón, alfombra negra o charol, escalera a cada lado con LED. Podio por definir con Pam.','Sillones: 6 en total (4 escenario, 2 foyer) más las salas de la Room 1, del mismo modelo y en colores de campaña.','Room 1: sin luz propia; luz indirecta de inventario, alfombra por comprar, flores, jardineras y aromaterapia.']},
+  list:['Revisión 13 nov (tarde) · Flag 2 en tres opciones; lona aprobada; valet opcional; mostrador en una sola tira; roll-ups de 800 × 2000; LED azul en el booth; sin viniles en muros, solo electrostáticos en espejos; Infinity y Reflective con los cuatro mensajes por break; Dragon con cajas, .obj y Alembic.','Junta de producción 13 nov · Calle: la cortina de servicio se cubre con lona con ojillos colgada desde arriba; preguntar a Vero por el cajón de valet.','Recepción: el mostrador se forra con lona sobre bastidor delgado; barrita con LED azul al frente.','Foyer: mamparas de 3 y 4 m a 1.90 m de alto, en lona mate.','Bar: arañas de 3.00 × 2.40 m en tela, del inventario de Polar; el pasillo es de doble altura.','Escenario: 5 × 2 m a 0.80 m, faldón, alfombra negra o charol, escalera a cada lado con LED. Podio por definir con Pam.','Sillones: 6 en total (4 escenario, 2 foyer) más las salas de la Room 1, del mismo modelo y en colores de campaña.','Room 1: sin luz propia; luz indirecta de inventario, alfombra por comprar, flores, jardineras y aromaterapia.']},
  {id:'calle',grp:'Recorrido de llegada',t:'Calle',eyebrow:'0 · Llegada 14:00 · salida 22:40',h:'Flags, manta, alfombra y valet',
   p:'La fachada de InSpace en Pestalozzi 35. Dos flags tipo gota a los lados de la puerta peatonal, alfombra solo sobre la banqueta y valet en la calle. De noche se suma iluminación para la salida.',
   carnot:'Lacteol fort más grande en la entrada. Flags sin PULSO (12 nov): solo Lacteol fort y Carnot. Vía pública: visto bueno de regulatorio y, si aplica, COFEPRIS.',
-  img:[['calle_dia','De día, llegada'],['calle_noche','De noche, salida'],['flags','Artes de los flags v3']],
+  img:[['calle_dia','De día, llegada'],['calle_noche','De noche, salida'],['flags','Flags v3 (flag 1 aprobado)'],['flag2_opciones','Flag 2 · tres opciones: logos protagonistas y «Bienvenidos» chico']],
   items:[
    ['flag1','imp','Flag gota 1 · Lacteol fort, Carnot y fecha','Vela ≈ 0.85 × 2.40 m, poliéster sublimado','2026-11-12_PULSO_Flag_gota_1_LacteolFort_Carnot_v3.png',AA+'Artes_impresion','Exportar a resolución de salida con logos en vector; plantilla del proveedor.'],
-   ['flag2','imp','Flag gota 2 · Bienvenidos','Vela ≈ 0.85 × 2.40 m, poliéster sublimado','2026-11-12_PULSO_Flag_gota_2_Bienvenidos_v3.png',AA+'Artes_impresion','Igual que el flag 1.'],
-   ['manta','imp','Lona de fachada sobre la puerta de servicio','≈ 4.10 × 4.60 m, lona con ojillos, colgada desde arriba (azotea o tubos)','2026-11-05_Manta_fachada_v2_Lacteolfort_grande.png',AA+'Artes_impresion','Beto revisa en sitio de dónde se amarra; medir; permiso de InSpace y regulatorio. Aún lleva PULSO.'],
+   ['flag2','imp','Flag gota 2 · elegir opción A, B o C','Vela ≈ 0.85 × 2.40 m, poliéster sublimado','2026-11-13_PULSO_Flag_gota_2_opciones_ABC.jpg',AA+'Artes_impresion','Elegir opción; «Bienvenidos» en un solo renglón, chico; luego exportar final.'],
+   ['manta','imp','Lona de fachada sobre la puerta de servicio · aprobada','≈ 4.10 × 4.60 m, lona con ojillos perimetrales, colgada desde arriba (azotea o tubos)','2026-11-05_Manta_fachada_v2_Lacteolfort_grande.png',AA+'Artes_impresion','Definir ojillos y fijación; Beto revisa en sitio; medir; permiso de InSpace y regulatorio.'],
    ['alfombra','prd','Alfombra azul rey','1.00 m de ancho, de la orilla de la banqueta a la puerta','Proveedor','—','Medir largo en sitio.'],
-   ['valet','imp','Módulo de valet','0.60 × 0.45 × 1.10 m','Por crear',AA+'Artes_impresion','Preguntar a Vero si InSpace tiene cajón de valet y cómo se pone; luego el arte.'],
+   ['valet','imp','Módulo de valet (opcional)','0.60 × 0.45 × 1.10 m','Por crear',AA+'Artes_impresion','Opcional. Preguntar a Vero si InSpace tiene cajón de valet.'],
    ['luznoche','prd','Iluminación de fachada (para la salida)','Luces de piso y reflector por flag, del inventario de Polar','Inventario Polar','—','Se monta para la noche; puede moverse de adentro. Depende del inventario de luces.'],
    ['permisos','prd','Permisos','Alcaldía (flags, alfombra, manta) · regulatorio Carnot','—','—','Definir quién tramita.']]},
  {id:'recepcion',grp:'Recorrido de llegada',t:'Recepción',eyebrow:'1 · Registro',h:'Mostrador, roll-ups y pantalla de bienvenida',
-  p:'El mostrador de registro con su frente impreso, dos roll-ups que tapan las puertas y la pantalla de 40" con los mensajes de cada momento.',
+  p:'El mostrador de registro forrado con una sola tira de lona que da la vuelta (frente y dos costados), dos roll-ups que tapan las puertas y la pantalla de 40" con los mensajes de cada momento.',
   img:[['mostrador','Mostrador con arreglos'],['rollups','Roll-ups']],
   items:[
-   ['mostrador','imp','Forro del mostrador','2470 × 960 mm, lona sobre bastidor delgado que lo rodea, con fondo a los lados','Mostrador_frente_2470x960mm.png',AA+'Artes_impresion','Beto arma el bastidor; ajustar arte a lona compuesta con costados; validar referencias.'],
-   ['rollup1','imp','Roll-up 1 · intestino de flores','1.00 × 2.00 m','Rollup_1_KV_1000x2000mm.png',AA+'Artes_impresion','Validar referencias; exportar final.'],
-   ['rollup2','imp','Roll-up 2 · producto','1.00 × 2.00 m','Rollup_2_producto_1000x2000mm.png',AA+'Artes_impresion','Validar referencias; exportar final.'],
+   ['mostrador','imp','Forro del mostrador · una sola tira','Mostrador 2470 × 960 × 520 mm (medido en sitio) · tira de 3510 × 960 mm (costado 520 + frente 2470 + costado 520) · archivo 3610 × 1060 mm con 50 mm de rebase por lado · lona sobre bastidor','Mostrador_frente_2470x960mm.png (solo frente)',AA+'Artes_impresion','Rehacer como tira continua: logos y texto centrados en el frente, flores que siguen a los costados.'],
+   ['rollup1','imp','Roll-up 1 · intestino de flores','800 × 2000 mm','Rollup_1_KV_1000x2000mm.png (a 1000 mm)',AA+'Artes_impresion','Mismo diseño, reacomodar a 800 mm de ancho.'],
+   ['rollup2','imp','Roll-up 2 · producto','800 × 2000 mm','Rollup_2_producto_1000x2000mm.png (a 1000 mm)',AA+'Artes_impresion','Mismo diseño, reacomodar a 800 mm de ancho.'],
    ['pantalla','pan','Pantalla de bienvenida (4 estados)','40" · 1920 × 1080 px','WS1 a WS4 (PNG)',AA+'Pantalla_bienvenida','Hoy son imágenes fijas; falta exportar los 4 MP4 animados.'],
    ['flores','prd','Arreglos florales (2)','Bowls blancos ≈ 45 × 35 cm','Florista','—','Cotizar.'],
-   ['led_rec','prd','Tira LED azul en mostrador y booth','Barrita al frente para meter la tira','Inventario Polar','—','Beto hace la barrita; revisar si queda tira azul.'],
+   ['led_rec','prd','Tira LED azul en el mostrador','Barrita al frente para meter la tira','Inventario Polar','—','Beto hace la barrita; revisar si queda tira azul.'],
    ['tableta','prd','Tableta de registro y portaletrero','Soporte delgado y acrílico','App de registro',DR+'08_App_Registro_PULSO','Confirmar equipo.']]},
  {id:'foyer',grp:'Recorrido de llegada',t:'Foyer · booth',eyebrow:'2 · Foto de llegada',h:'Booth con mampara y sala lounge',
-  p:'Booth de fotos en esquina con mampara frontal y lateral de 1.90 m de alto, luz indirecta y una pequeña sala lounge al frente.',
+  p:'Booth de fotos en esquina con mampara frontal y lateral de 1.90 m de alto, luz indirecta arriba, tira LED azul al pie y dos sillones para fotos. Aprobado.',
   img:[['booth','Booth con sillones (concepto)']],
   items:[
    ['booth_f','imp','Mampara frontal','3000 × 1900 mm, lona mate','Booth_frontal_3000x2000mm.png (a 2000 mm)',AA+'Artes_impresion','Diseñar a 1900 mm de alto con sobrante; validar referencias.'],
    ['booth_l','imp','Mampara lateral · cuatro mensajes','4000 × 1900 mm, lona mate','Booth_lateral_4000x2000mm.png (a 2000 mm)',AA+'Artes_impresion','Ajustar el arte a 1900 mm de alto; validar referencias; exportar final.'],
-   ['booth_luz','prd','Iluminación del booth','Spots ocultos arriba y tira LED al pie','Proveedor','—','Cotizar.'],
+   ['booth_luz','prd','Iluminación del booth','Luz indirecta arriba · tira LED azul al pie','Inventario Polar','—','La tira del pie va en azul.'],
    ['booth_sill','mob','2 sillones + mesa lateral','Mismo modelo que los del escenario y la Room 1','Renta','—','Solo para fotos; los invitados no esperan aquí.'],
    ['booth_tap','mob','Tapete','≈ 2.00 × 1.40 m, azul profundo','Renta','—','Cotizar.'],
    ['booth_alt','prd','Altura del booth','Mamparas a 1.90 m · luz arriba con altura libre ≥ 2.10 m','—','—','Confirmar en sitio.']]},
  {id:'pasillo',grp:'Recorrido de llegada',t:'Pasillo y bar',eyebrow:'3 · Camino corto a la 360',h:'Pasillo de los baños y las arañas del bar',
-  p:'El invitado pasa por el pasillo de los baños y cruza la franja superior del bar hasta la puerta de la Sala 360. Dos arañas de 3.00 × 2.40 m escalonadas tapan el emplatado y dejan un paso oculto de 1 m para meseros.',
+  p:'El invitado pasa por el pasillo de los baños y cruza la franja superior del bar hasta la puerta de la Sala 360. Dos arañas de 3.00 × 2.40 m escalonadas tapan el emplatado y dejan un paso oculto de 1 m para meseros. En los muros del pasillo no se pega nada: el único vinil va en los espejos de los baños, en electrostático.',
   img:[['aranas','Planta del bar con las arañas escalonadas']],
   items:[
-   ['arana1','imp','Araña 1 · jardín, frase de umbral, línea de pulso','3000 × 2400 mm, tela, una cara · araña del inventario de Polar','Por crear',AA+'Artes_impresion','Arte por diseñar; frase «Todo empieza con un pulso» por validar.'],
-   ['arana2','imp','Araña 2 · Lacteol fort, PULSO y cuatro mensajes','3000 × 2400 mm + 960 mm de empate · araña del inventario de Polar','Por crear',AA+'Artes_impresion','Arte por diseñar; confirmar rebase y tela con el proveedor.'],
-   ['vinil_linea','imp','Vinil línea de pulso','≈ 7.00 × 0.30 m','Por crear',AA+'Artes_impresion','Medir pasillo.'],
-   ['vinil_teaser','imp','Vinil flores y teaser «Se abre a las 17:40»','Recortes, por medir','Por crear',AA+'Artes_impresion','Medir puertas.'],
-   ['vinil_esp','imp','Vinil espejos de baños','≈ 30 × 20 cm','Por crear',AA+'Artes_impresion','—'],
-   ['led_pasillo','prd','Tira LED azul al pie','≈ 15 m lineales','Proveedor','—','Cotizar.'],
-   ['bar_med','prd','Medidas del bar y del pasillo','Boca ≈ 5 m · el pasillo es de doble altura: las arañas caben','—','—','Medir boca y ancho; ubicar barra y espacio de catering; permiso de vinil.']]},
+   ['arana1','imp','Araña 1 · jardín, frase de umbral, línea de pulso · propuesta aprobada','3000 × 2400 mm, tela, una cara · araña del inventario de Polar','Por crear',AA+'Artes_impresion','Diseñar; frase «Todo empieza con un pulso» por validar con Carnot.'],
+   ['arana2','imp','Araña 2 · Lacteol fort, PULSO y cuatro mensajes · propuesta aprobada','3000 × 2400 mm + 960 mm de empate · araña del inventario de Polar','Por crear',AA+'Artes_impresion','Diseñar; confirmar rebase y tela.'],
+   ['vinil_esp','imp','Electrostáticos de espejos de baños · 4 triángulos','Triángulos rectángulos de ≈ 30 × 30 cm, electrostático (sin pegamento). Por espejo: esquina inferior izquierda «Natural y amigable» + flores + PULSO; esquina superior derecha «Seguridad respaldada» + flores + Carnot. Un espejo en baño de mujeres y uno en baño de hombres','Por crear',AA+'Artes_impresion','Diseñar con referencias; imprimir un par de repuesto.'],
+   ['led_pasillo','prd','Tira LED azul al pie del pasillo','≈ 15 m lineales, sin pegar al muro','Inventario Polar','—','Marca el camino sin tocar los muros.'],
+   ['bar_med','prd','Medidas del bar y del pasillo','Boca ≈ 5 m · el pasillo es de doble altura: las arañas caben','—','—','Medir boca y ancho; ubicar barra y espacio de catering.']]},
  {id:'montaje',grp:'Sala 360',t:'Montaje',eyebrow:'Sala 360 · 20 × 13.08 m',h:'Pasillo central: 19 mesas de 8',
   p:'Mesas de 1.52 m con las ocho sillas abiertas hacia el escenario. Pasillo central de 2 m, franja de servicio de 1.20 m al fondo. Mesa más lejana a 12 m. Escenario de 5 × 2 m.',
   carnot:'Que nadie le dé la espalda al escenario, 8 por mesa y sin agregar mesas.',
@@ -199,38 +198,36 @@ const S=[
    ['cort_h','pan','Cortinillas de los doctores (5)','16:9','Semblanzas animadas',DR+'18_Semblanzas_animadas','Aprobadas.'],
    ['cort_m','pan','Cortinillas de las doctoras (3)','16:9','Por rehacer',DR+'18_Semblanzas_animadas','Esperamos fotos de Mendoza, Montijo y Abreu.'],
    ['ppts','pan','Presentaciones de ponentes','Con la plantilla, sin fondos blancos','Por recibir',DR+'10_Plantilla_ponentes','Pedir antes del ensayo.']]},
- {id:'infinity',grp:'Breaks',t:'Infinity',eyebrow:'Breaks · primera sala al salir',h:'Caleidoscopio de flores',
-  p:'Muro LED de 1920 × 1920 multiplicado por espejos. Logo de Lacteol fort al centro. Cambia en cada break: flores de hielo y flores al sol.',
+ {id:'infinity',grp:'Breaks',t:'Infinity',eyebrow:'Breaks · primera sala al salir',h:'Dos caleidoscopios nuevos: frío y calor',
+  p:'Muro LED de 1920 × 1920 multiplicado por espejos. Dos loops nuevos de 64 s, uno por break, ya no los cuatro anteriores. El fondo es un caleidoscopio de 6 u 8 gajos que gira despacio; al centro, fuera del efecto, pasan 8 momentos de 8 s: Lacteol fort · mensaje · Carnot · mensaje · Lacteol fort · mensaje · Carnot · mensaje, con los cuatro mensajes clave en cada break. Frío: nieve que cae, ráfagas de viento, escarcha en las orillas, vaho al centro y flores de hielo, en azul y plata; los mensajes se escriben en escarcha. Calor: plumerias e hibiscos en coral, naranja y dorado, ondas de calor, destellos de sol y polen que sube; los mensajes se iluminan con un destello de sol.',
   img:[['infinity','Loop base en la sala'],['inf_frio','Break 1 · frío'],['inf_calor','Break 2 · calor']],
   items:[
-   ['inf_base','pan','Loop base (elegir 1 de 4)','1920 × 1920 px, 10 s, HAP o H.264','R4_Infinity_*_loop10s_1920x1920.mp4',AA+'Cuadros_clave','Elegir opción.'],
-   ['inf_b1','pan','Loop break 1 · flores de hielo','1920 × 1920 px, 10 s','Imagen hecha',AA+'Cuadros_clave','Falta animar.'],
-   ['inf_b2','pan','Loop break 2 · flores al sol','1920 × 1920 px, 10 s','Imagen hecha',AA+'Cuadros_clave','Falta animar.']]},
- {id:'dragon',grp:'Breaks',t:'Dragon',eyebrow:'Breaks · LED volumétrico',h:'Flor de luz, logos y sobre',
-  p:'LED volumétrico de 2 × 2 × 3 m. La flor de luz se convierte en PULSO, Lacteol fort y Carnot.',
-  carnot:'Intentar el product shot del sobre y probar que se lea.',
-  img:[['dragon','Loop en la sala']],
+   ['inf_b1','pan','Loop break 1 · frío','1920 × 1920 px, 64 s (8 × 8 s), HAP o H.264, sin audio','Por crear',AA+'Animaciones','Caleidoscopio de nieve, viento, escarcha y flores de hielo; los cuatro mensajes con Lacteol fort y Carnot intercalados.'],
+   ['inf_b2','pan','Loop break 2 · calor','1920 × 1920 px, 64 s (8 × 8 s), HAP o H.264, sin audio','Por crear',AA+'Animaciones','Caleidoscopio de plumerias, ondas de calor, destellos y polen; los cuatro mensajes con Lacteol fort y Carnot intercalados.']]},
+ {id:'dragon',grp:'Breaks',t:'Dragon',eyebrow:'Breaks · LED volumétrico',h:'Cajas, logos y flor de luz',
+  p:'LED volumétrico de 2 × 2 × 3 m. Loop de 64 s en 8 momentos de 8 s: caja de Lacteol fort · logo de Lacteol fort · flor · logo de Carnot · caja de Lact1 · logo de Lact1 · flor · logo de Carnot. Se entrega en dos formatos: .obj de cada logo y caja (sin animación; InSpace aplica rotación, traslado y color, y con el color resolvemos frío y calor) y un Alembic .abc con la flor animada a 30 fps. Primero mandamos un paquete de prueba al equipo técnico de InSpace para que lo carguen.',
+  carnot:'Intentar el product shot del sobre y probar que se lea. Se resuelve con la caja.',
+  img:[['dragon','Loop actual en la sala (vista previa)'],['caja_lacteol','Caja de Lacteol fort: frente y vuelta iguales; costados blancos con Carnot; tapa y base blancas con franjas azul y naranja'],['caja_lact1','Caja de Lact1: mismo tratamiento']],
   items:[
-   ['dr_base','pan','Loop base de 60 s','TouchDesigner o Alembic','R2_Dragon_*.mp4 (vista previa)',AA+'Cuadros_clave','Exportar en formato de InSpace.'],
-   ['dr_b1','pan','Versión break 1 · tonos fríos','Mismo formato','Por crear',AA+'Cuadros_clave','—'],
-   ['dr_b2','pan','Versión break 2 · tonos cálidos','Mismo formato','Por crear',AA+'Cuadros_clave','—'],
-   ['dr_sobre','prd','Prueba del sobre en el LED','—','—','—','Probar en sitio si se lee.'],
+   ['dr_prueba','pan','Paquete de prueba para InSpace','1 .obj de logo + 1 .abc de 10 s a 30 fps','Por crear',AA+'Animaciones','Mandar al equipo técnico para que lo carguen y nos digan cómo se ve.'],
+   ['dr_logos','pan','Logos en .obj · Lacteol fort, Lact1 y Carnot','Extrusión 3D desde vector','Vectores en 00_Logos',DR+'00_Logos','Carnot ya en SVG; Lacteol fort y Lact1 en vector.'],
+   ['dr_cajas','pan','Cajas en .obj · Lacteol fort y Lact1','Frente y vuelta con el mismo arte; costados blancos con logo de Carnot; tapa y base blancas con franjas','Por crear',AA+'Animaciones','Modelar a partir de las fotos de las cajas.'],
+   ['dr_flor','pan','Flor de luz en Alembic','.abc a 30 fps, se abre y se cierra','Por crear',AA+'Animaciones','Ajustar si InSpace pide otros fps.'],
    ['dr_audio','pan','Audio','MP3 o WAV','Por crear',AA+'Cuadros_clave','—']]},
  {id:'reflective',grp:'Breaks',t:'Reflective',eyebrow:'Breaks · espejos',h:'¿Por qué Lacteol fort?',
-  p:'Cuatro muros proyectados entre espejos. Logos fijos en B1 y B2; en A1 y A2 los mensajes de cada break, con «¿Por qué Lacteol fort?» y el logo arriba.',
+  p:'Cuatro muros proyectados entre espejos. Muros cortos: logo de Lacteol fort con Carnot abajo, en los dos. Muros largos: los cuatro mensajes en cada break, con «¿Por qué Lacteol fort?» y el logo arriba; el texto se queda quieto mientras se lee. Base que fluye despacio en los dos muros largos hacia la puerta de la Infinity, para que se sienta como un túnel y no gire ni maree. Cada 16 s algo cruza los cuatro muros en 2 o 3 s: una ráfaga de nieve en el frío, una nube de pétalos y polen en el calor, y a veces la línea de pulso da la vuelta a la sala y hace latir los logos. Frío: escarcha y hielo; los mensajes crecen como escarcha y se rompen en cristales; el logo detrás de un vidrio empañado que se limpia. Calor: luz dorada y aire que vibra; los mensajes aparecen con un destello de sol; el logo con un halo que respira.',
   carnot:'Que se vea el logo de Lacteol fort junto a «¿Por qué Lacteol fort?».',
   img:[['reflective','Render del cuarto'],['ref_frio','Break 1 · frío'],['ref_calor','Break 2 · calor']],
   items:[
-   ['ref_base','pan','Loop base de 40 s','Archivo cosido 4626 × 1200 px','Reflective_estado1/2_4626x1200.png',AA+'Cuadros_clave','Corregir a «¿Por qué Lacteol fort?» con logo; confirmar ancho con InSpace.'],
-   ['ref_b1','pan','Break 1 · El aliado ideal y Seguridad respaldada','4626 × 1200 px','Imagen hecha',AA+'Cuadros_clave','Falta animar; frase de temporada por validar.'],
-   ['ref_b2','pan','Break 2 · Acción rápida y Natural y amigable','4626 × 1200 px','Imagen hecha',AA+'Cuadros_clave','Falta animar; frase de temporada por validar.']]},
+   ['ref_b1','pan','Loop break 1 · frío','Archivo cosido 4626 × 1200 px · cuatro mensajes','Imagen de propuesta',AA+'Cuadros_clave','Animar con la base que fluye y la ráfaga cada 16 s; confirmar ancho con InSpace.'],
+   ['ref_b2','pan','Loop break 2 · calor','Archivo cosido 4626 × 1200 px · cuatro mensajes','Imagen de propuesta',AA+'Cuadros_clave','Animar con la base que fluye y los pétalos cada 16 s.']]},
  {id:'room1',grp:'Breaks',t:'Room 1',eyebrow:'Breaks · descanso',h:'Sala lounge sin pantallas',
-  p:'La única sala que decoramos por dentro: es para descansar los ojos. No tiene luz propia, así que toda la luz es nuestra e indirecta, detrás de las salas hacia los muros. Salas lounge con mesitas, flores, jardineras y aromaterapia.',
+  p:'La única sala que decoramos por dentro: es para descansar los ojos. No tiene luz propia, así que toda la luz es nuestra e indirecta, detrás de las salas hacia los muros. Alfombra, salas lounge con mesitas, flores y aromatizantes: canela en el break de frío y cítricos en el de calor.',
   img:[['room1','Room 1 como lounge (concepto)']],
   items:[
    ['r1_salas','mob','Salas lounge con mesitas','Modulares (como las de Beautiful Mind) o lounge blancas; colores de campaña','Renta','—','Cotizar junto con los 6 sillones.'],
    ['r1_tapete','mob','Alfombra','≈ 4.00 × 1.20 m o más, azul profundo','Compra','—','Hay que comprarla: en inventario solo hay roja y rosa.'],
-   ['r1_flores','prd','Flores y jardineras','Arreglos en las mesitas y jardineras','Florista','—','Cotizar.'],
+   ['r1_flores','prd','Flores','Arreglos en las mesitas','Florista','—','Cotizar.'],
    ['r1_aroma','prd','Aroma','Difusores en frío: canela (break 1), cítricos (break 2)','Proveedor','—','—'],
    ['r1_luz','prd','Luz indirecta','Barras LED con tira dentro y robóticas fijas, detrás de las salas hacia los muros; tiras al piso a los lados','Inventario Polar','—','La sala no tiene focos. Beto hace una muestra y revisa el inventario de luces.'],
    ['r1_bebidas','prd','Bebidas','Calientes (break 1) · agua fresca (break 2)','Catering','—','—']]},
@@ -251,6 +248,9 @@ const S=[
   p:'Lo que necesitamos de otros para cerrar archivos finales.',img:[],items:[],
   list:['Carnot: logos de Lacteol fort y Carnot en vector.','Carnot: fotos de las doctoras Mendoza, Montijo y Abreu.','Carnot: validar frase de umbral, frases de temporada, opción de sillones y referencias de mostrador, booth y Reflective.','Carnot: comentarios del video de mensajes clave.','InSpace: medidas del bar, del pasillo y de la manta; puertas de la Sala 360; permisos de vinil y luz.','InSpace: confirmar fecha de ensayo (18 o 25 de noviembre).','Proveedor de arañas: tela, rebase y si son rectas.','Banquetero: medida de las mesas.']}
 ];
+const F='https://drive.google.com/file/d/', D='https://drive.google.com/drive/folders/';
+const LINKS={flag1:'17MEsnzbIJ6E6ZlCb2p0X72LrFM-OhX4v',manta:'14NyYQf5qpl7F_SeDTHooQmEjCUzAHpnd',mostrador:'1lSvWsNZODBNT0Efzc46qj-MkxfpVk91I',rollup1:'1G7NS-7y2K0Kmm15K9kG4wZ3-wc6YTBov',rollup2:'10p5Rf_FjevkCicMD2Eneh2mHBN8orZV6',booth_f:'1lDApNgQo_5mNeWqZJIZ0oIf0Gv-nE73k',booth_l:'1RqVt21UxOKfctfdFiSVCuXFutI9ajZk0',plano360:'1xWhzHH5gyj8fE690OwOFDtyMxLBpPNRr',plantilla:'1vdxLus8AS9AhdZpS9mFr2GY3mx3UoTVJ',bar_med:'1R8mOJajYf3G_h-gMuPl44pINm5OXWYfs'};
+const FOLD={'Artes_impresion':'1Yow3FSNp5s6e7c_jELAd1-gwpsu0or7S','Cuadros_clave':'16ft4-qz3dZuyV4-gFT4-Kadda6JMV_N2','Planos':'1RAyUk3uPvVq-WFdfLdak-d1g9WTrDDpH','Pantalla_bienvenida':'1tkfxB55Cm4oa163xiDfAXI-h9p1dEID-','10_Plantilla_ponentes':'1xuwoGx7s4PA-XZQ6IgvAHx_A_kxw2JcY','18_Semblanzas_animadas':'15CmAix-DhXWSJO4_Pv3JghhWW3f5FBh0','09_Biblia_visual_PULSO':'16GPkvyhAjVYl4Lsh_O_uoK_kc4-OEAGH','12_Codigo_PULSO_Juego':'1let6-gWC3vSOXnlH3z4IxXOCpfIH_6sj','00_Logos':'1ZwAEKB-XJiTnCIFbnhoC3vlqynA7b5Pk','Animaciones':'1Pi4zyxauPNfZmnoASO6m1ShCmK8vow5N'};
 const TIPO={imp:'Impresión',mob:'Mobiliario',pan:'Pantalla',prd:'Producción'};
 const ITEMS=S.flatMap(s=>s.items.map(i=>({sec:s.id,id:i[0]})));
 
@@ -292,7 +292,7 @@ function renderMain(){
       const who=done?`<span class="who">Lista · ${esc(c.by||'Alguien del equipo')}${c.at?' · '+esc(fmtDate(c.at)):''}</span>`:'';
       h+=`<div class="item${done?' done':''}"><input type="checkbox" class="chk" id="c-${id}" data-id="${id}" ${done?'checked':''} ${canWrite?'':'disabled'} aria-label="Marcar lista: ${esc(nm)}">
       <div class="ib"><label class="nm" for="c-${id}"><b>${esc(nm)}</b><span class="tipo ${tp}">${TIPO[tp]}</span></label>
-      <div class="meta"><div><span>Medida</span>${esc(med)}</div><div><span>Archivo</span>${esc(arch)}</div><div><span>Carpeta</span>${esc(carp==='—'?'—':'PULSO by Lacteol / '+carp)}</div></div>
+      <div class="meta"><div><span>Medida</span>${esc(med)}</div><div><span>Archivo</span>${LINKS[id]?`<a class="dl" href="${F+LINKS[id]}/view" target="_blank" rel="noopener">${esc(arch)}</a>`:esc(arch)}</div><div><span>Carpeta</span>${carp==='—'?'—':(FOLD[carp.split('/').pop()]?`<a class="dl" href="${D+FOLD[carp.split('/').pop()]}" target="_blank" rel="noopener">${esc(carp.split('/').pop())}</a>`:esc(carp.split('/').pop()))}</div></div>
       ${!done&&falta&&falta!=='—'?`<p class="falta">Falta: ${esc(falta)}</p>`:''}${who}</div></div>`;
     });
     h+=`</div>`;
