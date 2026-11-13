@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<title>PULSO Producción</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap">
+<style>
+/* Tablero por secciones en el orden del recorrido: índice a la izquierda con avance por área, lámina de la sección a la derecha con su lista de piezas para palomear. Una sola apariencia oscura, como el recinto. */
+:root{
+  --bg:#060b19; --panel:#0d1530; --panel2:#111c3d; --line:#1f2c55; --fg:#eaf1fc; --muted:#a3b3d2;
+  --cyan:#46dcef; --lime:#c8cf00; --coral:#ff9b73; --pink:#ff5fa2; --ok:#5ee39b;
+  --f:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--fg)}
+body{font-family:var(--f);font-weight:500;font-size:15px;line-height:1.55;margin:0}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+h1,h2,h3{margin:0;font-weight:800;line-height:1.2;text-wrap:balance}
+p{margin:0}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line);padding-block:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-wrap:wrap;align-items:center;gap:10px 20px}
+.top .brand{display:grid;gap:2px;min-width:0}
+.top .brand b{font-size:17px;font-weight:800}
+.top .brand span{font-size:12px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;font-weight:700}
+.prog{flex:1 1 260px;display:grid;gap:6px;min-width:0}
+.prog .bar{height:8px;background:var(--panel2);border-radius:99px;overflow:hidden}
+.prog .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--cyan),var(--lime));transition:width .4s}
+.prog small{color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums}
+.quien{display:grid;gap:2px;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.quien input{font:inherit;font-size:14px;letter-spacing:0;text-transform:none;font-weight:700;color:var(--fg);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 10px;width:180px}
+.sync{font-size:12px;font-weight:700;color:var(--muted);white-space:nowrap}
+.sync.live{color:var(--ok)}
+.sync.off{color:var(--coral)}
+.app{display:grid;grid-template-columns:260px minmax(0,1fr);gap:28px;max-width:1240px;margin:0 auto;padding-block:24px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+nav.idx{position:sticky;top:calc(env(safe-area-inset-top,0px) + 90px);align-self:start;display:grid;gap:2px;max-height:calc(100vh - 110px);overflow:auto}
+nav.idx .grp{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:800;padding:12px 10px 4px}
+nav.idx a{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:8px 10px;border-radius:8px;color:var(--fg);text-decoration:none;font-weight:700;font-size:14px}
+nav.idx a:hover{background:var(--panel)}
+nav.idx a[aria-current="page"]{background:var(--panel2);box-shadow:inset 3px 0 0 var(--cyan)}
+nav.idx a .n{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+nav.idx a .n.full{color:var(--ok)}
+main{min-width:0;display:grid;gap:22px;align-content:start}
+.eyebrow{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--cyan);font-weight:800}
+.head{display:grid;gap:8px}
+.head h2{font-size:26px}
+.head p{color:var(--muted);max-width:72ch}
+.gal{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;align-items:start}
+.gal figure{margin:0;display:grid;gap:6px;min-width:0}
+.gal img{width:100%;height:auto;display:block;border-radius:8px;border:1px solid var(--line);background:var(--panel)}
+.gal figcaption{font-size:13px;color:var(--muted)}
+.gal.one{grid-template-columns:1fr}
+.carnot{border-left:4px solid var(--pink);background:rgba(255,95,162,.08);border-radius:0 8px 8px 0;padding:10px 14px;font-size:14px;display:grid;gap:4px}
+.carnot b.t{color:var(--pink);font-size:11px;letter-spacing:.1em;text-transform:uppercase}
+.list{display:grid;gap:8px}
+.list h3{font-size:15px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-size:12px;font-weight:800;margin-top:6px}
+.item{display:grid;grid-template-columns:auto minmax(0,1fr);gap:14px;align-items:start;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.item.done{border-color:rgba(94,227,155,.45);background:linear-gradient(0deg,rgba(94,227,155,.06),rgba(94,227,155,.06)),var(--panel)}
+.chk{appearance:none;width:26px;height:26px;border-radius:7px;border:2px solid var(--muted);background:transparent;cursor:pointer;display:grid;place-items:center;margin-top:1px}
+.chk:checked{background:var(--ok);border-color:var(--ok)}
+.chk:checked::after{content:"";width:7px;height:13px;border:solid #06240f;border-width:0 3px 3px 0;transform:rotate(45deg) translate(-1px,-1px)}
+.chk:disabled{cursor:not-allowed;opacity:.5}
+.ib{display:grid;gap:6px;min-width:0}
+.ib .nm{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 10px}
+.ib .nm b{font-size:16px;font-weight:800}
+.tipo{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:2px 8px;border-radius:99px;border:1px solid var(--line);color:var(--muted)}
+.tipo.imp{color:var(--cyan);border-color:rgba(70,220,239,.5)}
+.tipo.mob{color:var(--coral);border-color:rgba(255,155,115,.5)}
+.tipo.pan{color:var(--lime);border-color:rgba(200,207,0,.5)}
+.tipo.prd{color:#cdb8ff;border-color:rgba(205,184,255,.5)}
+.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:4px 18px;font-size:13.5px}
+.meta div{min-width:0;overflow-wrap:anywhere}
+.meta span{color:var(--muted);font-weight:700;font-size:11px;letter-spacing:.08em;text-transform:uppercase;display:block}
+.falta{font-size:13.5px;color:var(--coral)}
+.who{font-size:12.5px;color:var(--ok);font-weight:700}
+.nav2{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:16px}
+.nav2 a{color:var(--fg);text-decoration:none;font-weight:800;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 14px}
+.nav2 a:hover{border-color:var(--cyan)}
+.empty-note{font-size:13px;color:var(--muted)}
+table.res{width:100%;border-collapse:collapse;font-size:14px}
+table.res th,table.res td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+table.res th{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+table.res td:last-child{font-variant-numeric:tabular-nums;white-space:nowrap}
+.tbx{overflow-x:auto}
+.legend{display:flex;flex-wrap:wrap;gap:8px 14px;font-size:13px;color:var(--muted);align-items:center}
+@media (max-width:860px){
+  .app{grid-template-columns:1fr}
+  nav.idx{position:static;max-height:none;display:flex;overflow-x:auto;gap:6px;padding-bottom:4px}
+  nav.idx .grp{display:none}
+  nav.idx a{white-space:nowrap;grid-template-columns:auto auto;background:var(--panel)}
+}
+.gal img{cursor:zoom-in}
+dialog.lb{border:0;padding:0;background:transparent;max-width:none;max-height:none;width:100vw;height:100vh;margin:0}
+dialog.lb::backdrop{background:rgba(3,6,14,.92)}
+dialog.lb .wrapb{width:100%;height:100%;display:grid;place-items:center;padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));gap:10px;grid-template-rows:1fr auto}
+dialog.lb img{max-width:100%;max-height:calc(100vh - 90px);object-fit:contain;border-radius:6px;cursor:zoom-out}
+dialog.lb p{color:var(--fg);font-size:14px;text-align:center}
+dialog.lb button{position:fixed;top:calc(12px + env(safe-area-inset-top,0px));right:calc(12px + env(safe-area-inset-right,0px));background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px 14px;font-weight:800;cursor:pointer}
+@media (prefers-reduced-motion:reduce){.prog .bar i{transition:none}}
+</style>
+
+</head><body>
+<script src="../juego/mqtt.min.js"></script>
+<header class="top">
+  <div class="brand"><span>PULSO by Lacteol · 26 nov · InSpace</span><b>Producción Polar</b></div>
+  <div class="prog"><div class="bar"><i id="pbar"></i></div><small id="ptxt">0 de 0 piezas listas</small></div>
+  <label class="quien"><span>Tu nombre</span><input id="quien" type="text" maxlength="30" placeholder="Para firmar los checks" autocomplete="name"></label>
+  <span class="sync" id="sync">Conectando avance…</span>
+</header>
+
+<dialog class="lb" id="lb" aria-label="Imagen ampliada"><div class="wrapb"><img id="lbimg" alt=""><p id="lbcap"></p></div><button type="button" id="lbx">Cerrar</button></dialog>
+<div class="app">
+  <nav class="idx" id="idx" aria-label="Secciones"></nav>
+  <main id="main"></main>
+</div>
+
+<script>
+// ---------- Contenido ----------
+const DR='DESARROLLO CREATIVO/';
+const AA=DR+'13_Areas_alternas/';
+const S=[
+ {id:'resumen',grp:'Inicio',t:'Resumen',eyebrow:'Tablero de producción',h:'Todo lo que hay que producir, área por área',
+  p:'Recorre las áreas en el orden en que las vive el invitado. Cada pieza tiene su medida, el archivo y la carpeta de Drive donde vive. Palomea una pieza cuando su archivo final esté en la carpeta, listo para mandar a impresión o al proveedor. El avance se comparte con todo el equipo.',
+  img:[['plano','Plano general: llegada en cian, breaks en naranja, arañas del bar en amarillo.']],items:[],
+  list:['Junta de producción 13 nov · Calle: la cortina de servicio se cubre con lona con ojillos colgada desde arriba; preguntar a Vero por el cajón de valet.','Recepción: el mostrador se forra con lona sobre bastidor delgado; barrita con LED azul al frente.','Foyer: mamparas de 3 y 4 m a 1.90 m de alto, en lona mate.','Bar: arañas de 3.00 × 2.40 m en tela, del inventario de Polar; el pasillo es de doble altura.','Escenario: 5 × 2 m a 0.80 m, faldón, alfombra negra o charol, escalera a cada lado con LED. Podio por definir con Pam.','Sillones: 6 en total (4 escenario, 2 foyer) más las salas de la Room 1, del mismo modelo y en colores de campaña.','Room 1: sin luz propia; luz indirecta de inventario, alfombra por comprar, flores, jardineras y aromaterapia.']},
+ {id:'calle',grp:'Recorrido de llegada',t:'Calle',eyebrow:'0 · Llegada 14:00 · salida 22:40',h:'Flags, manta, alfombra y valet',
+  p:'La fachada de InSpace en Pestalozzi 35. Dos flags tipo gota a los lados de la puerta peatonal, alfombra solo sobre la banqueta y valet en la calle. De noche se suma iluminación para la salida.',
+  carnot:'Lacteol fort más grande en la entrada. Flags sin PULSO (12 nov): solo Lacteol fort y Carnot. Vía pública: visto bueno de regulatorio y, si aplica, COFEPRIS.',
+  img:[['calle_dia','De día, llegada'],['calle_noche','De noche, salida'],['flags','Artes de los flags v3']],
+  items:[
+   ['flag1','imp','Flag gota 1 · Lacteol fort, Carnot y fecha','Vela ≈ 0.85 × 2.40 m, poliéster sublimado','2026-11-12_PULSO_Flag_gota_1_LacteolFort_Carnot_v3.png',AA+'Artes_impresion','Exportar a resolución de salida con logos en vector; plantilla del proveedor.'],
+   ['flag2','imp','Flag gota 2 · Bienvenidos','Vela ≈ 0.85 × 2.40 m, poliéster sublimado','2026-11-12_PULSO_Flag_gota_2_Bienvenidos_v3.png',AA+'Artes_impresion','Igual que el flag 1.'],
+   ['manta','imp','Lona de fachada sobre la puerta de servicio','≈ 4.10 × 4.60 m, lona con ojillos, colgada desde arriba (azotea o tubos)','2026-11-05_Manta_fachada_v2_Lacteolfort_grande.png',AA+'Artes_impresion','Beto revisa en sitio de dónde se amarra; medir; permiso de InSpace y regulatorio. Aún lleva PULSO.'],
+   ['alfombra','prd','Alfombra azul rey','1.00 m de ancho, de la orilla de la banqueta a la puerta','Proveedor','—','Medir largo en sitio.'],
+   ['valet','imp','Módulo de valet','0.60 × 0.45 × 1.10 m','Por crear',AA+'Artes_impresion','Preguntar a Vero si InSpace tiene cajón de valet y cómo se pone; luego el arte.'],
+   ['luznoche','prd','Iluminación de fachada (para la salida)','Luces de piso y reflector por flag, del inventario de Polar','Inventario Polar','—','Se monta para la noche; puede moverse de adentro. Depende del inventario de luces.'],
+   ['permisos','prd','Permisos','Alcaldía (flags, alfombra, manta) · regulatorio Carnot','—','—','Definir quién tramita.']]},
+ {id:'recepcion',grp:'Recorrido de llegada',t:'Recepción',eyebrow:'1 · Registro',h:'Mostrador, roll-ups y pantalla de bienvenida',
+  p:'El mostrador de registro con su frente impreso, dos roll-ups que tapan las puertas y la pantalla de 40" con los mensajes de cada momento.',
+  img:[['mostrador','Mostrador con arreglos'],['rollups','Roll-ups']],
+  items:[
+   ['mostrador','imp','Forro del mostrador','2470 × 960 mm, lona sobre bastidor delgado que lo rodea, con fondo a los lados','Mostrador_frente_2470x960mm.png',AA+'Artes_impresion','Beto arma el bastidor; ajustar arte a lona compuesta con costados; validar referencias.'],
+   ['rollup1','imp','Roll-up 1 · intestino de flores','1.00 × 2.00 m','Rollup_1_KV_1000x2000mm.png',AA+'Artes_impresion','Validar referencias; exportar final.'],
+   ['rollup2','imp','Roll-up 2 · producto','1.00 × 2.00 m','Rollup_2_producto_1000x2000mm.png',AA+'Artes_impresion','Validar referencias; exportar final.'],
+   ['pantalla','pan','Pantalla de bienvenida (4 estados)','40" · 1920 × 1080 px','WS1 a WS4 (PNG)',AA+'Pantalla_bienvenida','Hoy son imágenes fijas; falta exportar los 4 MP4 animados.'],
+   ['flores','prd','Arreglos florales (2)','Bowls blancos ≈ 45 × 35 cm','Florista','—','Cotizar.'],
+   ['led_rec','prd','Tira LED azul en mostrador y booth','Barrita al frente para meter la tira','Inventario Polar','—','Beto hace la barrita; revisar si queda tira azul.'],
+   ['tableta','prd','Tableta de registro y portaletrero','Soporte delgado y acrílico','App de registro',DR+'08_App_Registro_PULSO','Confirmar equipo.']]},
+ {id:'foyer',grp:'Recorrido de llegada',t:'Foyer · booth',eyebrow:'2 · Foto de llegada',h:'Booth con mampara y sala lounge',
+  p:'Booth de fotos en esquina con mampara frontal y lateral de 1.90 m de alto, luz indirecta y una pequeña sala lounge al frente.',
+  img:[['booth','Booth con sillones (concepto)']],
+  items:[
+   ['booth_f','imp','Mampara frontal','3000 × 1900 mm, lona mate','Booth_frontal_3000x2000mm.png (a 2000 mm)',AA+'Artes_impresion','Diseñar a 1900 mm de alto con sobrante; validar referencias.'],
+   ['booth_l','imp','Mampara lateral · cuatro mensajes','4000 × 1900 mm, lona mate','Booth_lateral_4000x2000mm.png (a 2000 mm)',AA+'Artes_impresion','Ajustar el arte a 1900 mm de alto; validar referencias; exportar final.'],
+   ['booth_luz','prd','Iluminación del booth','Spots ocultos arriba y tira LED al pie','Proveedor','—','Cotizar.'],
+   ['booth_sill','mob','2 sillones + mesa lateral','Mismo modelo que los del escenario y la Room 1','Renta','—','Solo para fotos; los invitados no esperan aquí.'],
+   ['booth_tap','mob','Tapete','≈ 2.00 × 1.40 m, azul profundo','Renta','—','Cotizar.'],
+   ['booth_alt','prd','Altura del booth','Mamparas a 1.90 m · luz arriba con altura libre ≥ 2.10 m','—','—','Confirmar en sitio.']]},
+ {id:'pasillo',grp:'Recorrido de llegada',t:'Pasillo y bar',eyebrow:'3 · Camino corto a la 360',h:'Pasillo de los baños y las arañas del bar',
+  p:'El invitado pasa por el pasillo de los baños y cruza la franja superior del bar hasta la puerta de la Sala 360. Dos arañas de 3.00 × 2.40 m escalonadas tapan el emplatado y dejan un paso oculto de 1 m para meseros.',
+  img:[['aranas','Planta del bar con las arañas escalonadas']],
+  items:[
+   ['arana1','imp','Araña 1 · jardín, frase de umbral, línea de pulso','3000 × 2400 mm, tela, una cara · araña del inventario de Polar','Por crear',AA+'Artes_impresion','Arte por diseñar; frase «Todo empieza con un pulso» por validar.'],
+   ['arana2','imp','Araña 2 · Lacteol fort, PULSO y cuatro mensajes','3000 × 2400 mm + 960 mm de empate · araña del inventario de Polar','Por crear',AA+'Artes_impresion','Arte por diseñar; confirmar rebase y tela con el proveedor.'],
+   ['vinil_linea','imp','Vinil línea de pulso','≈ 7.00 × 0.30 m','Por crear',AA+'Artes_impresion','Medir pasillo.'],
+   ['vinil_teaser','imp','Vinil flores y teaser «Se abre a las 17:40»','Recortes, por medir','Por crear',AA+'Artes_impresion','Medir puertas.'],
+   ['vinil_esp','imp','Vinil espejos de baños','≈ 30 × 20 cm','Por crear',AA+'Artes_impresion','—'],
+   ['led_pasillo','prd','Tira LED azul al pie','≈ 15 m lineales','Proveedor','—','Cotizar.'],
+   ['bar_med','prd','Medidas del bar y del pasillo','Boca ≈ 5 m · el pasillo es de doble altura: las arañas caben','—','—','Medir boca y ancho; ubicar barra y espacio de catering; permiso de vinil.']]},
+ {id:'montaje',grp:'Sala 360',t:'Montaje',eyebrow:'Sala 360 · 20 × 13.08 m',h:'Pasillo central: 19 mesas de 8',
+  p:'Mesas de 1.52 m con las ocho sillas abiertas hacia el escenario. Pasillo central de 2 m, franja de servicio de 1.20 m al fondo. Mesa más lejana a 12 m. Escenario de 5 × 2 m.',
+  carnot:'Que nadie le dé la espalda al escenario, 8 por mesa y sin agregar mesas.',
+  img:[['montaje','Montaje de pasillo central optimizado']],
+  items:[
+   ['mesas','mob','19 mesas redondas','Ø 1.52 m (60"), mantel largo blanco','Banquetero','—','Confirmar medida de mesa.'],
+   ['sillas','mob','152 sillas','8 por mesa en arco de 270°','Banquetero','—','—'],
+   ['plano360','prd','Plano de montaje','20 × 13.08 m','2026-11-13_PULSO_Sala360_montaje_pasillo_central_v3.png',AA+'Planos','Confirmar puertas en sitio y mandar a InSpace.']]},
+ {id:'escenario',grp:'Sala 360',t:'Escenario',eyebrow:'Sala 360 · muro largo',h:'Tarima, escaleras y cuatro sillones',
+  p:'Escenario de 5.00 × 2.00 m y 0.80 m de alto al centro del muro largo, con una escalera a cada lado. Cuatro sillones con respaldo de 1 m como máximo para no tapar la lámina, que empieza a 2.15 m. Se retiran en el break 2.',
+  img:[['escenario','La Mesa de Perspectivas, con los cuatro sillones']],
+  items:[
+   ['tarima','prd','Tarima','5.00 × 2.00 m, patas de 0.80 m, faldón y alfombra negra (o charol si está gastada)','Inventario Polar','—','Beto revisa la alfombra.'],
+   ['escaleras','prd','Escaleras (2)','Un desembarque por lado, 2 o 3 escalones, huella amplia, LED en cada escalón','Inventario Polar','—','La sala estará oscura: revisar huella y peralte para que nadie se tropiece.'],
+   ['sillones','mob','4 sillones','Respaldo ≤ 1.00 m · colores de campaña: azul, naranja, coral o crema','Renta','—','Mismo modelo que el foyer y la Room 1; quizá rentar ≈ 5 juegos de sala (2 largos + individuales).'],
+   ['mesitas','mob','3 mesas laterales','Ø 40–45 cm, 55 cm de alto, blancas','Renta','—','—'],
+   ['atril','prd','Podio','Por definir','—','—','Preguntar a Pam si algún ponente lo necesita; no hay en inventario.'],
+   ['micros','prd','Micrófonos','4 diadema o solapa + 1 de mano','Audio','—','Confirmar con InSpace.']]},
+ {id:'contenido',grp:'Sala 360',t:'Escenas y ponentes',eyebrow:'Sala 360 · proyección',h:'Mundos, plantilla y cortinillas',
+  p:'Las escenas de la sala, la plantilla de ponentes para la señal en vivo y las cortinillas de presentación de cada doctor.',
+  carnot:'Los retratos de las doctoras no se parecen; los de los hombres se aprueban. Presentaciones con anticipación y sin cambios de último minuto.',
+  img:[['s360','El Observatorio, con el escenario en el muro largo']],
+  items:[
+   ['escenas','pan','16 escenas de la Sala 360','5 superficies, archivos de InSpace','Escaleta v03',DR+'09_Biblia_visual_PULSO','Renders finales por superficie para InSpace.'],
+   ['plantilla','pan','Plantilla de ponentes','Lámina 1920 × 1080 en lienzo 3840 × 2160','2026-11-05_PULSO_C_Jardin_Carnot_plantilla_ponentes_v2.pptx',DR+'10_Plantilla_ponentes','Enviada; recibir presentaciones.'],
+   ['cort_h','pan','Cortinillas de los doctores (5)','16:9','Semblanzas animadas',DR+'18_Semblanzas_animadas','Aprobadas.'],
+   ['cort_m','pan','Cortinillas de las doctoras (3)','16:9','Por rehacer',DR+'18_Semblanzas_animadas','Esperamos fotos de Mendoza, Montijo y Abreu.'],
+   ['ppts','pan','Presentaciones de ponentes','Con la plantilla, sin fondos blancos','Por recibir',DR+'10_Plantilla_ponentes','Pedir antes del ensayo.']]},
+ {id:'infinity',grp:'Breaks',t:'Infinity',eyebrow:'Breaks · primera sala al salir',h:'Caleidoscopio de flores',
+  p:'Muro LED de 1920 × 1920 multiplicado por espejos. Logo de Lacteol fort al centro. Cambia en cada break: flores de hielo y flores al sol.',
+  img:[['infinity','Loop base en la sala'],['inf_frio','Break 1 · frío'],['inf_calor','Break 2 · calor']],
+  items:[
+   ['inf_base','pan','Loop base (elegir 1 de 4)','1920 × 1920 px, 10 s, HAP o H.264','R4_Infinity_*_loop10s_1920x1920.mp4',AA+'Cuadros_clave','Elegir opción.'],
+   ['inf_b1','pan','Loop break 1 · flores de hielo','1920 × 1920 px, 10 s','Imagen hecha',AA+'Cuadros_clave','Falta animar.'],
+   ['inf_b2','pan','Loop break 2 · flores al sol','1920 × 1920 px, 10 s','Imagen hecha',AA+'Cuadros_clave','Falta animar.']]},
+ {id:'dragon',grp:'Breaks',t:'Dragon',eyebrow:'Breaks · LED volumétrico',h:'Flor de luz, logos y sobre',
+  p:'LED volumétrico de 2 × 2 × 3 m. La flor de luz se convierte en PULSO, Lacteol fort y Carnot.',
+  carnot:'Intentar el product shot del sobre y probar que se lea.',
+  img:[['dragon','Loop en la sala']],
+  items:[
+   ['dr_base','pan','Loop base de 60 s','TouchDesigner o Alembic','R2_Dragon_*.mp4 (vista previa)',AA+'Cuadros_clave','Exportar en formato de InSpace.'],
+   ['dr_b1','pan','Versión break 1 · tonos fríos','Mismo formato','Por crear',AA+'Cuadros_clave','—'],
+   ['dr_b2','pan','Versión break 2 · tonos cálidos','Mismo formato','Por crear',AA+'Cuadros_clave','—'],
+   ['dr_sobre','prd','Prueba del sobre en el LED','—','—','—','Probar en sitio si se lee.'],
+   ['dr_audio','pan','Audio','MP3 o WAV','Por crear',AA+'Cuadros_clave','—']]},
+ {id:'reflective',grp:'Breaks',t:'Reflective',eyebrow:'Breaks · espejos',h:'¿Por qué Lacteol fort?',
+  p:'Cuatro muros proyectados entre espejos. Logos fijos en B1 y B2; en A1 y A2 los mensajes de cada break, con «¿Por qué Lacteol fort?» y el logo arriba.',
+  carnot:'Que se vea el logo de Lacteol fort junto a «¿Por qué Lacteol fort?».',
+  img:[['reflective','Render del cuarto'],['ref_frio','Break 1 · frío'],['ref_calor','Break 2 · calor']],
+  items:[
+   ['ref_base','pan','Loop base de 40 s','Archivo cosido 4626 × 1200 px','Reflective_estado1/2_4626x1200.png',AA+'Cuadros_clave','Corregir a «¿Por qué Lacteol fort?» con logo; confirmar ancho con InSpace.'],
+   ['ref_b1','pan','Break 1 · El aliado ideal y Seguridad respaldada','4626 × 1200 px','Imagen hecha',AA+'Cuadros_clave','Falta animar; frase de temporada por validar.'],
+   ['ref_b2','pan','Break 2 · Acción rápida y Natural y amigable','4626 × 1200 px','Imagen hecha',AA+'Cuadros_clave','Falta animar; frase de temporada por validar.']]},
+ {id:'room1',grp:'Breaks',t:'Room 1',eyebrow:'Breaks · descanso',h:'Sala lounge sin pantallas',
+  p:'La única sala que decoramos por dentro: es para descansar los ojos. No tiene luz propia, así que toda la luz es nuestra e indirecta, detrás de las salas hacia los muros. Salas lounge con mesitas, flores, jardineras y aromaterapia.',
+  img:[['room1','Room 1 como lounge (concepto)']],
+  items:[
+   ['r1_salas','mob','Salas lounge con mesitas','Modulares (como las de Beautiful Mind) o lounge blancas; colores de campaña','Renta','—','Cotizar junto con los 6 sillones.'],
+   ['r1_tapete','mob','Alfombra','≈ 4.00 × 1.20 m o más, azul profundo','Compra','—','Hay que comprarla: en inventario solo hay roja y rosa.'],
+   ['r1_flores','prd','Flores y jardineras','Arreglos en las mesitas y jardineras','Florista','—','Cotizar.'],
+   ['r1_aroma','prd','Aroma','Difusores en frío: canela (break 1), cítricos (break 2)','Proveedor','—','—'],
+   ['r1_luz','prd','Luz indirecta','Barras LED con tira dentro y robóticas fijas, detrás de las salas hacia los muros; tiras al piso a los lados','Inventario Polar','—','La sala no tiene focos. Beto hace una muestra y revisa el inventario de luces.'],
+   ['r1_bebidas','prd','Bebidas','Calientes (break 1) · agua fresca (break 2)','Catering','—','—']]},
+ {id:'dinamica',grp:'Cierre',t:'Dinámica',eyebrow:'19:55–20:40 · Sala 360',h:'JeoparPULSO',
+  p:'Juego de casos clínicos por mesas; las pantallas florecen con cada respuesta. Ganadores de la beca a las 20:40.',
+  img:[['dinamica','La dinámica en la sala']],
+  items:[
+   ['din_preg','prd','Preguntas validadas','—','Por enviar a Karen',DR+'12_Codigo_PULSO_Juego','Mandar a Karen para validación.'],
+   ['din_app','pan','Tablero y app del juego','—','Código del juego',DR+'12_Codigo_PULSO_Juego','Programar con las preguntas validadas y probar en red del venue.']]},
+ {id:'cena',grp:'Cierre',t:'Cena y salida',eyebrow:'20:40–22:40 · Sala 360',h:'Terraza de noche',
+  p:'La cena en una terraza: París con la Torre Eiffel (idea de Carnot), claro de noche INiverse o viñedo. A la salida, giveaway.',
+  carnot:'Terraza en París ligada al origen francés. «El probiótico más vendido» necesita referencia.',
+  img:[['cena','Terraza en París']],
+  items:[
+   ['cena_esc','pan','Escena de cena elegida','5 superficies','Vistas',DR+'09_Biblia_visual_PULSO','Carnot elige París, INiverse o viñedo.'],
+   ['giveaway','prd','Giveaway de salida','—','Por definir','—','Definir pieza y cantidad.']]},
+ {id:'pendientes',grp:'Cierre',t:'Pendientes',eyebrow:'Lo que frena',h:'Pendientes de Carnot, InSpace y proveedores',
+  p:'Lo que necesitamos de otros para cerrar archivos finales.',img:[],items:[],
+  list:['Carnot: logos de Lacteol fort y Carnot en vector.','Carnot: fotos de las doctoras Mendoza, Montijo y Abreu.','Carnot: validar frase de umbral, frases de temporada, opción de sillones y referencias de mostrador, booth y Reflective.','Carnot: comentarios del video de mensajes clave.','InSpace: medidas del bar, del pasillo y de la manta; puertas de la Sala 360; permisos de vinil y luz.','InSpace: confirmar fecha de ensayo (18 o 25 de noviembre).','Proveedor de arañas: tela, rebase y si son rectas.','Banquetero: medida de las mesas.']}
+];
+const TIPO={imp:'Impresión',mob:'Mobiliario',pan:'Pantalla',prd:'Producción'};
+const ITEMS=S.flatMap(s=>s.items.map(i=>({sec:s.id,id:i[0]})));
+
+// ---------- Estado compartido (MQTT retenido + copia local) ----------
+let checks={}; let db=null; let user=null; let canWrite=true; const names={};
+const TOPIC='polar-multimedia/pulso/produccion-7f3k9q/checks';
+const LS='pulso-produccion-checks';
+try{checks=JSON.parse(localStorage.getItem(LS)||'{}')||{}}catch(e){checks={}}
+function saveLocal(){try{localStorage.setItem(LS,JSON.stringify(checks))}catch(e){}}
+function getName(){try{return localStorage.getItem('pulso-produccion-nombre')||''}catch(e){return ''}}
+const $=s=>document.querySelector(s);
+function esc(t){return String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function cur(){const h=(location.hash||'').slice(1);return S.find(s=>s.id===h)?h:'resumen'}
+function count(sec){const it=S.find(s=>s.id===sec).items;return [it.filter(i=>checks[i[0]]?.done).length,it.length]}
+function renderNav(){
+  const c=cur(); let g='',h='';
+  S.forEach(s=>{ if(s.grp!==g){g=s.grp;h+=`<div class="grp">${esc(g)}</div>`}
+    const [d,n]=count(s.id); h+=`<a href="#${s.id}"${s.id===c?' aria-current="page"':''}><span>${esc(s.t)}</span>${n?`<span class="n${d===n?' full':''}">${d}/${n}</span>`:'<span class="n"></span>'}</a>`});
+  $('#idx').innerHTML=h;
+  const done=ITEMS.filter(i=>checks[i.id]?.done).length;
+  $('#pbar').style.width=(ITEMS.length?done/ITEMS.length*100:0)+'%';
+  $('#ptxt').textContent=`${done} de ${ITEMS.length} piezas listas`;
+}
+function fmtDate(ms){try{return new Date(ms).toLocaleString('es-MX',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}catch(e){return ''}}
+function renderMain(){
+  const s=S.find(x=>x.id===cur()); const i=S.indexOf(s);
+  let h=`<div class="head"><span class="eyebrow">${esc(s.eyebrow)}</span><h2>${esc(s.h)}</h2><p>${esc(s.p)}</p></div>`;
+  if(s.carnot) h+=`<div class="carnot"><b class="t">Cambio pedido por Carnot</b><span>${esc(s.carnot)}</span></div>`;
+  if(s.img.length) h+=`<div class="gal${s.img.length===1?' one':''}">`+s.img.map(([f,c])=>`<figure><img src="img/${f}.jpg" alt="${esc(c)}" loading="lazy"><figcaption>${esc(c)}</figcaption></figure>`).join('')+`</div>`;
+  if(s.id==='resumen'){
+    h+=`<div class="legend"><b>Tipos:</b> <span class="tipo imp">Impresión</span><span class="tipo mob">Mobiliario</span><span class="tipo pan">Pantalla</span><span class="tipo prd">Producción</span></div>`;
+    h+=`<div class="tbx"><table class="res"><thead><tr><th>Área</th><th>Listas</th></tr></thead><tbody>`+S.filter(x=>x.items.length).map(x=>{const [d,n]=count(x.id);return `<tr><td><a href="#${x.id}" style="color:var(--fg);font-weight:700">${esc(x.t)}</a></td><td>${d} / ${n}</td></tr>`}).join('')+`</tbody></table></div>`;
+  }
+  if(s.list) h+=`<div class="list">`+s.list.map(t=>`<div class="item" style="grid-template-columns:1fr"><span>${esc(t)}</span></div>`).join('')+`</div>`;
+  if(s.items.length){
+    h+=`<div class="list"><h3>Piezas · palomea cuando el archivo final esté en su carpeta</h3>`;
+    s.items.forEach(([id,tp,nm,med,arch,carp,falta])=>{
+      const c=checks[id]; const done=!!c?.done;
+      const who=done?`<span class="who">Lista · ${esc(c.by||'Alguien del equipo')}${c.at?' · '+esc(fmtDate(c.at)):''}</span>`:'';
+      h+=`<div class="item${done?' done':''}"><input type="checkbox" class="chk" id="c-${id}" data-id="${id}" ${done?'checked':''} ${canWrite?'':'disabled'} aria-label="Marcar lista: ${esc(nm)}">
+      <div class="ib"><label class="nm" for="c-${id}"><b>${esc(nm)}</b><span class="tipo ${tp}">${TIPO[tp]}</span></label>
+      <div class="meta"><div><span>Medida</span>${esc(med)}</div><div><span>Archivo</span>${esc(arch)}</div><div><span>Carpeta</span>${esc(carp==='—'?'—':'PULSO by Lacteol / '+carp)}</div></div>
+      ${!done&&falta&&falta!=='—'?`<p class="falta">Falta: ${esc(falta)}</p>`:''}${who}</div></div>`;
+    });
+    h+=`</div>`;
+    h+=`<p class="empty-note">Escribe tu nombre arriba para palomear. El avance se comparte con todos los que abren esta página.</p>`;
+  }
+  const pv=S[i-1], nx=S[i+1];
+  h+=`<div class="nav2">${pv?`<a href="#${pv.id}">← ${esc(pv.t)}</a>`:'<span></span>'}${nx?`<a href="#${nx.id}">${esc(nx.t)} →</a>`:''}</div>`;
+  $('#main').innerHTML=h;
+}
+function render(){renderNav();renderMain()}
+document.addEventListener('change',e=>{
+  const el=e.target; if(!el.classList||!el.classList.contains('chk')) return;
+  const nm=getName(); if(!nm){el.checked=!el.checked; const q=document.getElementById('quien'); q.focus(); q.placeholder='Escribe tu nombre para palomear'; return}
+  checks[el.dataset.id]={done:el.checked,by:nm,at:Date.now()}; saveLocal(); publish(); render();
+});
+document.addEventListener('click',e=>{
+  const im=e.target.closest&&e.target.closest('.gal img'); const lb=document.getElementById('lb');
+  if(im){document.getElementById('lbimg').src=im.src;document.getElementById('lbimg').alt=im.alt;document.getElementById('lbcap').textContent=im.alt;try{lb.showModal()}catch(err){lb.setAttribute('open','')}return}
+  if(e.target.id==='lbx'||e.target.id==='lbimg'||e.target===lb||e.target.classList.contains('wrapb')){try{lb.close()}catch(err){lb.removeAttribute('open')}}
+});
+window.addEventListener('hashchange',()=>{render();window.scrollTo(0,0)});
+let client=null;
+function setSync(t,c){const s=$('#sync');s.textContent=t;s.className='sync '+c}
+function publish(){ if(client&&client.connected){ client.publish(TOPIC,JSON.stringify(checks),{qos:1,retain:true}) } else setSync('Sin conexión: guardado en este equipo','off') }
+function merge(remote){ let changed=false, needPush=false;
+  for(const k in remote){const r=remote[k],l=checks[k]; if(!l||(r&&r.at>l.at)){checks[k]=r;changed=true}}
+  for(const k in checks){const r=remote[k]; if(!r||checks[k].at>r.at) needPush=true}
+  if(changed){saveLocal();render()} if(needPush) publish(); }
+const qi=document.getElementById('quien'); qi.value=getName();
+qi.addEventListener('change',()=>{try{localStorage.setItem('pulso-produccion-nombre',qi.value.trim())}catch(e){}});
+render();
+try{
+  client=mqtt.connect('wss://broker.hivemq.com:8884/mqtt',{clientId:'pulsoprod_'+Math.random().toString(16).slice(2,10),clean:true,reconnectPeriod:4000,connectTimeout:10000});
+  let got=false;
+  client.on('connect',()=>{setSync('Avance compartido en vivo','live');client.subscribe(TOPIC,{qos:1});setTimeout(()=>{if(!got&&Object.keys(checks).length)publish()},4000)});
+  client.on('message',(t,m)=>{got=true;try{merge(JSON.parse(m.toString()||'{}'))}catch(e){}});
+  client.on('offline',()=>setSync('Sin conexión: guardado en este equipo','off'));
+  client.on('error',()=>setSync('Sin conexión: guardado en este equipo','off'));
+}catch(e){setSync('Sin conexión: guardado en este equipo','off')}
+</script>
+
+</body></html>
