@@ -66,6 +66,7 @@ header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-betw
 .phone{width:100%;max-width:300px;aspect-ratio:9/18.5;background:#020817;border-radius:38px;padding:10px;box-shadow:0 0 0 2px #24365f,0 18px 44px rgba(0,0,0,.45);margin:0 auto}
 .ph{height:100%;border-radius:29px;overflow:hidden auto;display:flex;flex-direction:column;padding:28px 14px 14px;gap:10px;position:relative;background:linear-gradient(180deg,#0B1A40,#071330)}
 .ph .notch{position:absolute;top:8px;left:50%;transform:translateX(-50%);width:84px;height:18px;border-radius:12px;background:#020817}
+body.solo.mob .phone.solo-target{max-width:none!important;width:100%!important;aspect-ratio:auto!important;height:100vh!important;height:100dvh!important;border-radius:0!important;padding:0!important;box-shadow:none!important;margin:0!important}body.solo.mob .solo-target .ph{border-radius:0;padding:max(18px,env(safe-area-inset-top)) 16px max(16px,env(safe-area-inset-bottom))}body.solo.mob .solo-target .notch{display:none}
 @media (max-width:600px){body.solo .phone.solo-target{max-width:none;aspect-ratio:auto;height:100dvh;border-radius:0;padding:0;box-shadow:none;margin:0!important}body.solo .solo-target .ph{border-radius:0;padding:max(18px,env(safe-area-inset-top)) 16px max(16px,env(safe-area-inset-bottom))}body.solo .solo-target .notch{display:none}}
 
 .lock{display:inline-flex;align-items:center;gap:14px}
@@ -773,7 +774,7 @@ function renderAll(){const s=P();if(faces.w1)setScene(s.sc);paintSignal();render
 function boot(){
  if(MODE==="senal"){document.body.classList.add("solo");const so=$("#soloSig");so.style.display="block";so.classList.add("solo-target","sig-host");window.addEventListener("resize",scaleHosts)}
  else if(MODE==="ponente"){document.body.classList.add("solo");$("#pon").style.display="flex";try{navigator.wakeLock&&navigator.wakeLock.request("screen").catch(()=>{})}catch(e){}}
- else if(MODE==="productor"||MODE==="participante"){document.body.classList.add("solo");const id=MODE==="productor"?"#ctl":"#par";const ph=$(id).closest(".phone");document.body.appendChild(ph);ph.classList.add("solo-target");ph.style.margin="12px auto"}
+ else if(MODE==="productor"||MODE==="participante"){document.body.classList.add("solo");try{if(Math.min(innerWidth,screen.width||9999)<=700||matchMedia("(pointer:coarse)").matches)document.body.classList.add("mob")}catch(e){}const id=MODE==="productor"?"#ctl":"#par";const ph=$(id).closest(".phone");document.body.appendChild(ph);ph.classList.add("solo-target");ph.style.margin="12px auto"}
  else{$("#sigMain").classList.add("sig-host");buildRoom();drag();look("w1");$("#scene").classList.remove("anim");
   document.querySelectorAll("#looks .pill").forEach(b=>b.onclick=()=>look(b.dataset.look));
   $("#mRoom").onclick=()=>{VIEW.mode="room";$("#scene").classList.add("anim");place()};$("#mNet").onclick=()=>{VIEW.mode="net";$("#scene").classList.add("anim");place()};
