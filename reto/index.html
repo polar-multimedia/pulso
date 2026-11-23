@@ -446,7 +446,7 @@ function ckOp(op){const p=curP();if(op==="reset"&&p)CK={id:p,left:DECKS[p].dur*6
 function curItem(){const e=ESC[S.es];return e&&S.src>=0?e.it[S.src]:null}
 function curP(){const it=curItem();return it&&it.p?it.p:null}
 const isReto=()=>!!ESC[S.es].r;
-function snapshot(){return {es:S.es,src:S.src,sl:S.sl,clk:CK?{id:CK.id,left:Math.round(ckLeft()),run:CK.run}:null,i:S.i,t:S.t,run:S.run,paused:S.paused,closed:S.closed,board:S.board,joined:S.joined,players:S.players,ans:S.ans,played:S.played,cue:S.cue}}
+function snapshot(){return {ep:S.ep||0,es:S.es,src:S.src,sl:S.sl,clk:CK?{id:CK.id,left:Math.round(ckLeft()),run:CK.run}:null,i:S.i,t:S.t,run:S.run,paused:S.paused,closed:S.closed,board:S.board,joined:S.joined,players:S.players,ans:S.ans,played:S.played,cue:S.cue}}
 function share(){if(!MASTER)return;if(bc)try{bc.postMessage({type:"state",s:snapshot()})}catch(e){}netShare();save()}
 let lastTap={};function act(a){if(NET&&MODE==="productor"&&(a.t==="next"||a.t==="back")){const n=Date.now();if(lastTap[a.t]&&n-lastTap[a.t]<450)return;lastTap[a.t]=n}
  a.uid=ME+"_"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);if(MODE==="productor")a.pin=PIN;else if(MODE==="ponente"){a.k=PKEY;a.deck=PID}if(MASTER)apply(a);else{if(bc)bc.postMessage({type:"act",a});netAct(a)}}
@@ -471,6 +471,7 @@ const MID=Math.random().toString(36).slice(2,8),HBS={};
 function sigStat(){if(!USE_FB)return;if(!netUp){netStatus("Reconectando…");return}const t=performance.now(),live=Object.keys(HBS).filter(k=>t-HBS[k]<9000&&(!MASTER||k!==MID));
  if(MASTER){netStatus(live.length?"⚠ HAY OTRA SEÑAL ABIERTA · ciérrala":"Señal en línea · sala "+ROOM);return}
  if(MODE==="productor"||MODE==="ponente")netStatus(live.length>1?"⚠ Hay "+live.length+" señales abiertas · deja solo una":live.length?"En línea · señal activa":"En línea · SIN SEÑAL abierta");else netStatus("En línea")}
+let EPSEEN=0;try{EPSEEN=+localStorage.getItem("retoEp_"+ROOM)||0}catch(e){}
 let fdb=null,fbLast=0,fbT=null,bigKey="",fbPend=[],LOCAL_ME=null;
 try{LOCAL_ME=JSON.parse(localStorage.getItem("retoMe_"+ROOM)||"null")}catch(e){}
 function fbLoad(){const add=src=>new Promise((ok,no)=>{const x=document.createElement("script");x.src=src;x.onload=ok;x.onerror=no;document.head.appendChild(x)});
@@ -482,7 +483,7 @@ function fbConnect(){firebase.initializeApp(FBCFG);fdb=firebase.database();const
  setInterval(sigStat,2000);
  fbPend.splice(0).forEach(a=>R("acts").push(a));
  if(MASTER){R("acts").on("child_added",sn=>{let a=null;try{a=JSON.parse(sn.val())}catch(e){}sn.ref.remove();if(a&&Date.now()-(a.ts||0)<120000)apply(a)})}
- else{R("state").on("value",sn=>{let v=null;try{v=JSON.parse(sn.val())}catch(e){}if(!v)return;Object.assign(S,v);S.rx=performance.now();renderAll()});
+ else{R("state").on("value",sn=>{let v=null;try{v=JSON.parse(sn.val())}catch(e){}if(!v)return;if(v.ep&&v.ep!==EPSEEN){EPSEEN=v.ep;LOCAL_ME=null;delete S.players[ME];S.ans={};try{localStorage.setItem("retoEp_"+ROOM,String(v.ep));localStorage.removeItem("retoMe_"+ROOM)}catch(e){}}Object.assign(S,v);S.rx=performance.now();renderAll()});
   R("big").on("value",sn=>{let v=null;try{v=JSON.parse(sn.val())}catch(e){}if(!v)return;S.players=v.players||{};S.played=v.played||{};if(v.ans)Object.assign(S.ans,v.ans);if(LOCAL_ME&&!S.players[ME])S.players[ME]=LOCAL_ME;renderAll()})}}
 function fbShare(force){if(!fdb)return;const go=()=>{fbLast=Date.now();fbT=null;const o=snapshot();delete o.players;delete o.ans;delete o.played;o.pc=nPlayers();
   fdb.ref(FBNS+"/state").set(JSON.stringify(o));
@@ -503,8 +504,9 @@ const CTL_PIN="2611";
 const seen=new Set();
 function apply(a){
  if(a.uid){if(seen.has(a.uid))return;seen.add(a.uid);if(seen.size>400)seen.delete(seen.values().next().value)}
- if(NET&&["next","back","board","pause","goto","scene","src","ck"].includes(a.t)&&a.pin!==CTL_PIN&&!MASTER_LOCAL(a))return;
+ if(NET&&["next","back","board","pause","goto","scene","src","ck","reset"].includes(a.t)&&a.pin!==CTL_PIN&&!MASTER_LOCAL(a))return;
  if(a.t==="slide"&&NET&&!(a.pin===CTL_PIN||MASTER_LOCAL(a)||(PONK[a.deck]&&PONK[a.deck]===a.k)))return;
+ if(a.t==="reset"){resetAll();return}
  if(a.t==="goto")goTo(a.i);else if(a.t==="next")next();else if(a.t==="back")back();
  else if(a.t==="scene")gotoScene(a.i);
  else if(a.t==="src"){S.src=a.i;S.cue=null;const it=curItem();if(it&&it.p)startClk(it.p);renderAll()}
@@ -516,6 +518,11 @@ function apply(a){
  else if(a.t==="answer"){const s=P();if(s.k!=="tiempo"||S.closed||S.paused)return;const k=qkey(s);S.ans[k]=S.ans[k]||{};if(S.ans[k][a.id])return;S.ans[k][a.id]={pick:a.pick,t:S.t};renderAll()}
  share();
 }
+function resetAll(){clearInterval(S.timer);Object.assign(S,{es:NET?0:9,src:-1,sl:{},clk:null,i:0,t:0,run:false,paused:false,closed:false,board:false,joined:0,me:null,players:{},ans:{},scored:{},simq:[],played:{},cue:null,ep:Date.now()});CK=null;
+ try{localStorage.removeItem("retoState_"+ROOM)}catch(e){}
+ if(!NET)sims.forEach(x=>S.players[x.id]={name:x.name,inst:x.inst,pts:0,fast:0});
+ if(USE_FB&&fdb){bigKey=JSON.stringify({players:{},ans:{},played:{}});fdb.ref(FBNS+"/big").set(bigKey)}
+ renderAll();share()}
 function MASTER_LOCAL(a){return a._local===true}
 const retoStep=i=>i===9?0:i===15?STEPS.findIndex(x=>x.k==="g3"):caseStart(i-10);
 function gotoScene(i){if(i==null||i<0||i>=ESC.length)return;const e=ESC[i];
@@ -678,6 +685,7 @@ function itemsPanel(){const e=ESC[S.es];if(!e.it.length)return `<div class="nota
  if(it&&it.p){const run=CK&&CK.id===it.p?(MASTER?CK.run:S.clk&&S.clk.run):false;
   h+=`<div class="clk"><span>Reloj de ${DECKS[it.p].who}</span><b data-ck="${it.p}">--:--</b></div><div class="row"><button class="sec" id="cCk">${run?"Pausar reloj":"Reanudar reloj"}</button><button class="sec" id="cCkR">Reiniciar reloj</button></div>`}
  return h}
+let rstAt=0;
 function renderCtl(){const el=$("#ctl");if(!el)return;
  if(NET&&MODE==="productor"&&PIN!==CTL_PIN){el.innerHTML=`<div class="notch"></div><form class="gate" id="pinF"><div class="big" style="font-size:22px;font-weight:800;text-align:center">Productor</div><input id="pinI" inputmode="numeric" autocomplete="off" placeholder="Código" aria-label="Código del productor"><div class="err" id="pinE" style="color:var(--coral);font-weight:700;font-size:12px;min-height:16px;text-align:center"></div><button type="submit">Entrar</button></form>`;
   $("#pinF").onsubmit=e=>{e.preventDefault();const v=$("#pinI").value.trim();if(v!==CTL_PIN){$("#pinE").textContent="Código incorrecto";return}PIN=v;try{localStorage.setItem("retoPin",v)}catch(x){}renderCtl()};return}
@@ -688,7 +696,8 @@ function renderCtl(){const el=$("#ctl");if(!el)return;
    <div class="sigl"><small>Señal en vivo</small>${sigLabel()}</div></div>
   ${e.r?retoPanel():itemsPanel()}
   <div class="pkl" style="margin-top:6px">Escaleta de la noche</div>
-  <div class="esc">${ESC.map((x,i)=>`<button class="eb${i===S.es?" on":""}${i<S.es?" past":""}" data-e="${i}"><b>${x.c}</b><span>${x.n}<small>${x.h?x.h+" · ":""}${x.b}</small></span></button>`).join("")}</div>`;
+  <div class="esc">${ESC.map((x,i)=>`<button class="eb${i===S.es?" on":""}${i<S.es?" past":""}" data-e="${i}"><b>${x.c}</b><span>${x.n}<small>${x.h?x.h+" · ":""}${x.b}</small></span></button>`).join("")}</div>
+  <button id="cReset" class="sec" style="margin:14px 0 24px;width:100%;padding:14px;border:1px solid ${Date.now()-rstAt<4000?"#ff6b5a":"rgba(255,255,255,.18)"};color:${Date.now()-rstAt<4000?"#fff":"#ff8d80"};background:${Date.now()-rstAt<4000?"#c4362a":"transparent"};font-weight:800;border-radius:12px">${Date.now()-rstAt<4000?"Toca otra vez para confirmar":"Reiniciar todo (pruebas)"}</button>`;
  const g=id=>el.querySelector(id);
  if(e.r){g("#cGo").onclick=()=>act({t:"next"});g("#cBack").onclick=()=>act({t:"back"});g("#cBoard").onclick=()=>act({t:"board"});g("#cPause").onclick=()=>act({t:"pause"});
   el.querySelectorAll(".pk button").forEach(b=>b.onclick=()=>act({t:"goto",i:+b.dataset.i}))}
@@ -697,6 +706,7 @@ function renderCtl(){const el=$("#ctl");if(!el)return;
    el.querySelectorAll("[data-j]").forEach(b=>b.onclick=()=>{const v=b.dataset.j,j=S.sl[it.p]||0,n=DECKS[it.p].n;act({t:"slide",d:v==="first"?-j:v==="last"?n-1-j:+v})})}
   if(g("#cCk")){g("#cCk").onclick=()=>act({t:"ck",op:"toggle"});g("#cCkR").onclick=()=>act({t:"ck",op:"reset"})}}
  el.querySelectorAll(".eb").forEach(b=>b.onclick=()=>act({t:"scene",i:+b.dataset.e}));
+ const rb=g("#cReset");if(rb)rb.onclick=()=>{if(Date.now()-rstAt<4000){rstAt=0;act({t:"reset"})}else{rstAt=Date.now();renderCtl();setTimeout(renderCtl,4100)}};
  el.scrollTop=sc0;tickClock()}
 /* ================== Clicker del ponente ================== */
 let opt=null;
