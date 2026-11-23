@@ -462,9 +462,27 @@ function netConnect(ix=0){if(!NET||!window.mqtt)return;const url=BROKERS[ix%BROK
  cli.on("message",(tp,buf)=>{let m;try{m=JSON.parse(buf.toString())}catch(e){return}
   if(MASTER&&tp===NS+"/act")apply(m);else if(!MASTER&&tp===NS+"/state"){Object.assign(S,m);S.rx=performance.now();renderAll()}});
  setTimeout(()=>{if(!up&&BROKERS.length>1){try{cli.end(true)}catch(e){}netConnect(ix+1)}},8000)}
-function netShare(force){if(!cli||!netUp||!MASTER)return;const go=()=>{lastPub=Date.now();pubT=null;try{cli.publish(NS+"/state",JSON.stringify(netSnap()),{qos:0,retain:true})}catch(e){}};
+/* ---- Firebase Realtime Database (proyecto jeopardycarnot, ruta /retopulso/<sala>) ---- */
+const FBCFG={apiKey:"AIzaSyDzfIVORStmgOgnsRHphf40LX7vpXzYvcU",authDomain:"jeopardycarnot.firebaseapp.com",databaseURL:"https://jeopardycarnot-default-rtdb.firebaseio.com",projectId:"jeopardycarnot",appId:"1:134138179325:web:37ecdeae1a4d694c315894"};
+const USE_FB=NET&&!QS.has("mqtt");
+const FBNS="retopulso/"+ROOM;
+let fdb=null,fbLast=0,fbT=null,bigKey="",fbPend=[],LOCAL_ME=null;
+try{LOCAL_ME=JSON.parse(localStorage.getItem("retoMe_"+ROOM)||"null")}catch(e){}
+function fbLoad(){const add=src=>new Promise((ok,no)=>{const x=document.createElement("script");x.src=src;x.onload=ok;x.onerror=no;document.head.appendChild(x)});
+ add("firebase-app-compat.js").then(()=>add("firebase-database-compat.js")).then(fbConnect).catch(()=>netStatus("Sin conexión"))}
+function fbConnect(){firebase.initializeApp(FBCFG);fdb=firebase.database();const R=p=>fdb.ref(FBNS+"/"+p);netStatus("Conectando…");
+ fdb.ref(".info/connected").on("value",sn=>{netUp=!!sn.val();netStatus(netUp?(MASTER?"Señal en línea · sala "+ROOM:"En línea"):"Reconectando…");if(netUp&&MASTER)netShare(true)});
+ fbPend.splice(0).forEach(a=>R("acts").push(a));
+ if(MASTER){R("acts").on("child_added",sn=>{let a=null;try{a=JSON.parse(sn.val())}catch(e){}sn.ref.remove();if(a&&Date.now()-(a.ts||0)<120000)apply(a)})}
+ else{R("state").on("value",sn=>{let v=null;try{v=JSON.parse(sn.val())}catch(e){}if(!v)return;Object.assign(S,v);S.rx=performance.now();renderAll()});
+  R("big").on("value",sn=>{let v=null;try{v=JSON.parse(sn.val())}catch(e){}if(!v)return;S.players=v.players||{};S.played=v.played||{};if(v.ans)Object.assign(S.ans,v.ans);if(LOCAL_ME&&!S.players[ME])S.players[ME]=LOCAL_ME;renderAll()})}}
+function fbShare(force){if(!fdb)return;const go=()=>{fbLast=Date.now();fbT=null;const o=snapshot();delete o.players;delete o.ans;delete o.played;o.pc=nPlayers();
+  fdb.ref(FBNS+"/state").set(JSON.stringify(o));
+  if(P().k!=="tiempo"&&P().k!=="intro"){const k=P().qi!=null?qkey(P()):null;const big=JSON.stringify({players:S.players,ans:k?{[k]:S.ans[k]||{}}:{},played:S.played});if(big!==bigKey){bigKey=big;fdb.ref(FBNS+"/big").set(big)}}};
+ const w=400-(Date.now()-fbLast);if(force||w<=0){clearTimeout(fbT);go()}else if(!fbT)fbT=setTimeout(go,w)}
+function netShare(force){if(USE_FB)return fbShare(force);if(!cli||!netUp||!MASTER)return;const go=()=>{lastPub=Date.now();pubT=null;try{cli.publish(NS+"/state",JSON.stringify(netSnap()),{qos:0,retain:true})}catch(e){}};
  const w=400-(Date.now()-lastPub);if(force||w<=0){clearTimeout(pubT);go()}else if(!pubT)pubT=setTimeout(go,w)}
-function netAct(a){if(cli&&netUp)try{cli.publish(NS+"/act",JSON.stringify(a),{qos:1})}catch(e){}}
+function netAct(a){if(USE_FB){const j=JSON.stringify({...a,ts:Date.now()});if(fdb)fdb.ref(FBNS+"/acts").push(j);else fbPend.push(j);return}if(cli&&netUp)try{cli.publish(NS+"/act",JSON.stringify(a),{qos:1})}catch(e){}}
 function netSnap(){const s=P(),o=snapshot(),k=s.qi!=null?qkey(s):null;o.ans=k?{[k]:S.ans[k]||{}}:{};if(!isReto()){delete o.players;delete o.ans;delete o.played}return o}
 function save(){if(!NET)return;try{localStorage.setItem("retoState_"+ROOM,JSON.stringify({...snapshot(),scored:S.scored,played:S.played}))}catch(e){}}
 function restore(){if(!NET||!MASTER||QS.has("nuevo"))return;try{const v=JSON.parse(localStorage.getItem("retoState_"+ROOM)||"null");if(v){Object.assign(S,v);if(v.clk)CK={id:v.clk.id,left:v.clk.left,run:false,at:Date.now()};if(P().k==="tiempo"){S.closed=true;S.run=false}}}catch(e){}}
@@ -709,7 +727,7 @@ function renderPar(){const el=$("#par");if(!el)return;const me=S.players[ME]||nu
    <div class="err" id="pErr"></div><button class="join" type="submit">Entrar al Reto</button></form>`;
   el.innerHTML=h;
   $("#pName").oninput=e=>draft.name=e.target.value;$("#pInst").oninput=e=>draft.inst=e.target.value;
-  $("#pForm").onsubmit=e=>{e.preventDefault();const n=draft.name.trim();if(n.split(/\s+/).length<2){$("#pErr").textContent="Escribe nombre y apellido para identificar tu premio.";return}act({t:"join",id:ME,name:n,inst:draft.inst.trim()})};
+  $("#pForm").onsubmit=e=>{e.preventDefault();const n=draft.name.trim();if(n.split(/\s+/).length<2){$("#pErr").textContent="Escribe nombre y apellido para identificar tu premio.";return}act({t:"join",id:ME,name:n,inst:draft.inst.trim()});if(!MASTER){LOCAL_ME={name:n.slice(0,80),inst:draft.inst.trim().slice(0,80),pts:0,fast:0};S.players[ME]=LOCAL_ME;try{localStorage.setItem("retoMe_"+ROOM,JSON.stringify(LOCAL_ME))}catch(x){}renderAll()}};
   return}
  const rank=ranking().findIndex(x=>x.id===ME)+1;
  h+=`<div class="who"><span>${me.name}</span><b>${me.pts.toLocaleString("es-MX")} pts</b></div>`;
@@ -728,7 +746,7 @@ function renderPar(){const el=$("#par");if(!el)return;const me=S.players[ME]||nu
     return `<button class="${c}" data-i="${i}" ${open?"":"disabled"}><span class="l">${L[i]}</span><span>${o}</span></button>`}).join("")}</div>`;
  }else{h+=`<div class="mid"><div class="chip">Reto PULSO</div><div class="big">Terminaste en el lugar ${rank} de ${nPlayers()}</div><div class="live">${me.pts.toLocaleString("es-MX")}</div><div style="color:var(--muted);font-size:12px;font-weight:600">Mira el muro: estamos revelando a los ganadores.</div></div>`}
  el.innerHTML=h;
- el.querySelectorAll(".btns button").forEach(b=>b.onclick=()=>act({t:"answer",id:ME,pick:+b.dataset.i}))}
+ el.querySelectorAll(".btns button").forEach(b=>b.onclick=()=>{const i=+b.dataset.i;act({t:"answer",id:ME,pick:i});if(!MASTER&&k){S.ans[k]=S.ans[k]||{};if(!S.ans[k][ME]){S.ans[k][ME]={pick:i,t:S.t};renderPar()}}})}
 
 /* ================== Render ================== */
 const $=s=>document.querySelector(s);
@@ -741,8 +759,10 @@ function boot(){
   document.querySelectorAll("#looks .pill").forEach(b=>b.onclick=()=>look(b.dataset.look));
   $("#mRoom").onclick=()=>{VIEW.mode="room";$("#scene").classList.add("anim");place()};$("#mNet").onclick=()=>{VIEW.mode="net";$("#scene").classList.add("anim");place()};
   addEventListener("resize",scaleHosts)}
+ if(NET&&!MASTER&&LOCAL_ME&&MODE==="participante")S.players[ME]=LOCAL_ME;
  restore();renderAll();if(!MASTER&&bc)bc.postMessage({type:"hello"});
- if(NET){const sc=document.createElement("script");sc.src="mqtt.min.js";sc.onload=()=>netConnect(0);sc.onerror=()=>netStatus("Sin conexión");document.head.appendChild(sc)}
+ if(USE_FB)fbLoad();
+ if(NET){const sc=document.createElement("script");sc.src="mqtt.min.js";sc.onload=()=>netConnect(0);sc.onerror=()=>netStatus("Sin conexión");if(!USE_FB)document.head.appendChild(sc)}
 }
 boot();
 </script>
