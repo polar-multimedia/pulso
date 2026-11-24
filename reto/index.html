@@ -467,7 +467,7 @@ function netConnect(ix=0){if(!NET||!window.mqtt)return;const url=BROKERS[ix%BROK
 const FBCFG={apiKey:"AIzaSyDzfIVORStmgOgnsRHphf40LX7vpXzYvcU",authDomain:"jeopardycarnot.firebaseapp.com",databaseURL:"https://jeopardycarnot-default-rtdb.firebaseio.com",projectId:"jeopardycarnot",appId:"1:134138179325:web:37ecdeae1a4d694c315894"};
 const USE_FB=NET&&!QS.has("mqtt");
 const FBNS="retopulso/"+ROOM;
-const MID=Math.random().toString(36).slice(2,8),HBS={};
+const MID=(()=>{try{let v=sessionStorage.getItem("retoMID");if(!v){v=Math.random().toString(36).slice(2,8);sessionStorage.setItem("retoMID",v)}return v}catch(e){return Math.random().toString(36).slice(2,8)}})(),HBS={};
 function sigStat(){if(!USE_FB)return;if(!netUp){netStatus("Reconectando…");return}const t=performance.now(),live=Object.keys(HBS).filter(k=>t-HBS[k]<9000&&(!MASTER||k!==MID));
  if(MASTER){netStatus(live.length?"⚠ HAY OTRA SEÑAL ABIERTA · ciérrala":"Señal en línea · sala "+ROOM);return}
  if(MODE==="productor"||MODE==="ponente")netStatus(live.length>1?"⚠ Hay "+live.length+" señales abiertas · deja solo una":live.length?"En línea · señal activa":"En línea · SIN SEÑAL abierta");else netStatus("En línea")}
