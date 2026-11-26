@@ -588,7 +588,7 @@ function sigHTML(){const s=P();let h='<div class="fx"></div>';const p=PATIENTS[s
  if(s.k==="intro"){
   h+=`<div class="pad" style="flex-direction:row;justify-content:center;align-items:center;gap:90px"><div style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:34px;max-width:1080px"><div class="eyebrow">Cinco pacientes · 25 preguntas</div><div class="h1">Reto PULSO</div>
   <div class="big" style="color:var(--cyan)"><span data-live="joined">${nPlayers()}</span> <span style="font-size:60px;font-weight:700;color:#fff">médicos conectados</span></div>
-  <div class="meta" style="font-size:48px;color:#fff">${PRIZE}</div></div>
+  <div style="display:flex;align-items:center;gap:30px;text-align:left"><img src="conapeme.png" alt="CONAPEME" style="height:200px;background:#fff;padding:14px;border-radius:20px;flex:none"><div class="meta" style="font-size:48px;color:#fff">${PRIZE}</div></div></div>
   <div style="display:flex;flex-direction:column;align-items:center;gap:22px;flex:none"><div style="background:#fff;padding:18px;border-radius:22px"><img src="${QR}" alt="QR del Reto PULSO" style="width:440px;height:440px;display:block"></div><div style="font:800 44px/1.1 var(--sig);color:var(--lime);text-align:center">Escanea y<br>entra al Reto</div></div></div>`;
  }else if(s.k==="caso"){
   h+=`<div class="pad" style="justify-content:center"><div class="eyebrow" style="font-size:64px">Caso ${s.c+1} de 5</div><div class="h1" style="text-transform:uppercase">${p.name}</div><div class="meta" style="font-size:60px;color:var(--cyan)">${p.age}</div>
@@ -610,7 +610,7 @@ function sigHTML(){const s=P();let h='<div class="fx"></div>';const p=PATIENTS[s
  }else{ /* ganadores */
   const r=ranking(),show={g3:[2],g2:[2,1],g1:[2,1,0]}[s.k];
   const cell=(n,hgt)=>{const x=r[n]||{name:"—",inst:""},v=show.includes(n);return `<div><div class="nm ${v?"":"hid"}">${x.name}</div><div class="in ${v?"":"hid"}">${x.inst||"&nbsp;"}</div><div class="blk" style="height:${hgt}px">${n+1}</div></div>`};
-  h+=`<div class="pad"><div style="text-align:center;flex:none"><div class="eyebrow">Reto PULSO</div><div class="big" style="font-size:96px">Ganadores</div><div class="meta" style="margin-top:12px">${PRIZE}</div></div>
+  h+=`<div class="pad"><div style="text-align:center;flex:none"><div class="eyebrow">Reto PULSO</div><div class="big" style="font-size:96px">Ganadores</div><div style="display:flex;align-items:center;justify-content:center;gap:24px;margin-top:14px"><img src="conapeme.png" alt="CONAPEME" style="height:130px;background:#fff;padding:10px;border-radius:16px;flex:none"><div class="meta">${PRIZE}</div></div></div>
    <div class="pod">${cell(1,300)}${cell(0,420)}${cell(2,220)}</div></div>`;
  }
  if(S.board&&!s.k.startsWith("g")){const r=ranking().slice(0,8);
