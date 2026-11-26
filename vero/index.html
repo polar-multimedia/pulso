@@ -94,6 +94,9 @@ details.more{margin-top:18px;border:1px solid var(--line);border-radius:14px;pad
 details.more summary{font-weight:800;font-size:13.5px;color:var(--mut);cursor:pointer}
 details.more a{display:block;padding:10px 2px;border-top:1px solid var(--line);color:var(--tx);text-decoration:none;font-weight:700;font-size:14px}
 details.more a span{display:block;color:var(--mut);font-size:12px;font-weight:600}
+.top{position:sticky;top:0;z-index:15;margin:-18px -14px 12px;padding:12px 14px 10px;background:linear-gradient(180deg,rgba(7,20,51,.98),rgba(7,20,51,.9));backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:1px solid rgba(255,255,255,.08)}
+.menu{width:auto!important;padding:0 12px;gap:6px;display:flex!important;align-items:center;font:800 13px Manrope,sans-serif}
+.menu.on{background:var(--cian);color:#071433;border-color:var(--cian)}
 </style>
 <style>
 .f{display:grid;gap:8px}
@@ -111,7 +114,7 @@ details.more a span{display:block;color:var(--mut);font-size:12px;font-weight:60
 </head>
 <body>
 <main>
-  <div class="top"><img src="../img/pulso-logo.png" alt="PULSO by Lacteol"><div style="display:flex;align-items:center;gap:10px"><span class="clk" id="clk"></span><button class="menu" data-tab="mas" aria-label="Más opciones"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button></div></div>
+  <div class="top"><img src="../img/pulso-logo.png" alt="PULSO by Lacteol"><div style="display:flex;align-items:center;gap:10px"><span class="clk" id="clk"></span><button class="menu" data-tab="mas" aria-label="Más opciones"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>Más</button></div></div>
   <div id="app"></div>
 </main>
 <link rel="stylesheet" href="../equipo/consola.css">
@@ -208,7 +211,7 @@ function render(){if(!D)return;if(!['inicio','foraneos','montaje','prov','cierre
  const M=D.montaje,sec=t=>`<div class="sec">${t}</div>`;
  const body=TAB==='inicio'?resumen():TAB==='foraneos'?sec('Foráneos')+foraneos():TAB==='montaje'?sec('Montaje · fotos de testigo')+MONTAJE.html(M):TAB==='prov'?sec('Proveedores ('+D.proveedores.length+')')+proveedores():TAB==='cierre'?sec('Cierre para facturar')+cierre():mas();
  const al=B&&VUELOS.alertas(B),pp=D.proveedores.some(p=>p['Estado']==='Retrasado');
- $('#app').innerHTML=body+`<nav class="bn">${[['inicio','Resumen'],['foraneos','Foráneos'],['montaje','Montaje'],['prov','Proveedores'],['cierre','Cierre']].map(t=>t[0]==='montaje'?`<button data-tab="montaje" class="ag ${TAB==='montaje'?'on':''}"><span class="ring">${ICON.montaje}</span>${t[1]}</button>`:`<button data-tab="${t[0]}" class="${TAB===t[0]?'on':''}">${(t[0]==='foraneos'&&al)||(t[0]==='prov'&&pp)?'<span class="dot"></span>':''}${ICON[t[0]]}${t[1]}</button>`).join('')}</nav>`}
+ $('#app').innerHTML=body+`<nav class="bn">${[['inicio','Resumen'],['foraneos','Foráneos'],['montaje','Montaje'],['prov','Proveedores'],['cierre','Cierre']].map(t=>t[0]==='montaje'?`<button data-tab="montaje" class="ag ${TAB==='montaje'?'on':''}"><span class="ring">${ICON.montaje}</span>${t[1]}</button>`:`<button data-tab="${t[0]}" class="${TAB===t[0]?'on':''}">${(t[0]==='foraneos'&&al)||(t[0]==='prov'&&pp)?'<span class="dot"></span>':''}${ICON[t[0]]}${t[1]}</button>`).join('')}</nav>`;document.querySelectorAll('.menu').forEach(b=>b.classList.toggle('on',TAB==='mas'))}
 async function save(body){busy++;try{const r=await api('veroSet',body);if(!r.success)alert(r.message||'No se guardó');}catch(e){alert('No se guardó: revisa tu conexión.')}busy--;refresh(true)}
 async function refresh(force){if(!CODE||(busy&&!force))return;try{const r=await api('vero',{});if(r.success){D=r;guarda(r);traeB();if(force||!document.activeElement||!/INPUT|TEXTAREA/.test(document.activeElement.tagName))render()}else if(r.expired){CODE='';login()}}catch(e){}}
 MONTAJE.bind(()=>D&&D.montaje,m=>{D.montaje=m;guarda(D)},()=>render());
