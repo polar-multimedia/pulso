@@ -59,7 +59,7 @@ const K=(new URLSearchParams(location.search).get('k')||'').trim();
 let API='',D=null,msg='',busy='';
 async function api(action,body){if(!API){const c=await fetch('../config.json',{cache:'no-store'}).then(r=>r.json());API=c.appsScriptUrl}
   const r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action,...body}),redirect:'follow'});
-  if(!r.ok)throw new Error('Sin respuesta del servidor');return r.json()}
+  if(!r.ok)throw new Error('Sin respuesta del servidor');return JSON.parse((await r.text()).replace(/CONAPM/g,"CONAPEME"))}
 function render(){const a=$('#app');
   if(!D){a.innerHTML=`<h1>Mis médicos</h1><p>${esc(msg||'Cargando…')}</p>`;return}
   const inn=D.doctors.filter(d=>d.checkedIn);

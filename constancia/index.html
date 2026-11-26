@@ -45,7 +45,7 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 let API='',U=null,st={err:'',ok:'',busy:false,edit:false};
 async function api(action,body){if(!API){const c=await fetch('../config.json',{cache:'no-store'}).then(r=>r.json());API=c.appsScriptUrl}
   const r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action,...body}),redirect:'follow'});
-  if(!r.ok)throw new Error('Sin respuesta del servidor');return r.json()}
+  if(!r.ok)throw new Error('Sin respuesta del servidor');return JSON.parse((await r.text()).replace(/CONAPM/g,"CONAPEME"))}
 function tid(){const q=(new URLSearchParams(location.search).get('t')||'').toUpperCase();if(/^PL-[A-Z0-9]{6}$/.test(q)){try{localStorage.setItem('pulso.ticket',q)}catch(e){}return q}
   try{const v=String(localStorage.getItem('pulso.ticket')||'').replace(/"/g,'').toUpperCase();return /^PL-[A-Z0-9]{6}$/.test(v)?v:''}catch(e){return''}}
 function render(){const a=$('#app');const m=`<div class="err">${esc(st.err)}</div>${st.ok?`<div class="ok">${esc(st.ok)}</div>`:''}`;

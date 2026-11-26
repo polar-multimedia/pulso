@@ -44,7 +44,7 @@ const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 (async()=>{const q=new URLSearchParams(location.search);const a=$('#app');
  try{const c=await fetch('../config.json',{cache:'no-store'}).then(r=>r.json());
-  const r=await fetch(c.appsScriptUrl,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'winnerConfirm',t:q.get('t')||'',k:q.get('k')||''}),redirect:'follow'}).then(r=>r.json());
+  const r=await fetch(c.appsScriptUrl,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'winnerConfirm',t:q.get('t')||'',k:q.get('k')||''}),redirect:'follow'}).then(r=>r.text()).then(t=>JSON.parse(t.replace(/CONAPM/g,"CONAPEME")));
   a.innerHTML=r.success?`<h1>¡Gracias, ${esc(r.name)}!</h1><p>Sus datos quedaron confirmados. El equipo organizador se pondrá en contacto con usted para los siguientes pasos de su beca para el CONAPEME 2027.</p><p>Si después nota algún error, escríbanos a <a href="mailto:pulso@polarmultimedia.com" style="color:var(--cian)">pulso@polarmultimedia.com</a>.</p>`:`<h1>No pudimos confirmar</h1><p>${esc(r.message||'Liga no válida.')} Escríbanos a <a href="mailto:pulso@polarmultimedia.com" style="color:var(--cian)">pulso@polarmultimedia.com</a>.</p>`}
  catch(e){a.innerHTML='<h1>Sin conexión</h1><p>Intente de nuevo en un momento.</p>'}})();
 </script>

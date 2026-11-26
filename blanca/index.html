@@ -183,7 +183,7 @@ const SS={get(k){try{return JSON.parse(sessionStorage.getItem(k)||'null')}catch(
 function guarda(r){SS.set('pulso.blanca',r)}
 function adelanta(){setTimeout(()=>{api('vero',{}).then(r=>{if(r&&r.success)SS.set('pulso.vero',r)}).catch(()=>{})},300)}
 async function api(action,body){if(!API){const c=await fetch('../config.json',{cache:'no-store'}).then(r=>r.json());API=c.appsScriptUrl}
- const r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action,idToken:'codigo:'+CODE,who:WHO,...body}),redirect:'follow'});return r.json()}
+ const r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action,idToken:'codigo:'+CODE,who:WHO,...body}),redirect:'follow'});return JSON.parse((await r.text()).replace(/CONAPM/g,"CONAPEME"))}
 const toMin=t=>{const m=String(t||'').match(/(\d{1,2}):(\d{2})/);return m?+m[1]*60+ +m[2]:0};
 const fmt=m=>{m=((m%1440)+1440)%1440;return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0')};
 const nowMin=()=>{const d=new Date(new Date().toLocaleString('en-US',{timeZone:'America/Mexico_City'}));return d.getHours()*60+d.getMinutes()};
