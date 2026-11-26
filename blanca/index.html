@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#071433">
+<meta name="robots" content="noindex">
+<title>Consola de Blanca · PULSO</title>
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#030A1E;--card:#071433;--tx:#EAF1FF;--mut:#A9B7D3;--cian:#49E6FF;--coral:#FF6B5B;--ok:#3DDC97;--warn:#FFB547;--line:rgba(255,255,255,.14)}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--tx);font-family:Manrope,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+body{background:radial-gradient(70vmax 50vmax at 50% -10%,rgba(30,70,168,.5),transparent 65%),linear-gradient(180deg,#071433,#030A1E);min-height:100vh}
+main{max-width:620px;margin:0 auto;padding:18px 14px 60px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+.top img{height:30px}
+.top .clk{font-weight:800;font-size:15px;color:var(--mut)}
+.card{background:rgba(7,20,51,.85);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:12px}
+h1{font-size:19px;font-weight:800;margin:0 0 6px}
+h2{font-size:16px;font-weight:800;margin:0 0 4px}
+p{font-size:14.5px;line-height:1.55;font-weight:600;color:var(--mut);margin:0 0 10px}
+b{color:#fff}
+label{display:block;font-size:12.5px;font-weight:800;color:var(--mut);margin:12px 0 6px}
+input{width:100%;padding:13px 14px;border-radius:12px;border:1px solid var(--line);background:rgba(3,10,30,.7);color:#fff;font:700 16px Manrope,system-ui,sans-serif}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:12px 16px;border-radius:999px;border:none;background:var(--cian);color:#071433;font:800 14.5px Manrope,system-ui,sans-serif;cursor:pointer;text-decoration:none}
+.btn.full{display:flex;width:100%;margin-top:14px}
+.btn.ghost{background:transparent;color:var(--tx);border:1px solid var(--line)}
+.btn.wa{background:#25D366;color:#062b16}
+.btn.warn{background:var(--warn);color:#2b1800}
+.btn.sm{padding:9px 13px;font-size:13.5px}
+.err{color:var(--coral);font-weight:700;font-size:13.5px;min-height:18px;margin-top:10px}
+.hello{border-color:rgba(73,230,255,.45)}
+.hello ol{margin:6px 0 10px 18px;padding:0;color:var(--mut);font-weight:600;font-size:14.5px;line-height:1.6}
+.big{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.big .n{font-size:46px;font-weight:800;line-height:1;color:#fff}
+.big .of{font-size:18px;font-weight:800;color:var(--mut)}
+.meter{height:10px;border-radius:8px;background:rgba(255,255,255,.1);overflow:hidden;margin:10px 0 12px}
+.meter i{display:block;height:100%;background:linear-gradient(90deg,var(--cian),#7CF5C8);transition:width .6s}
+.mini{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.mini div{background:rgba(3,10,30,.6);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.mini b{display:block;font-size:22px}
+.mini span{font-size:12.5px;font-weight:700;color:var(--mut)}
+.extras{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px;background:rgba(3,10,30,.6);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.extras b{font-size:24px}
+.extras .pm{display:flex;gap:8px}
+.extras button{width:48px;height:44px;border-radius:12px;border:1px solid var(--line);background:rgba(73,230,255,.12);color:#fff;font:800 22px Manrope,sans-serif;cursor:pointer}
+.now{border-color:rgba(255,181,71,.55)}
+.now .item{padding:10px 0;border-top:1px solid var(--line)}
+.now .item:first-of-type{border-top:0;padding-top:4px}
+.now .why{font-size:13.5px;color:var(--mut);font-weight:600;margin-top:2px}
+.now .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.tabs{display:flex;gap:6px;overflow-x:auto;margin:4px 0 12px;padding-bottom:2px}
+.tabs button{flex:none;padding:10px 14px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--tx);font:800 13.5px Manrope,sans-serif;cursor:pointer}
+.tabs button.on{background:var(--cian);color:#071433;border-color:var(--cian)}
+.hide{display:none}
+.block{display:flex;justify-content:space-between;align-items:baseline;margin:16px 4px 8px}
+.block h3{margin:0;font-size:15px;font-weight:800}
+.block span{font-size:12.5px;color:var(--mut);font-weight:700}
+.p{border-radius:16px;padding:14px;margin-bottom:10px;background:rgba(7,20,51,.85);border:1px solid var(--line)}
+.p.alert{border-color:var(--warn);box-shadow:0 0 0 1px var(--warn) inset}
+.p.cancel{border-color:var(--coral)}
+.row{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.nm{font-weight:800;font-size:16px}
+.meta{font-size:13px;color:var(--mut);font-weight:700;margin-top:2px}
+.chip{flex:none;font-size:12px;font-weight:800;padding:5px 10px;border-radius:999px;background:rgba(255,255,255,.1)}
+.c-air{background:rgba(73,230,255,.18);color:var(--cian)}.c-delay{background:rgba(255,181,71,.2);color:var(--warn)}.c-land,.c-pick{background:rgba(61,220,151,.18);color:var(--ok)}.c-done{background:var(--ok);color:#03210f}.c-cancel{background:rgba(255,107,91,.22);color:var(--coral)}
+.times{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
+.times div{background:rgba(3,10,30,.6);border-radius:12px;padding:9px 11px}
+.times small{display:block;font-size:11.5px;color:var(--mut);font-weight:800}
+.times b{font-size:20px}
+.times s{color:var(--mut);font-size:13px;margin-left:6px}
+.states{display:flex;flex-wrap:wrap;gap:6px}
+.states button{padding:9px 11px;border-radius:10px;border:1px solid var(--line);background:transparent;color:var(--tx);font:800 13px Manrope,sans-serif;cursor:pointer}
+.states button.on{background:#fff;color:#071433}
+.delay{display:none;align-items:center;gap:8px;margin-top:8px;font-weight:700;font-size:14px}
+.delay.show{display:flex}
+.delay input{width:90px;padding:9px 10px}
+.msg{margin-top:10px;font-size:13.5px;font-weight:700;color:#2b1800;background:var(--warn);border-radius:10px;padding:9px 11px}
+.acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.by{font-size:11.5px;color:var(--mut);font-weight:700;margin-top:8px}
+.li{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 2px;border-top:1px solid var(--line)}
+.li:first-child{border-top:0}
+.li .nm{font-size:15px}
+.note{font-size:12.5px;color:var(--mut);font-weight:600;margin-top:10px;line-height:1.5}
+.lnk{background:none;border:none;color:var(--mut);text-decoration:underline;font:700 13px Manrope,sans-serif;cursor:pointer;padding:4px}
+.sync{font-size:12px;color:var(--mut);font-weight:700;text-align:center;margin-top:16px}
+</style>
+</head>
+<body>
+<main>
+  <div class="top"><img src="../img/pulso-logo.png" alt="PULSO by Lacteol"><span class="clk" id="clk"></span></div>
+  <div id="app"></div>
+</main>
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const st={get(k){try{return localStorage.getItem(k)||''}catch(e){return''}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+let API='',CODE=st.get('pulso.staff.code'),WHO=st.get('pulso.staff.who')||'',D=null,TAB=st.get('pulso.blanca.tab')||'llegadas',msg='',busy=0,lastOk=0;
+const EST=[['prog','Programado'],['air','En vuelo'],['delay','Retrasado'],['land','Aterrizó'],['pick','Con el chofer'],['done','Entregado'],['cancel','Cancelado']];
+const EVENTO='InSpace Del Valle';
+async function api(action,body){if(!API){const c=await fetch('../config.json',{cache:'no-store'}).then(r=>r.json());API=c.appsScriptUrl}
+ const r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action,idToken:'codigo:'+CODE,who:WHO,...body}),redirect:'follow'});return r.json()}
+const toMin=t=>{const m=String(t||'').match(/(\d{1,2}):(\d{2})/);return m?+m[1]*60+ +m[2]:0};
+const fmt=m=>{m=((m%1440)+1440)%1440;return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0')};
+const nowMin=()=>{const d=new Date(new Date().toLocaleString('en-US',{timeZone:'America/Mexico_City'}));return d.getHours()*60+d.getMinutes()};
+const fa=v=>'https://www.flightaware.com/live/flight/AMX'+String(v).replace(/\D/g,'');
+const wa=(n,t)=>'https://wa.me/'+(n?String(n).replace(/\D/g,'').replace(/^(\d{10})$/,'52$1'):'')+'?text='+encodeURIComponent(t);
+const eta=p=>toMin(p.land)+(p.s==='delay'?(+p.d||0):0);
+const pickup=p=>Math.max(toMin(p.pick),eta(p)+30);
+const a=(p,f,m)=>p.trato==='Dra.'?f:m;
+const first=p=>p.name.split(' ')[0];
+const dest=p=>p.to==='hotel'?D.hotel:EVENTO;
+function welcome(p){const pk=fmt(pickup(p));return `${p.trato} ${p.name}, bienvenid${a(p,'a','o')} a la Ciudad de México. Le escribe el asistente de Blanca, de Polar. Su chofer ${D.driver.name} l${a(p,'a','o')} espera a la salida de la Terminal ${p.terminal||2} a las ${pk} para llevarl${a(p,'a','o')} ${p.to==='hotel'?'a su hotel, el '+D.hotel+'. A las 13:30 sale la camioneta del hotel a '+EVENTO+'.':'directo a '+EVENTO+', a tiempo para el registro y la comida. Su equipaje va seguro en la camioneta.'}`}
+function retorno(p){return `${p.trato} ${p.name}, le escribe el asistente de Blanca, de Polar. Para su regreso mañana 27: su vuelo ${p.back} sale a las ${p.dep}. L${a(p,'a','o')} vemos en el lobby del hotel a las ${p.lobby}, con tiempo para llegar al aeropuerto sin prisa.`}
+function driverMsg(p){const n=D.driver.name;
+ if(p.s==='cancel')return `${n}, el vuelo ${p.flight} de ${p.trato} ${p.name} (bloque ${p.block}) se canceló. No vayas por ahora; te aviso el vuelo nuevo.`;
+ if(p.s==='delay')return `${n}, el vuelo ${p.flight} de ${p.trato} ${p.name} (bloque ${p.block}) viene con ${p.d} min de retraso. Nueva llegada: ${fmt(eta(p))}. Recogida en Terminal ${p.terminal||2} a las ${fmt(pickup(p))}. Destino: ${dest(p)}.`;
+ if(p.s==='land')return `${n}, ya aterrizó ${p.trato} ${p.name}, vuelo ${p.flight} (bloque ${p.block}). Recogida en Terminal ${p.terminal||2}. Destino: ${dest(p)}.`;
+ return `${n}, bloque ${p.block}: ${p.trato} ${p.name}, vuelo ${p.flight}, aterriza ${p.land}. Recogida en Terminal ${p.terminal||2} a las ${fmt(pickup(p))}. Destino: ${dest(p)}.`}
+const chip=p=>{const e=EST.find(x=>x[0]===p.s)||EST[0];return `<span class="chip c-${p.s}">${e[1]}${p.s==='delay'?' +'+p.d+' min':''}</span>`};
+
+function login(){$('#app').innerHTML=`<div class="card"><h1>Consola de Blanca</h1><p>Aquí ves en un solo lugar quién llegó, quién falta y cómo vienen los vuelos y traslados. Lo que marques lo ven al instante Vero, Roberto y el equipo.</p>
+ <form id="f"><label for="c">Código de staff</label><input id="c" inputmode="numeric" autocomplete="off"><label for="w">Tu nombre</label><input id="w" value="${esc(WHO||'Blanca')}"><div class="err">${esc(msg)}</div><button class="btn full">Entrar</button></form></div>`;
+ $('#f').onsubmit=async e=>{e.preventDefault();CODE=$('#c').value.trim();WHO=$('#w').value.trim()||'Blanca';try{const r=await api('blanca',{});if(!r.success){CODE='';msg='Ese código no es correcto.';login();return}st.set('pulso.staff.code',CODE);st.set('pulso.staff.who',WHO);msg='';D=r;lastOk=Date.now();render()}catch(x){CODE='';msg='Sin conexión. Intenta de nuevo.';login()}}}
+
+function hello(){if(st.get('pulso.blanca.hello'))return'';return `<div class="card hello"><h2>Hola, ${esc(WHO)}. Así funciona tu consola</h2><ol>
+ <li><b>Arriba</b> ves cuántos médicos han llegado contra los que esperamos, y el contador de extras de alimentos.</li>
+ <li><b>«Ahora toca»</b> te dice lo siguiente que hay que hacer y por qué, una cosa a la vez.</li>
+ <li><b>Traslados:</b> cuando cambies el estado de un vuelo (en vuelo, retrasado, aterrizó…), lo ven todos. Los botones verdes abren WhatsApp con el mensaje ya escrito; tú solo lo revisas y lo mandas.</li>
+ <li><b>Sin registro:</b> los que confirmaron con Carnot pero no tienen boleto, con su teléfono para llamarles.</li></ol>
+ <p>Los mensajes a los doctores van firmados como «el asistente de Blanca», nunca como tú.</p><button class="btn sm" data-hello>Entendido</button></div>`}
+
+function nextUp(){if(!D)return[];const T=D.traslados,now=nowMin(),out=[];
+ T.filter(p=>p.s==='cancel').forEach(p=>out.push({t:`Se canceló el vuelo de ${p.trato} ${p.name}`,why:`Hay que buscarle otro vuelo; mientras, ${D.driver.name} no debe ir por ${a(p,'ella','él')}.`,acts:[['wa',wa(D.driver.phone,driverMsg(p)),'Avisar a '+D.driver.name]]}));
+ T.filter(p=>p.s==='delay'&&p.d>=20).forEach(p=>out.push({t:`${p.trato} ${p.name} viene con ${p.d} min de retraso`,why:`Avísale a ${D.driver.name} para que no entre antes al estacionamiento del aeropuerto (no dejan esperar mucho). Nueva recogida: ${fmt(pickup(p))}.${p.d>=60?' Pasa de una hora: revisa si conviene separar su bloque.':''}`,acts:[['wa',wa(D.driver.phone,driverMsg(p)),'Avisar a '+D.driver.name],['wa',wa(p.phone,welcome(p)),'Avisarle a '+a(p,'ella','él')]]}));
+ T.filter(p=>p.s==='land').forEach(p=>out.push({t:`Aterrizó ${p.trato} ${p.name}`,why:`Mándale su bienvenida para que sepa dónde ${a(p,'la','lo')} espera ${D.driver.name}. Cuando suba a la camioneta, márcalo «Con el chofer».`,acts:[['wa',wa(p.phone,welcome(p)),'Bienvenida'],['set',p.key+'|pick','Ya está con el chofer']]}));
+ const blocks={};T.filter(p=>!['done','pick','cancel'].includes(p.s)).forEach(p=>{(blocks[p.block]=blocks[p.block]||[]).push(p)});
+ const nb=Object.keys(blocks).map(b=>({b,ps:blocks[b],pk:Math.max(...blocks[b].map(pickup))})).filter(x=>x.pk>=now-60).sort((x,y)=>x.pk-y.pk)[0];
+ if(nb)out.push({t:`Siguiente recogida: bloque ${nb.b} a las ${fmt(nb.pk)}`,why:`${nb.ps.map(p=>p.trato+' '+first(p)).join(', ')}. Se recoge 30 minutos después de aterrizar para dar tiempo a salir del avión.`,acts:[['wa',wa(D.driver.phone,nb.ps.map(driverMsg).join('\n')),'Recordar a '+D.driver.name]]});
+ if(D.sinRegistro.length)out.push({t:`${D.sinRegistro.length} confirmaron con Carnot y no tienen boleto`,why:'Si llegan, se registran en la entrada en un minuto. Si quieres, llámales desde la pestaña «Sin registro».',acts:[['tab','sin','Ver la lista']]});
+ return out.slice(0,4)}
+
+function render(){if(!D)return;const c=D.counts,pct=c.esperados?Math.min(100,Math.round(c.llegaron/c.esperados*100)):0;const up=nextUp();
+ $('#app').innerHTML=hello()+`<div class="card"><div class="big"><span class="n">${c.llegaron}</span><span class="of">de ${c.esperados} esperados ya llegaron</span></div>
+ <div class="meter"><i style="width:${pct}%"></i></div>
+ <div class="mini"><div><b>${c.registrados}</b><span>con boleto</span></div><div><b>${D.sinRegistro.length}</b><span>confirmaron con Carnot, sin boleto</span></div><div><b>${c.enSitio}</b><span>se registraron en la entrada</span></div><div><b>${D.fueraDeLista.length}</b><span>llegaron sin estar en la lista de Carnot</span></div></div>
+ <div class="extras"><div><b>${c.extras}</b><br><span class="meta">extras de alimentos</span></div><div class="pm"><button data-x="-1" aria-label="Restar uno">−</button><button data-x="1" aria-label="Sumar uno">+</button></div></div>
+ <p class="note">«Esperados» son los que tienen boleto más los que confirmaron con Carnot sin registrarse. Cupo: ${c.capacidad}.</p></div>`+
+ (up.length?`<div class="card now"><h2>Ahora toca</h2>${up.map(u=>`<div class="item"><b>${esc(u.t)}</b><div class="why">${esc(u.why)}</div><div class="acts">${u.acts.map(x=>x[0]==='wa'?`<a class="btn wa sm" target="_blank" rel="noopener" href="${x[1]}">${esc(x[2])}</a>`:x[0]==='set'?`<button class="btn sm" data-set="${x[1]}">${esc(x[2])}</button>`:`<button class="btn ghost sm" data-tab="${x[1]}">${esc(x[2])}</button>`).join('')}</div></div>`).join('')}</div>`:'')+
+ `<div class="tabs">${[['llegadas','Traslados hoy'],['salidas','Salidas mañana'],['sin','Sin registro ('+D.sinRegistro.length+')'],['foraneos','Foráneos ('+D.foraneos.length+')'],['fuera','Fuera de lista ('+D.fueraDeLista.length+')']].map(t=>`<button data-tab="${t[0]}" class="${TAB===t[0]?'on':''}">${t[1]}</button>`).join('')}</div>
+ <div id="t-llegadas" class="${TAB==='llegadas'?'':'hide'}">${llegadas()}</div>
+ <div id="t-salidas" class="${TAB==='salidas'?'':'hide'}">${salidas()}</div>
+ <div id="t-sin" class="${TAB==='sin'?'':'hide'}">${lista(D.sinRegistro,'Confirmaron con Carnot pero no tienen boleto. Si llegan, en la entrada los registran en un minuto.',true)}</div>
+ <div id="t-foraneos" class="${TAB==='foraneos'?'':'hide'}">${lista(D.foraneos,'Médicos que viajan desde otra ciudad.',true)}</div>
+ <div id="t-fuera" class="${TAB==='fuera'?'':'hide'}">${D.fueraDeLista.length?`<div class="card">${D.fueraDeLista.map(x=>`<div class="li"><div><div class="nm">${esc(x.name)}</div><div class="meta">${esc(x.origin||'')}</div></div></div>`).join('')}</div>`:'<div class="card"><p>Todavía nadie ha llegado sin estar en la lista de Carnot.</p></div>'}</div>
+ <div class="sync">${D.rastreo?'Los vuelos se revisan solos cada 10 minutos'+(D.lastTrack?' · última revisión '+new Date(D.lastTrack).toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',hour12:false}):''):'Los estados de los vuelos los marca el equipo a mano y los ven todos'} · se actualiza cada 20 s<br><button class="lnk" id="out">Salir</button></div>`}
+
+function llegadas(){const T=D.traslados;if(!T.length)return '<div class="card"><p>No hay traslados capturados.</p></div>';
+ const blocks=[...new Set(T.map(p=>p.block))].sort((x,y)=>x-y);
+ return blocks.map(b=>{const ps=T.filter(p=>p.block===b),pk=Math.max(...ps.map(pickup)),moved=pk!==toMin(ps[0].pick);
+  return `<div class="block"><h3>Bloque ${b} · ${fmt(pk)}</h3><span>${esc(ps[0].blockType)}${moved?' · se recorrió':''}</span></div>`+
+  (ps.length>1&&moved?`<div class="msg">La recogida del bloque pasa a las ${fmt(pk)} por un retraso. Si la espera para los demás pasa de 1 hora, conviene separar en dos viajes.</div>`:'')+
+  ps.map(p=>{const al=p.s==='delay'&&p.d>=20;return `<div class="p ${al?'alert':''} ${p.s==='cancel'?'cancel':''}">
+   <div class="row"><div><div class="nm">${esc(p.trato+' '+p.name)}</div><div class="meta">${esc(p.from)} · ${esc(p.flight)} · Terminal ${esc(p.terminal||'2')}${p.arrived?' · ya está en PULSO':''}</div></div>${chip(p)}</div>
+   <div class="times"><div><small>Aterriza</small><b>${fmt(eta(p))}</b>${eta(p)!==toMin(p.land)?'<s>'+p.land+'</s>':''}</div><div><small>Recogida → ${p.to==='hotel'?'hotel':'InSpace'}</small><b>${fmt(pickup(p))}</b>${pickup(p)!==toMin(p.pick)?'<s>'+p.pick+'</s>':''}</div></div>
+   <div class="states">${EST.map(e=>`<button data-k="${p.key}" data-s="${e[0]}" class="${p.s===e[0]?'on':''}">${e[1]}</button>`).join('')}</div>
+   <div class="delay ${p.s==='delay'?'show':''}">Retraso <input type="number" min="0" step="5" inputmode="numeric" data-d="${p.key}" value="${p.d||''}"> minutos</div>
+   ${al?`<div class="msg">Avísale a ${esc(D.driver.name)}: no debe entrar antes al estacionamiento del aeropuerto.${p.d>=60?' Pasa de una hora: revisa si conviene reacomodar el bloque.':''}</div>`:''}
+   <div class="acts"><a class="btn ghost sm" href="${fa(p.flight)}" target="_blank" rel="noopener">Ver vuelo</a><a class="btn wa sm" href="${wa(D.driver.phone,driverMsg(p))}" target="_blank" rel="noopener">Avisar a ${esc(D.driver.name)}</a><a class="btn wa sm" href="${wa(p.phone,welcome(p))}" target="_blank" rel="noopener">Bienvenida</a></div>
+   ${p.at?`<div class="by">Último cambio: ${esc(p.by||'')} · ${new Date(p.at).toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',hour12:false})}${p.src==='Automático'?' (rastreo automático)':''}</div>`:''}</div>`}).join('')}).join('')}
+
+function salidas(){const T=D.traslados.filter(p=>p.lobby),g={};T.forEach(p=>{(g[p.lobby]=g[p.lobby]||[]).push(p)});
+ return `<div class="card"><p>Viernes 27 · del hotel a la Terminal 2. La hora de lobby da tiempo para llegar y documentar con calma (vuelo nacional: 2 horas antes en el aeropuerto).</p></div>`+
+ Object.keys(g).sort().map(t=>`<div class="p"><div class="row"><div class="nm">Lobby ${t}</div><span class="chip">${g[t].length>1?'Camioneta':'Individual'}</span></div>`+
+  g[t].map(p=>`<div class="meta" style="margin-top:6px">${esc(p.trato+' '+p.name)} · ${esc(p.back)} sale ${esc(p.dep)}</div>`).join('')+
+  `<div class="acts">${g[t].map(p=>`<a class="btn wa sm" target="_blank" rel="noopener" href="${wa(p.phone,retorno(p))}">Aviso a ${esc(first(p))}</a>`).join('')}</div></div>`).join('')+
+ `<div class="acts"><a class="btn wa" target="_blank" rel="noopener" href="${wa(D.driver.phone,D.driver.name+', salidas del viernes 27 del hotel a Terminal 2: '+Object.keys(g).sort().map(t=>t+' '+g[t].map(p=>first(p)+' ('+p.back+' '+p.dep+')').join(' y ')).join(' · '))}">Mandar salidas a ${esc(D.driver.name)}</a></div>`}
+
+function lista(L,intro,phone){return `<div class="card"><p>${esc(intro)}</p>${L.length?L.map(x=>`<div class="li"><div><div class="nm">${esc(x.name)}</div><div class="meta">${esc([x.city,x.rep?'Repre: '+x.rep:''].filter(Boolean).join(' · '))}${x.arrived?' · ya llegó':x.registered?' · tiene boleto':''}</div></div>${phone&&x.phone?`<a class="btn ghost sm" href="tel:${esc(String(x.phone).replace(/\D/g,''))}">Llamar</a>`:''}</div>`).join(''):'<p>No hay nadie en esta lista.</p>'}</div>`}
+
+async function refresh(){if(!CODE||busy)return;try{const r=await api('blanca',{});if(r.success){D=r;lastOk=Date.now();if(!document.activeElement||document.activeElement.tagName!=='INPUT')render()}else if(r.expired){CODE='';login()}}catch(e){}}
+async function setState(key,s,d){const p=D.traslados.find(x=>x.key===key);if(!p)return;p.s=s;if(d!=null)p.d=d;else if(s==='delay'&&!p.d)p.d=20;p.by=WHO;p.at=new Date().toISOString();p.src='Manual';render();busy++;try{await api('trasladoSet',{key,s,d:p.d})}catch(e){alert('No se guardó: revisa tu conexión.')}busy--}
+document.addEventListener('click',async e=>{
+ const h=e.target.closest('[data-hello]');if(h){st.set('pulso.blanca.hello','1');render();return}
+ const b=e.target.closest('.states button');if(b){setState(b.dataset.k,b.dataset.s);return}
+ const sb=e.target.closest('[data-set]');if(sb){const [k,s]=sb.dataset.set.split('|');setState(k,s);return}
+ const t=e.target.closest('[data-tab]');if(t){TAB=t.dataset.tab;st.set('pulso.blanca.tab',TAB);render();window.scrollTo({top:document.querySelector('.tabs').offsetTop-10,behavior:'smooth'});return}
+ const x=e.target.closest('[data-x]');if(x){const dl=+x.dataset.x;D.counts.extras=Math.max(0,D.counts.extras+dl);render();busy++;try{const r=await api('extras',{delta:dl});if(r.success){D.counts.extras=r.extras;render()}}catch(err){}busy--;return}
+ if(e.target.id==='out'){CODE='';st.set('pulso.staff.code','');D=null;login()}});
+document.addEventListener('change',e=>{const i=e.target.closest('[data-d]');if(i){setState(i.dataset.d,'delay',Math.max(0,+i.value||0))}});
+const tick=()=>{$('#clk').textContent=new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'America/Mexico_City'})};tick();setInterval(tick,15000);
+setInterval(refresh,20000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh()});
+if(CODE){$('#app').innerHTML='<div class="card"><p>Cargando…</p></div>';api('blanca',{}).then(r=>{if(r.success){D=r;render()}else login()}).catch(()=>{msg='Sin conexión. Intenta de nuevo.';login()})}else login();
+</script>
+</body>
+</html>
