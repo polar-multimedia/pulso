@@ -169,6 +169,7 @@ main{padding-bottom:110px}
   <div id="app"></div>
 </main>
 <script src="../equipo/montaje.js"></script>
+<script src="../equipo/ponentes.js"></script>
 <script>
 try{localStorage.setItem('pulso.equipo.to',location.pathname.includes('/vero/')?'../vero/':'../blanca/')}catch(e){}
 const $=s=>document.querySelector(s);
@@ -297,7 +298,7 @@ function render(){if(!D)return;prep();const c=D.counts,pct=c.esperados?Math.min(
  TAB=TABMAP[TAB]||TAB;if(!ICON[TAB])TAB='inicio';
  const alerta=D.traslados.some(p=>p.flight&&(p.s==='cancel'||(p.s==='delay'&&p.d>=20)));
  let body='';
- if(TAB==='inicio')body=foraneosCard()+
+ if(TAB==='inicio')body=(window.PONENTES?PONENTES.html():'')+foraneosCard()+
  (up.length?`<div class="card now"><h2>Ahora toca</h2>${up.map(u=>`<div class="item"><b>${esc(u.t)}</b><div class="why">${esc(u.why)}</div><div class="acts">${u.acts.map(x=>x[0]==='wa'?`<a class="btn wa sm" target="_blank" rel="noopener" href="${x[1]}">${esc(x[2])}</a>`:x[0]==='set'?`<button class="btn sm" data-set="${x[1]}">${esc(x[2])}</button>`:`<button class="btn ghost sm" data-tab="${x[1]}">${esc(x[2])}</button>`).join('')}</div></div>`).join('')}</div>`:'')+
  `<div class="card"><h2 style="margin:0 0 2px">Asistencia en vivo</h2><div class="meta">${c.llegaron} de ${c.esperados} esperados ya están en el evento · cupo ${c.capacidad}</div>
  <div class="meter"><i style="width:${pct}%"></i></div>
