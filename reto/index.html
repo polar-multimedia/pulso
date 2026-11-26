@@ -754,7 +754,8 @@ const SPECS=["Pediatría","Gastroenterología pediátrica","Neonatología","Medi
 function hubEsc(x){return String(x==null?"":x).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
 function hubTid(){const q=(QS.get("t")||"").toUpperCase();if(/^PL-[A-Z0-9]{6}$/.test(q)){try{localStorage.setItem("pulso.ticket",q)}catch(e){}return q}try{const v=String(localStorage.getItem("pulso.ticket")||"").replace(/"/g,"").toUpperCase();return /^PL-[A-Z0-9]{6}$/.test(v)?v:""}catch(e){return""}}
 async function hubCall(action,body){if(!HUB.api){const c=await fetch("../config.json",{cache:"no-store"}).then(r=>r.json());HUB.api=c.appsScriptUrl}
- const r=await fetch(HUB.api,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action,...body}),redirect:"follow"});if(!r.ok)throw new Error("Sin conexión con el registro");return r.json()}
+ const ac=typeof AbortController!=="undefined"?new AbortController():null;const tm=setTimeout(()=>{try{ac&&ac.abort()}catch(e){}},9000);
+ try{const r=await fetch(HUB.api,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action,...body}),redirect:"follow",signal:ac?ac.signal:undefined});if(!r.ok)throw new Error("Sin conexión con el registro");return await r.json()}finally{clearTimeout(tm)}}
 async function hubStart(){if(MODE!=="participante"||S.players[ME])return;const tid=hubTid();
  try{if(!HUB.api){const c=await fetch("../config.json",{cache:"no-store"}).then(r=>r.json());HUB.api=c.appsScriptUrl}}catch(e){HUB.mode="manual";renderPar();return}
  if(!tid){HUB.mode="email";renderPar();return}
@@ -788,8 +789,10 @@ function hubBind(){
   if(String(f.name||"").trim().split(/\s+/).length<2){HUB.err="Escriba nombre y apellidos completos.";renderPar();return}
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(f.email||"").trim())){HUB.err="Escriba un correo válido.";renderPar();return}
   if(!HUB.user.consent&&!f.consent){HUB.err="Para continuar, acepte el aviso de privacidad.";renderPar();return}
+  let name=String(f.name).trim();const u0=HUB.user;
+  const same=HUB.user.consent&&name===u0.name&&String(f.email).trim().toLowerCase()===String(u0.email).toLowerCase()&&f.specialty===u0.specialty&&String(f.phone||"")===String(u0.phone||"")&&String(f.cedula||"")===String(u0.cedula||"")&&!!f.carnot===!!u0.carnot;
+  if(same){hubJoin(name,u0.id);return}/* sin cambios: entra sin esperar al servidor */
   HUB.busy=true;HUB.err="";renderPar();
-  let name=String(f.name).trim();
   try{const r=await hubCall("updateProfile",{id:HUB.user.id,name,email:f.email,specialty:f.specialty,phone:f.phone,cedula:f.cedula,consent:!!(f.consent||HUB.user.consent),carnot:!!f.carnot,canal:"Reto PULSO"});
    HUB.busy=false;if(!r.success){HUB.err=r.message||"No se pudo guardar.";renderPar();return}HUB.user=r.user;name=r.user.name}
   catch(x){HUB.busy=false}/* sin conexión: entra igual con su nombre; los datos se corrigen en el registro */
