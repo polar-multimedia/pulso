@@ -140,7 +140,6 @@ main{padding-bottom:110px}
 <body>
 <main>
   <div class="top"><img src="../img/pulso-logo.png" alt="PULSO by Lacteol"><span class="clk" id="clk"></span></div>
-  <nav class="sw"><a class="on" href="../blanca/">Blanca · invitados</a><a href="../vero/">Vero · cliente y cierre</a></nav>
   <div id="app"></div>
 </main>
 <script>
@@ -269,7 +268,7 @@ function render(){if(!D)return;prep();const c=D.counts,pct=c.esperados?Math.min(
  else if(TAB==='hotel')body=hotelScreen();
  else body=`<div class="sec">Agenda de hoy</div>`+agenda()+`<div class="sec" id="s-sin">Sin boleto (${D.sinRegistro.length})</div>`+lista(D.sinRegistro,'Confirmaron con Carnot pero no tienen boleto. Si llegan, en la entrada los registran en un minuto.',true)+
   `<div class="sec">Llegaron sin estar en la lista de Carnot (${D.fueraDeLista.length})</div>`+(D.fueraDeLista.length?`<div class="card">${D.fueraDeLista.map(x=>`<div class="li"><div><div class="nm">${esc(x.name)}</div><div class="meta">${esc(x.origin||'')}</div></div></div>`).join('')}</div>`:'<div class="card"><p>Todavía nadie.</p></div>')+
-  hello()+`<details class="more" open><summary>Más pantallas del equipo (para cubrir a Roberto)</summary>
+  `<div class="card"><h2>Cambiar de vista</h2><p>Para ver lo que ve Vero: asistencia para Carnot, proveedores y cierre.</p><a class="btn full" href="../vero/">Ir a la vista de Vero</a></div>`+hello()+`<details class="more" open><summary>Más pantallas del equipo (para cubrir a Roberto)</summary>
  <a href="../acceso/">Acceso · escáner de la entrada<span>Registrar llegadas y registrar en sitio</span></a>
  <a href="../reto/#productor">Productor del Reto y de la Sala<span>Pide el PIN de producción</span></a>
  <a href="../fotos/">Subir fotos al reporte<span>Con el momento o el ponente</span></a>

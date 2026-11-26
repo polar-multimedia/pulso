@@ -112,7 +112,6 @@ details.more a span{display:block;color:var(--mut);font-size:12px;font-weight:60
 <body>
 <main>
   <div class="top"><img src="../img/pulso-logo.png" alt="PULSO by Lacteol"><span class="clk" id="clk"></span></div>
-  <nav class="sw"><a href="../blanca/">Blanca · invitados</a><a class="on" href="../vero/">Vero · cliente y cierre</a></nav>
   <div id="app"></div>
 </main>
 <script>
@@ -154,6 +153,7 @@ function render(){if(!D)return;const c=D.counts,pct=c.esperados?Math.min(100,Mat
   <button class="btn full ${K.listo?'listo':''}" id="clisto">${K.listo?'Listo para facturar · '+esc(K.listo):'Marcar: listo para facturar'}</button>
   <p class="note">Solo tú decides cuándo el cierre está completo. Si lo marcas por error, tócalo otra vez para quitarlo.</p></div></div>
  <div class="sync">Se actualiza cada 30 s<br><button class="lnk" id="out">Salir</button></div>
+ <div class="card" style="margin-top:14px"><h2>Cambiar de vista</h2><p>Para ver lo que ve Blanca: foráneos, vuelos, asistencia y hotel.</p><a class="btn full" href="../blanca/">Ir a la vista de Blanca</a></div>
  <details class="more"><summary>Más pantallas del equipo (para cubrir a Roberto)</summary>
  <a href="../acceso/">Acceso · escáner de la entrada<span>Registrar llegadas y registrar en sitio</span></a>
  <a href="../reto/#productor">Productor del Reto y de la Sala<span>Pide el PIN de producción</span></a>
