@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#071433">
+<meta name="robots" content="noindex">
+<title>Fotos del reporte · PULSO</title>
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#030A1E;--card:#071433;--tx:#EAF1FF;--mut:#A9B7D3;--cian:#49E6FF;--coral:#FF6B5B;--line:rgba(255,255,255,.14)}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--tx);font-family:Manrope,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+body{background:radial-gradient(70vmax 50vmax at 50% -10%,rgba(30,70,168,.5),transparent 65%),linear-gradient(180deg,#071433,#030A1E);min-height:100vh}
+main{max-width:520px;margin:0 auto;padding:28px 16px 48px}
+.logo{display:block;height:40px;margin:0 auto 22px}
+.card{background:rgba(7,20,51,.82);border:1px solid var(--line);border-radius:20px;padding:22px 18px}
+h1{font-size:20px;font-weight:800;margin:0 0 6px}
+p{font-size:14px;line-height:1.55;font-weight:600;color:var(--mut);margin:0 0 14px}
+.name{font-size:22px;font-weight:800;color:#fff;margin:6px 0 16px}
+label{display:block;font-size:12px;font-weight:800;color:var(--mut);margin:14px 0 6px}
+input{width:100%;padding:13px 14px;border-radius:12px;border:1px solid var(--line);background:rgba(3,10,30,.7);color:#fff;font:700 15px Manrope,system-ui,sans-serif}
+input:focus{outline:none;border-color:var(--cian)}
+.btn{display:block;width:100%;margin-top:14px;padding:15px;border-radius:999px;border:none;background:var(--cian);color:#071433;font:800 15px Manrope,system-ui,sans-serif;cursor:pointer;text-align:center;text-decoration:none}
+.btn.ghost{background:transparent;color:var(--tx);border:1px solid var(--line)}
+.btn:disabled{opacity:.55}
+.err{color:var(--coral);font-weight:700;font-size:13px;min-height:18px;margin-top:10px}
+.ok{color:var(--cian);font-weight:700;font-size:13px;margin-top:10px}
+.lnk{background:none;border:none;color:var(--mut);text-decoration:underline;font:700 13px Manrope,system-ui,sans-serif;margin-top:14px;cursor:pointer;padding:4px}
+.foot{font-size:11px;color:var(--mut);text-align:center;margin-top:22px;font-weight:600;line-height:1.5}
+.foot a{color:var(--cian)}
+</style>
+<style>
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:14px}
+.grid div{aspect-ratio:1;border-radius:10px;background:rgba(3,10,30,.7) center/cover no-repeat;position:relative;overflow:hidden}
+.grid div span{position:absolute;inset:auto 0 0 0;font-size:10px;font-weight:800;padding:3px 5px;background:rgba(3,10,30,.75)}
+select{width:100%;padding:13px 14px;border-radius:12px;border:1px solid var(--line);background:rgba(3,10,30,.7);color:#fff;font:700 15px Manrope,system-ui,sans-serif}
+.pick{display:block;text-align:center;border:2px dashed rgba(73,230,255,.5);border-radius:16px;padding:26px 10px;margin-top:14px;font-weight:800;color:var(--cian);cursor:pointer}
+.bar{height:8px;border-radius:8px;background:rgba(255,255,255,.1);overflow:hidden;margin-top:12px}.bar i{display:block;height:100%;width:0;background:var(--cian);transition:width .3s}
+</style>
+</head>
+<body>
+<main>
+  <img class="logo" src="../img/pulso-logo.png" alt="PULSO by Lacteol">
+  <div class="card" id="app"></div>
+  <div class="foot">Las fotos se guardan en Drive, en «PULSO · Fotos reporte», y aparecen en el reporte final.</div>
+</main>
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const st={get(k){try{return localStorage.getItem(k)||''}catch(e){return''}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+let API='',CODE=st.get('pulso.staff.code'),WHO=st.get('pulso.staff.who'),busy=false,done=0,total=0,msg='',recent=[];
+const MOMENTOS=['Llegada y registro','Comida','Ponencias','Panel','Breaks y áreas','Reto PULSO','Ganadores','Cena','Equipo y montaje','Otro'];
+async function api(action,body){if(!API){const c=await fetch('../config.json',{cache:'no-store'}).then(r=>r.json());API=c.appsScriptUrl}
+ const r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action,idToken:'codigo:'+CODE,who:WHO,...body}),redirect:'follow'});return r.json()}
+function shrink(file,max){return new Promise((ok,ko)=>{const img=new Image();const u=URL.createObjectURL(file);img.onload=()=>{const k=Math.min(1,max/Math.max(img.width,img.height));const c=document.createElement('canvas');c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);c.getContext('2d').drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(u);ok(c.toDataURL('image/jpeg',.84))};img.onerror=ko;img.src=u})}
+function render(){const a=$('#app');
+ if(!CODE){a.innerHTML=`<form id="f"><h1>Fotos del reporte</h1><p>Escriba el código de staff.</p><label for="c">Código</label><input id="c" inputmode="numeric" autocomplete="off"><label for="w">Su nombre</label><input id="w" value="${esc(WHO)}" placeholder="Ej. Blanca"><div class="err">${esc(msg)}</div><button class="btn">Entrar</button></form>`;
+  $('#f').onsubmit=async e=>{e.preventDefault();CODE=$('#c').value.trim();WHO=$('#w').value.trim();try{const r=await api('adminCheck',{});if(!r.success){CODE='';msg='Código incorrecto';render();return}st.set('pulso.staff.code',CODE);st.set('pulso.staff.who',WHO);msg='';render()}catch(x){CODE='';msg='Sin conexión';render()}};return}
+ a.innerHTML=`<h1>Fotos del reporte</h1><p>Elija varias fotos de su galería. Se reducen en el celular y se suben una por una.</p>
+  <label for="m">¿De qué momento son?</label><select id="m">${MOMENTOS.map(x=>`<option>${x}</option>`).join('')}</select>
+  <label for="cap">Nota (opcional)</label><input id="cap" placeholder="Ej. Dra. Mendoza en El Observatorio">
+  <label class="pick" for="files">${busy?'Subiendo…':'＋ Elegir fotos'}</label><input id="files" type="file" accept="image/*" multiple style="display:none" ${busy?'disabled':''}>
+  ${total?`<div class="bar"><i style="width:${Math.round(done/total*100)}%"></i></div><p style="margin-top:8px">${done} de ${total} subidas</p>`:''}
+  <div class="${/error|no se/i.test(msg)?'err':'ok'}">${esc(msg)}</div>
+  <div class="grid">${recent.map(x=>`<div style="background-image:url('${x.src}')"><span>${esc(x.m)}</span></div>`).join('')}</div>
+  <button class="lnk" id="out">Salir</button>`;
+ $('#files').onchange=async e=>{const fs=[...e.target.files];if(!fs.length)return;const m=$('#m').value,cap=$('#cap').value.trim();busy=true;total=fs.length;done=0;msg='';render();let fail=0;
+  for(const f of fs){try{const data=await shrink(f,1800);const r=await api('uploadPhoto',{data,momento:m,caption:cap});if(r.success){recent.unshift({src:data,m});recent=recent.slice(0,12)}else{fail++;if(r.expired){CODE='';break}}}catch(x){fail++}done++;render()}
+  busy=false;msg=fail?`${fail} no se pudieron subir. Intente de nuevo.`:`Listo: ${done} foto${done===1?'':'s'} en el reporte.`;total=0;render()};
+ $('#out').onclick=()=>{CODE='';st.set('pulso.staff.code','');render()};}
+render();
+</script>
+</body>
+</html>

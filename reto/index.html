@@ -513,7 +513,11 @@ if(bc)bc.onmessage=e=>{const m=e.data;if(m.type==="act"&&MASTER){apply(m.a)}
 /* ================== Acciones ================== */
 const CTL_PIN="2611";
 const seen=new Set();
-function apply(a){
+/* Bitácora en vivo: cada cambio de escena, lámina o paso del Reto queda con su hora (para la cronología del reporte final) */
+function apply(a){const b4=[S.es,S.src,S.i,S.closed].join("|");applyCore(a);
+ try{if(MASTER&&NET&&typeof fdb!=="undefined"&&fdb&&(a.t==="reset"||[S.es,S.src,S.i,S.closed].join("|")!==b4)){const e=ESC[S.es]||{};
+  fdb.ref(FBNS+"/log").push(JSON.stringify({ts:Date.now(),t:a.t,es:e.c||"",n:e.n||"",b:e.b||"",what:a.t==="reset"?"Reinicio del Reto":sigLabel(),pc:nPlayers()}))}}catch(x){}}
+function applyCore(a){
  if(a.uid){if(seen.has(a.uid))return;seen.add(a.uid);if(seen.size>400)seen.delete(seen.values().next().value)}
  if(NET&&["next","back","board","pause","goto","scene","src","ck","reset"].includes(a.t)&&a.pin!==CTL_PIN&&!MASTER_LOCAL(a))return;
  if(a.t==="slide"&&NET&&!(a.pin===CTL_PIN||MASTER_LOCAL(a)||(PONK[a.deck]&&PONK[a.deck]===a.k)))return;
