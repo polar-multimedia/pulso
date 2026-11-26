@@ -123,6 +123,7 @@ details.st{margin-top:10px}details.st summary{font-weight:800;font-size:13px;col
   <div id="app"></div>
 </main>
 <script>
+try{localStorage.setItem('pulso.equipo.to',location.pathname.includes('/vero/')?'../vero/':'../blanca/')}catch(e){}
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const st={get(k){try{return localStorage.getItem(k)||''}catch(e){return''}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
@@ -150,9 +151,7 @@ function driverMsg(p){const n=D.driver.name;
  return `${n}, bloque ${p.block}: ${p.trato} ${p.name}, vuelo ${p.flight}, aterriza ${p.land}. Recogida en Terminal ${p.terminal||2} a las ${fmt(pickup(p))}. Destino: ${dest(p)}.`}
 const chip=p=>{const e=EST.find(x=>x[0]===p.s)||EST[0];return `<span class="chip c-${p.s}">${e[1]}${p.s==='delay'?' +'+p.d+' min':''}</span>`};
 
-function login(){$('#app').innerHTML=`<div class="card"><h1>Consola de Blanca</h1><p>Aquí ves en un solo lugar quién llegó, quién falta y cómo vienen los vuelos y traslados. Lo que marques lo ven al instante Vero, Roberto y el equipo.</p>
- <form id="f"><label for="c">Código de staff</label><input id="c" inputmode="numeric" autocomplete="off"><label for="w">Tu nombre</label><input id="w" value="${esc(WHO||'Blanca')}"><div class="err">${esc(msg)}</div><button class="btn full">Entrar</button></form></div>`;
- $('#f').onsubmit=async e=>{e.preventDefault();CODE=$('#c').value.trim();WHO=$('#w').value.trim()||'Blanca';try{const r=await api('blanca',{});if(!r.success){if(/desconocida/i.test(r.message||'')){msg='La consola se activa en cuanto Roberto actualice el servidor (versión 6). Intenta en un rato.';CODE='';login();return}CODE='';msg='Ese código no es correcto.';login();return}st.set('pulso.staff.code',CODE);st.set('pulso.staff.who',WHO);msg='';D=r;lastOk=Date.now();render()}catch(x){CODE='';msg='Sin conexión. Intenta de nuevo.';login()}}}
+function login(){const m=msg;msg='';$('#app').innerHTML=`<div class="card"><p>${esc(m||'Entra con tu clave.')}</p><a class="btn full" href="../equipo/">Ir a la entrada del equipo</a></div>`;if(!m)location.replace('../equipo/')}
 
 function hello(){return `<details class="more"><summary>¿Cómo funciona esta consola?</summary><div class="note" style="margin-top:8px">
  <b>Arriba</b>: cuántos han llegado contra los esperados y los extras de alimentos.<br>
@@ -246,7 +245,7 @@ document.addEventListener('click',async e=>{
  const sb=e.target.closest('[data-set]');if(sb){const [k,s]=sb.dataset.set.split('|');setState(k,s);return}
  const t=e.target.closest('[data-tab]');if(t){TAB=t.dataset.tab;st.set('pulso.blanca.tab',TAB);render();window.scrollTo({top:document.querySelector('.tabs').offsetTop-10,behavior:'smooth'});return}
  const x=e.target.closest('[data-x]');if(x){const dl=+x.dataset.x;D.counts.extras=Math.max(0,D.counts.extras+dl);render();busy++;try{const r=await api('extras',{delta:dl});if(r.success){D.counts.extras=r.extras;render()}}catch(err){}busy--;return}
- if(e.target.id==='out'){CODE='';st.set('pulso.staff.code','');D=null;login()}});
+ if(e.target.id==='out'){CODE='';st.set('pulso.staff.code','');st.set('pulso.equipo.to','');D=null;location.replace('../equipo/')}});
 document.addEventListener('change',e=>{const i=e.target.closest('[data-d]');if(i){setState(i.dataset.d,'delay',Math.max(0,+i.value||0))}});
 const tick=()=>{$('#clk').textContent=new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'America/Mexico_City'})};tick();setInterval(tick,15000);
 setInterval(refresh,20000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh()});

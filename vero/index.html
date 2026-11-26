@@ -116,6 +116,7 @@ details.more a span{display:block;color:var(--mut);font-size:12px;font-weight:60
   <div id="app"></div>
 </main>
 <script>
+try{localStorage.setItem('pulso.equipo.to',location.pathname.includes('/vero/')?'../vero/':'../blanca/')}catch(e){}
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const st={get(k){try{return localStorage.getItem(k)||''}catch(e){return''}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
@@ -123,9 +124,7 @@ let API='',CODE=st.get('pulso.staff.code'),WHO=st.get('pulso.staff.who')||'',D=n
 const PE=['Por llegar','Llegó','Montado','Retrasado','No llegó'];
 async function api(action,body){if(!API){const c=await fetch('../config.json',{cache:'no-store'}).then(r=>r.json());API=c.appsScriptUrl}
  const r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action,idToken:'codigo:'+CODE,who:WHO,...body}),redirect:'follow'});return r.json()}
-function login(){$('#app').innerHTML=`<div class="card"><h1>Consola de Vero</h1><p>Asistencia para reportar a Carnot, proveedores al minuto y el cierre para facturar, en una sola pantalla.</p>
- <form id="f"><label for="c">Código de staff</label><input id="c" inputmode="numeric" autocomplete="off"><label for="w">Tu nombre</label><input id="w" value="${esc(WHO||'Vero')}"><div class="err">${esc(msg)}</div><button class="btn full">Entrar</button></form></div>`;
- $('#f').onsubmit=async e=>{e.preventDefault();CODE=$('#c').value.trim();WHO=$('#w').value.trim()||'Vero';try{const r=await api('vero',{});if(!r.success){if(/desconocida/i.test(r.message||'')){msg='La consola se activa en cuanto Roberto actualice el servidor (versión 6). Intenta en un rato.';CODE='';login();return}CODE='';msg='Ese código no es correcto.';login();return}st.set('pulso.staff.code',CODE);st.set('pulso.staff.who',WHO);msg='';D=r;render()}catch(x){CODE='';msg='Sin conexión. Intenta de nuevo.';login()}}}
+function login(){const m=msg;msg='';$('#app').innerHTML=`<div class="card"><p>${esc(m||'Entra con tu clave.')}</p><a class="btn full" href="../equipo/">Ir a la entrada del equipo</a></div>`;if(!m)location.replace('../equipo/')}
 function textoCliente(){const c=D.counts;return `PULSO by Lacteol · ${new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',hour12:false})} h\nLlegaron ${c.llegaron} médicos de ${c.esperados} esperados (${c.confirmados} confirmados con Carnot).\n${c.enSitio} se registraron en la entrada.`}
 function render(){if(!D)return;const c=D.counts,pct=c.esperados?Math.min(100,Math.round(c.llegaron/c.esperados*100)):0,P=D.proveedores,K=D.cierre;
  const pend=P.filter(p=>p['Estado']==='Por llegar'||p['Estado']==='Retrasado');
@@ -163,7 +162,7 @@ document.addEventListener('click',e=>{
  if(e.target.id==='padd'){const n=$('#pn').value.trim();if(!n)return alert('Escribe el nombre del proveedor');save({type:'provAdd',hora:$('#ph').value,nombre:n,que:$('#pq').value,contacto:$('#pc').value});return}
  if(e.target.id==='csave'){save({type:'cierre',oc:$('#coc').value,monto:$('#cmo').value,nota:$('#cno').value});return}
  if(e.target.id==='clisto'){const on=!D.cierre.listo;if(on&&!confirm('¿Confirmas que el cierre está completo y listo para facturar?'))return;save({type:'cierre',oc:$('#coc').value,monto:$('#cmo').value,nota:$('#cno').value,listo:on});return}
- if(e.target.id==='out'){CODE='';st.set('pulso.staff.code','');D=null;login()}});
+ if(e.target.id==='out'){CODE='';st.set('pulso.staff.code','');st.set('pulso.equipo.to','');D=null;location.replace('../equipo/')}});
 const tick=()=>{$('#clk').textContent=new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'America/Mexico_City'})};tick();setInterval(tick,15000);
 setInterval(refresh,30000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh()});
 if(CODE){$('#app').innerHTML='<div class="card"><p>Cargando…</p></div>';api('vero',{}).then(r=>{if(!r.success&&/desconocida/i.test(r.message||'')){msg='La consola se activa en cuanto Roberto actualice el servidor (versión 6). Intenta en un rato.';login();return}if(r.success){D=r;render()}else login()}).catch(()=>{msg='Sin conexión. Intenta de nuevo.';login()})}else login();

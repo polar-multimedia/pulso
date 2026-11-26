@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#071433">
+<meta name="robots" content="noindex">
+<title>Equipo PULSO</title>
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#030A1E;--card:#071433;--tx:#EAF1FF;--mut:#A9B7D3;--cian:#49E6FF;--coral:#FF6B5B;--ok:#3DDC97;--warn:#FFB547;--line:rgba(255,255,255,.14)}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--tx);font-family:Manrope,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+body{background:radial-gradient(70vmax 50vmax at 50% -10%,rgba(30,70,168,.5),transparent 65%),linear-gradient(180deg,#071433,#030A1E);min-height:100vh}
+main{max-width:620px;margin:0 auto;padding:18px 14px 60px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+.top img{height:30px}
+.top .clk{font-weight:800;font-size:15px;color:var(--mut)}
+.card{background:rgba(7,20,51,.85);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:12px}
+h1{font-size:19px;font-weight:800;margin:0 0 6px}
+h2{font-size:16px;font-weight:800;margin:0 0 4px}
+p{font-size:14.5px;line-height:1.55;font-weight:600;color:var(--mut);margin:0 0 10px}
+b{color:#fff}
+label{display:block;font-size:12.5px;font-weight:800;color:var(--mut);margin:12px 0 6px}
+input{width:100%;padding:13px 14px;border-radius:12px;border:1px solid var(--line);background:rgba(3,10,30,.7);color:#fff;font:700 16px Manrope,system-ui,sans-serif}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:12px 16px;border-radius:999px;border:none;background:var(--cian);color:#071433;font:800 14.5px Manrope,system-ui,sans-serif;cursor:pointer;text-decoration:none}
+.btn.full{display:flex;width:100%;margin-top:14px}
+.btn.ghost{background:transparent;color:var(--tx);border:1px solid var(--line)}
+.btn.wa{background:#25D366;color:#062b16}
+.btn.warn{background:var(--warn);color:#2b1800}
+.btn.sm{padding:9px 13px;font-size:13.5px}
+.err{color:var(--coral);font-weight:700;font-size:13.5px;min-height:18px;margin-top:10px}
+.hello{border-color:rgba(73,230,255,.45)}
+.hello ol{margin:6px 0 10px 18px;padding:0;color:var(--mut);font-weight:600;font-size:14.5px;line-height:1.6}
+.big{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.big .n{font-size:46px;font-weight:800;line-height:1;color:#fff}
+.big .of{font-size:18px;font-weight:800;color:var(--mut)}
+.meter{height:10px;border-radius:8px;background:rgba(255,255,255,.1);overflow:hidden;margin:10px 0 12px}
+.meter i{display:block;height:100%;background:linear-gradient(90deg,var(--cian),#7CF5C8);transition:width .6s}
+.mini{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.mini div{background:rgba(3,10,30,.6);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.mini b{display:block;font-size:22px}
+.mini span{font-size:12.5px;font-weight:700;color:var(--mut)}
+.extras{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px;background:rgba(3,10,30,.6);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.extras b{font-size:24px}
+.extras .pm{display:flex;gap:8px}
+.extras button{width:48px;height:44px;border-radius:12px;border:1px solid var(--line);background:rgba(73,230,255,.12);color:#fff;font:800 22px Manrope,sans-serif;cursor:pointer}
+.now{border-color:rgba(255,181,71,.55)}
+.now .item{padding:10px 0;border-top:1px solid var(--line)}
+.now .item:first-of-type{border-top:0;padding-top:4px}
+.now .why{font-size:13.5px;color:var(--mut);font-weight:600;margin-top:2px}
+.now .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.tabs{display:flex;gap:6px;overflow-x:auto;margin:4px 0 12px;padding-bottom:2px}
+.tabs button{flex:none;padding:10px 14px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--tx);font:800 13.5px Manrope,sans-serif;cursor:pointer}
+.tabs button.on{background:var(--cian);color:#071433;border-color:var(--cian)}
+.hide{display:none}
+.block{display:flex;justify-content:space-between;align-items:baseline;margin:16px 4px 8px}
+.block h3{margin:0;font-size:15px;font-weight:800}
+.block span{font-size:12.5px;color:var(--mut);font-weight:700}
+.p{border-radius:16px;padding:14px;margin-bottom:10px;background:rgba(7,20,51,.85);border:1px solid var(--line)}
+.p.alert{border-color:var(--warn);box-shadow:0 0 0 1px var(--warn) inset}
+.p.cancel{border-color:var(--coral)}
+.row{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.nm{font-weight:800;font-size:16px}
+.meta{font-size:13px;color:var(--mut);font-weight:700;margin-top:2px}
+.chip{flex:none;font-size:12px;font-weight:800;padding:5px 10px;border-radius:999px;background:rgba(255,255,255,.1)}
+.c-air{background:rgba(73,230,255,.18);color:var(--cian)}.c-delay{background:rgba(255,181,71,.2);color:var(--warn)}.c-land,.c-pick{background:rgba(61,220,151,.18);color:var(--ok)}.c-done{background:var(--ok);color:#03210f}.c-cancel{background:rgba(255,107,91,.22);color:var(--coral)}
+.times{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
+.times div{background:rgba(3,10,30,.6);border-radius:12px;padding:9px 11px}
+.times small{display:block;font-size:11.5px;color:var(--mut);font-weight:800}
+.times b{font-size:20px}
+.times s{color:var(--mut);font-size:13px;margin-left:6px}
+.states{display:flex;flex-wrap:wrap;gap:6px}
+.states button{padding:9px 11px;border-radius:10px;border:1px solid var(--line);background:transparent;color:var(--tx);font:800 13px Manrope,sans-serif;cursor:pointer}
+.states button.on{background:#fff;color:#071433}
+.delay{display:none;align-items:center;gap:8px;margin-top:8px;font-weight:700;font-size:14px}
+.delay.show{display:flex}
+.delay input{width:90px;padding:9px 10px}
+.msg{margin-top:10px;font-size:13.5px;font-weight:700;color:#2b1800;background:var(--warn);border-radius:10px;padding:9px 11px}
+.acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.by{font-size:11.5px;color:var(--mut);font-weight:700;margin-top:8px}
+.li{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 2px;border-top:1px solid var(--line)}
+.li:first-child{border-top:0}
+.li .nm{font-size:15px}
+.note{font-size:12.5px;color:var(--mut);font-weight:600;margin-top:10px;line-height:1.5}
+.lnk{background:none;border:none;color:var(--mut);text-decoration:underline;font:700 13px Manrope,sans-serif;cursor:pointer;padding:4px}
+.sync{font-size:12px;color:var(--mut);font-weight:700;text-align:center;margin-top:16px}
+.sw{display:flex;gap:6px;margin:0 0 12px}
+.sw a{flex:1;text-align:center;padding:9px 6px;border-radius:12px;border:1px solid var(--line);color:var(--tx);text-decoration:none;font:800 13px Manrope,sans-serif}
+.sw a.on{background:rgba(73,230,255,.16);border-color:var(--cian);color:#fff}
+details.more{margin-top:18px;border:1px solid var(--line);border-radius:14px;padding:10px 12px}
+details.more summary{font-weight:800;font-size:13.5px;color:var(--mut);cursor:pointer}
+details.more a{display:block;padding:10px 2px;border-top:1px solid var(--line);color:var(--tx);text-decoration:none;font-weight:700;font-size:14px}
+details.more a span{display:block;color:var(--mut);font-size:12px;font-weight:600}
+.fl{background:linear-gradient(160deg,rgba(20,44,96,.95),rgba(7,20,51,.95));border:1px solid var(--line);border-radius:18px;padding:14px;margin-bottom:12px}
+.fl.alert{border-color:var(--warn);box-shadow:0 0 0 1px var(--warn) inset}.fl.cancel{border-color:var(--coral)}
+.fl .hd{display:flex;align-items:center;gap:10px}
+.al{flex:none;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font:800 14px Manrope,sans-serif;color:#fff;background:linear-gradient(135deg,#0B2A6F,#1E5BD8);box-shadow:0 0 0 1px rgba(255,255,255,.2) inset}
+.al.y4{background:linear-gradient(135deg,#5B1E8C,#A13CC9)}.al.vb{background:linear-gradient(135deg,#0E7A3B,#3DBE63)}
+.fl .who{flex:1;min-width:0}.fl .who .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.route{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;margin:14px 2px 6px}
+.route .ap b{display:block;font-size:24px;font-weight:800;letter-spacing:.02em;color:#fff;line-height:1}
+.route .ap span{font-size:11.5px;color:var(--mut);font-weight:700}
+.route .ap.r{text-align:right}
+.track{position:relative;height:2px;background:repeating-linear-gradient(90deg,rgba(255,255,255,.35) 0 6px,transparent 6px 11px)}
+.track i{position:absolute;left:0;top:0;height:2px;background:var(--cian)}
+.track svg{position:absolute;top:-10px;width:22px;height:22px;margin-left:-11px;fill:#fff;filter:drop-shadow(0 0 6px rgba(73,230,255,.8))}
+.facts{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:12px}
+.facts div{background:rgba(3,10,30,.55);border-radius:10px;padding:7px 8px;text-align:center}
+.facts small{display:block;font-size:10.5px;color:var(--mut);font-weight:800;text-transform:uppercase;letter-spacing:.04em}
+.facts b{font-size:15px}
+.pickup{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;background:rgba(73,230,255,.10);border:1px solid rgba(73,230,255,.35);border-radius:12px;padding:10px 12px}
+.pickup b{font-size:20px}.pickup span{font-size:12.5px;color:var(--mut);font-weight:700}
+details.st{margin-top:10px}details.st summary{font-weight:800;font-size:13px;color:var(--cian);cursor:pointer}
+</style>
+</head>
+<body>
+<main style="max-width:440px;padding-top:40px">
+  <div class="top" style="justify-content:center"><img src="../img/pulso-logo.png" alt="PULSO by Lacteol" style="height:40px"></div>
+  <div class="card"><h1>Consola del equipo</h1><p>Escribe tu clave para entrar a tu vista.</p>
+  <form id="f"><label for="c">Clave</label><input id="c" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"><div class="err" id="err"></div><button class="btn full" id="go">Entrar</button></form></div>
+</main>
+<script>
+const $=s=>document.querySelector(s);
+const st={get(k){try{return localStorage.getItem(k)||''}catch(e){return''}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+const norm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').trim();
+// Por ahora, para PULSO: la clave es el apellido de cada quien y decide su vista principal.
+const QUIEN={puebla:{who:'Blanca',to:'../blanca/'},silva:{who:'Vero',to:'../vero/'}};
+let API='';
+async function check(code){if(!API){const c=await fetch('../config.json',{cache:'no-store'}).then(r=>r.json());API=c.appsScriptUrl}
+ const r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'adminCheck',idToken:'codigo:'+code}),redirect:'follow'});return (await r.json()).success}
+const last=st.get('pulso.equipo.to');if(st.get('pulso.staff.code')&&last)location.replace(last);
+$('#f').onsubmit=async e=>{e.preventDefault();const k=norm($('#c').value),q=QUIEN[k];$('#err').textContent='';$('#go').disabled=true;$('#go').textContent='Entrando…';
+ try{let code=k;if(!(await check(code))&&q)code='18';if(!(await check(code))){$('#err').textContent='Esa clave no es correcta.';return}
+  st.set('pulso.staff.code',code);st.set('pulso.staff.who',q?q.who:'Equipo');const to=q?q.to:'../blanca/';st.set('pulso.equipo.to',to);location.replace(to)}
+ catch(x){$('#err').textContent='Sin conexión. Intenta de nuevo.'}finally{$('#go').disabled=false;$('#go').textContent='Entrar'}};
+</script>
+</body>
+</html>
