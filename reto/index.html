@@ -865,7 +865,14 @@ function renderPar(){const el=$("#par");if(!el)return;const me=S.players[ME]||nu
 
 /* ================== Render ================== */
 const $=s=>document.querySelector(s);
-function renderAll(){const s=P();if(faces.w1)setScene(s.sc);paintSignal();renderCtl();renderPar();renderPick();renderPon();live()}
+/* Sonido del cronómetro (solo en la señal): suena mientras corre el tiempo de una pregunta */
+const TICK=(()=>{try{const a=new Audio("sfx/tiempo.mp3");a.preload="auto";return a}catch(e){return null}})();let tickKey="";
+function tickSync(){if(!TICK||!(MODE==="senal"||!NET))return;const s=P();const on=s&&s.k==="tiempo"&&!S.closed&&!S.paused;
+ const key=s?(s.qi!=null?qkey(s):"")+"|"+S.i:"";
+ if(on){if(tickKey!==key){tickKey=key;try{TICK.currentTime=Math.min(19.5,S.t||0)}catch(e){}}if(TICK.paused){const pr=TICK.play();if(pr&&pr.catch)pr.catch(()=>{})}}
+ else if(!TICK.paused&&!(s&&s.k==="tiempo"&&(S.t||0)>=TIME-0.3)){TICK.pause();if(!(s&&s.k==="tiempo"))tickKey=""}}
+document.addEventListener("pointerdown",()=>{if(TICK&&TICK.paused){TICK.muted=true;const pr=TICK.play();if(pr&&pr.then)pr.then(()=>{TICK.pause();TICK.muted=false;tickSync()}).catch(()=>{TICK.muted=false})}},{once:true});
+function renderAll(){const s=P();tickSync();if(faces.w1)setScene(s.sc);paintSignal();renderCtl();renderPar();renderPick();renderPon();live()}
 function boot(){
  if(MODE==="senal"){document.body.classList.add("solo");const so=$("#soloSig");so.style.display="block";so.classList.add("solo-target","sig-host");window.addEventListener("resize",scaleHosts)}
  else if(MODE==="ponente"){document.body.classList.add("solo");$("#pon").style.display="flex";try{navigator.wakeLock&&navigator.wakeLock.request("screen").catch(()=>{})}catch(e){}}
