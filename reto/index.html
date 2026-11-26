@@ -837,13 +837,21 @@ async function hubStart(){if(MODE!=="participante"||S.players[ME])return;const t
  if(!tid){HUB.mode="email";renderPar();return}
  await hubLoad(tid)}
 async function hubLoad(tid){HUB.mode="loading";renderPar();
- try{const r=await hubCall("me",{id:tid});if(r.success){HUB.user=r.user;HUB.f={...r.user};HUB.mode="card"}else if(/desconocida/i.test(r.message||"")){HUB.mode="manual"}else{HUB.mode="email";HUB.err="No encontramos ese boleto. Escriba el correo con el que se registró."}}
+ try{const r=await hubCall("me",{id:tid});if(r.success){HUB.user=r.user;HUB.f={...r.user};HUB.mode="card";HUB.edit=false}else if(/desconocida/i.test(r.message||"")){HUB.mode="manual"}else{HUB.mode="email";HUB.err="No encontramos ese boleto. Escriba el correo con el que se registró."}}
  catch(e){HUB.mode="manual"}renderPar()}
 function hubHTML(){const u=HUB.user,f=HUB.f||{},err=`<div class="err" id="hErr">${hubEsc(HUB.err)}</div>`;
  if(HUB.mode==="loading")return`<div class="hub"><p style="text-align:center">Buscando su registro…</p></div>`;
  if(HUB.mode==="email")return`<form class="hub" id="hMail" novalidate><h3>Entre con su registro de PULSO</h3><p>Escriba el correo con el que confirmó su asistencia. Así su puntaje queda ligado a su nombre para la beca.</p>
   <label for="hEmail">Correo electrónico<input id="hEmail" type="email" inputmode="email" autocomplete="email" autocapitalize="none" placeholder="correo@ejemplo.com"></label>${err}
   <button class="join" type="submit" ${HUB.busy?"disabled":""}>${HUB.busy?"Buscando…":"Continuar"}</button><button type="button" class="lnk" id="hManual">No me registré</button></form>`;
+ if(!HUB.edit){const nm=(u.trato?u.trato+" ":"")+u.name;
+  return`<form class="hub" id="hQuick" novalidate><h3 style="text-align:center">¿Es usted?</h3>
+  <div style="text-align:center;font-weight:800;font-size:22px;line-height:1.25;margin:6px 0 2px">${hubEsc(nm)}</div>
+  <div style="text-align:center;opacity:.7;font-weight:600;font-size:13px;margin-bottom:10px">${hubEsc(u.email||"")}</div>
+  ${u.consent?"":`<label class="chk"><input type="checkbox" id="hQOk"><span>Leí el <a href="../privacidad/" target="_blank" rel="noopener">aviso de privacidad</a> y acepto que Polar use mis datos para el Reto, la beca y mi constancia, y que los comparta con Carnot y su representante, y sus resultados con DSM-Firmenich (patrocinador) solo con fines informativos.</span></label>`}
+  ${err}<button class="join" type="submit" ${HUB.busy?"disabled":""}>${HUB.busy?"Entrando…":"Sí, entrar al Reto"}</button>
+  <button type="button" class="lnk" id="hEdit">Corregir mis datos</button>
+  <button type="button" class="lnk" id="hOther">No soy ${hubEsc(String(u.name).split(" ").slice(0,2).join(" "))}</button></form>`}
  const opts=SPECS.concat(SPECS.includes(f.specialty)||!f.specialty?[]:[f.specialty]).map(x=>`<option${x===f.specialty?" selected":""}>${hubEsc(x)}</option>`).join("");
  return`<form class="hub" id="hCard" novalidate><h3>Confirme sus datos</h3><p>Revíselos antes de jugar: con ellos se asigna la beca y se emite su constancia. Si algo está mal, corríjalo aquí.</p>
   <label for="hName">Nombre completo (así sale en su constancia)<input id="hName" autocomplete="name" value="${hubEsc(f.name)}"></label>
@@ -857,6 +865,13 @@ function hubHTML(){const u=HUB.user,f=HUB.f||{},err=`<div class="err" id="hErr">
 function hubKeep(){const g=id=>{const x=$(id);return x?x.value:undefined};if(!HUB.f||!$("#hCard"))return;Object.assign(HUB.f,{name:g("#hName"),email:g("#hEmail2"),trato:g("#hTrato"),specialty:g("#hSpec"),phone:g("#hPhone"),cedula:g("#hCed")});if($("#hOk"))HUB.f.consent=$("#hOk").checked;HUB.f.carnot=$("#hCarnot").checked}
 function hubBind(){
  if($("#hManual"))$("#hManual").onclick=()=>{HUB.mode="manual";HUB.err="";renderPar()};
+ if($("#hEdit"))$("#hEdit").onclick=()=>{HUB.edit=true;HUB.err="";renderPar()};
+ if($("#hQuick"))$("#hQuick").onsubmit=async e=>{e.preventDefault();const u=HUB.user;
+  if(u.consent){hubJoin(u.name,u.id);return}
+  if(!$("#hQOk").checked){HUB.err="Para continuar, acepte el aviso de privacidad.";renderPar();return}
+  HUB.busy=true;HUB.err="";renderPar();
+  try{const r=await hubCall("updateProfile",{id:u.id,name:u.name,email:u.email,specialty:u.specialty,phone:u.phone,cedula:u.cedula,trato:u.trato,consent:true,carnot:!!u.carnot,canal:"Reto PULSO"});if(r.success&&r.user)HUB.user=r.user}catch(x){}
+  HUB.busy=false;hubJoin(HUB.user.name,HUB.user.id)};
  if($("#hOther"))$("#hOther").onclick=()=>{try{localStorage.removeItem("pulso.ticket")}catch(e){}HUB.user=null;HUB.mode="email";HUB.err="";renderPar()};
  if($("#hCard"))$("#hCard").addEventListener("input",hubKeep),$("#hCard").addEventListener("change",hubKeep);
  if($("#hMail"))$("#hMail").onsubmit=async e=>{e.preventDefault();const em=$("#hEmail").value.trim().toLowerCase();if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)){HUB.err="Escriba un correo válido.";renderPar();return}
