@@ -127,7 +127,7 @@ const $=s=>document.querySelector(s);
 const st={get(k){try{return localStorage.getItem(k)||''}catch(e){return''}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
 const norm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').trim();
 // Por ahora, para PULSO: la clave es el apellido de cada quien y decide su vista principal.
-const QUIEN={puebla:{who:'Blanca',to:'../blanca/'},silva:{who:'Vero',to:'../vero/'}};
+const QUIEN={puebla:{who:'Blanca',to:'../blanca/'},silva:{who:'Vero',to:'../vero/'},'2611':{who:'Roberto',to:'../blanca/'}};
 let API='';
 async function check(code){if(!API){const c=await fetch('../config.json',{cache:'no-store'}).then(r=>r.json());API=c.appsScriptUrl}
  const r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'adminCheck',idToken:'codigo:'+code}),redirect:'follow'});return (await r.json()).success}

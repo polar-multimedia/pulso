@@ -80,7 +80,7 @@ label{display:block;font-size:12px;font-weight:800;color:var(--mut);margin:14px 
   <div class="card">
     <img src="../img/pulso-logo.png" alt="PULSO">
     <h1>Acceso de registro</h1>
-    <input id="code" class="field" inputmode="numeric" autocomplete="off" placeholder="····">
+    <input id="code" class="field" autocomplete="off" autocapitalize="off" placeholder="PIN 2611 o su clave">
     <label for="whoIn" style="text-align:left">¿Quién registra? (opcional)</label>
     <input id="whoIn" class="field" placeholder="Ej. Blanca" autocomplete="off">
     <div class="err" id="loginErr"></div>
@@ -176,7 +176,9 @@ function buzz(p){try{navigator.vibrate&&navigator.vibrate(p)}catch(e){}}
 async function login(){
   const c=$('#code').value.trim();if(!c)return;
   $('#loginBtn').disabled=true;$('#loginErr').textContent='';
-  CODE=c;WHO=$('#whoIn').value.trim();
+  /* Un solo PIN de equipo (2611) y las claves personales de Blanca y Vero abren también esta pantalla. */
+  const K={'2611':'','puebla':'Blanca','silva':'Vero'},kk=c.toLowerCase();
+  CODE=(kk in K)?'18':c;WHO=$('#whoIn').value.trim()||K[kk]||'';
   try{const j=await api('adminCheck');if(!j.success)throw new Error(j.message||'Código incorrecto');
     store.set('pulso.staff.code',CODE);store.set('pulso.staff.who',WHO);start();
   }catch(e){if(e.message!=='expired')$('#loginErr').textContent=e.message||'No se pudo entrar'}
