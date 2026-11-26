@@ -257,11 +257,17 @@ async function find(){
 function personCard(u){
   const tags=(u.checkedIn?`<span class="tag ok">Ya ingresó ${esc(u.checkedAt||'')}</span>`:'')+
     (u.match&&u.match!=='exacta'?`<span class="tag sim">Coincidencia ${esc(u.match)}</span>`:'')+
-    (u.origin==='En sitio'?'<span class="tag site">Registro en sitio</span>':'');
+    (u.origin==='En sitio'?'<span class="tag site">Registro en sitio</span>':'')+
+    (u.invited?'<span class="tag site">Lista de invitados · sin registro</span>':'');
+  if(u.invited){const meta2=[u.email,u.phone,[u.specialty,u.city].filter(Boolean).join(' · '),u.note].filter(Boolean).map(esc).join('<br>');
+    return `<div class="p"><div class="i"><div class="n">${esc(u.name)}</div><div class="m">${meta2}</div>${tags}</div><button class="btn warn" data-inv="${esc(JSON.stringify({name:u.name,email:u.email,phone:u.phone,specialty:u.specialty,city:u.city}))}">Registrar</button></div>`}
   const meta=[u.email,u.phone,[u.specialty,u.city].filter(Boolean).join(' · '),u.id].filter(Boolean).map(esc).join('<br>');
   return `<div class="p"><div class="i"><div class="n">${esc(u.name)}</div><div class="m">${meta}</div>${tags}</div>${u.checkedIn?'':`<button class="btn" data-id="${esc(u.id)}">Dar acceso</button>`}</div>`;
 }
 function bindPersonBtns(root,after){
+  root.querySelectorAll('button[data-inv]').forEach(b=>b.onclick=()=>{const v=JSON.parse(b.dataset.inv);
+    $('#nName').value=v.name||'';$('#nEmail').value=v.email||'';$('#nPhone').value=v.phone||'';$('#nSpec').value=v.specialty||'';$('#nCity').value=v.city||'';
+    show('new');$('#newErr').textContent=v.email?'Datos de la lista de invitados. Confirme nombre y correo con el médico.':'Pida su correo para la constancia.';setTimeout(()=>$((v.email?'#newBtn':'#nEmail')).focus(),100)});
   root.querySelectorAll('button[data-id]').forEach(b=>b.onclick=async()=>{
     b.disabled=true;await checkin(b.dataset.id);const t=setInterval(()=>{if(!busy){clearInterval(t);after&&after()}},300)});
 }
