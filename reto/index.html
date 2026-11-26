@@ -773,13 +773,13 @@ function hubHTML(){const u=HUB.user,f=HUB.f||{},err=`<div class="err" id="hErr">
  return`<form class="hub" id="hCard" novalidate><h3>Confirme sus datos</h3><p>Revíselos antes de jugar: con ellos se asigna la beca y se emite su constancia. Si algo está mal, corríjalo aquí.</p>
   <label for="hName">Nombre completo (así sale en su constancia)<input id="hName" autocomplete="name" value="${hubEsc(f.name)}"></label>
   <label for="hEmail2">Correo electrónico<input id="hEmail2" type="email" inputmode="email" autocapitalize="none" value="${hubEsc(f.email)}"></label>
-  <div class="two"><label for="hSpec">Especialidad<select id="hSpec">${opts}</select></label><label for="hPhone">Celular<input id="hPhone" type="tel" inputmode="tel" value="${hubEsc(f.phone)}"></label></div>
-  <label for="hCed">Cédula profesional<input id="hCed" inputmode="numeric" value="${hubEsc(f.cedula)}" placeholder="Opcional"></label>
+  <div class="two"><label for="hTrato">Trato<select id="hTrato"><option value=""${!f.trato?" selected":""}>Elija</option><option${f.trato==="Dr."?" selected":""}>Dr.</option><option${f.trato==="Dra."?" selected":""}>Dra.</option></select></label><label for="hSpec">Especialidad<select id="hSpec">${opts}</select></label></div>
+  <div class="two"><label for="hPhone">Celular<input id="hPhone" type="tel" inputmode="tel" value="${hubEsc(f.phone)}"></label><label for="hCed">Cédula profesional<input id="hCed" inputmode="numeric" value="${hubEsc(f.cedula)}" placeholder="Opcional"></label></div>
   ${u.consent?`<div class="ok">✓ Aviso de privacidad aceptado</div>`:`<label class="chk"><input type="checkbox" id="hOk"${f.consent?" checked":""}><span>Leí el <a href="../privacidad/" target="_blank" rel="noopener">aviso de privacidad</a> y acepto que Polar use mis datos para el Reto, la beca y mi constancia, y que los comparta con Carnot y su representante.</span></label>`}
   <label class="chk"><input type="checkbox" id="hCarnot"${f.carnot?" checked":""}><span>Acepto que Carnot me contacte después del evento (opcional).</span></label>
   ${err}<button class="join" type="submit" ${HUB.busy?"disabled":""}>${HUB.busy?"Guardando…":"Guardar y entrar al Reto"}</button>
   <button type="button" class="lnk" id="hOther">No soy ${hubEsc(String(u.name).split(" ").slice(0,2).join(" "))}</button></form>`}
-function hubKeep(){const g=id=>{const x=$(id);return x?x.value:undefined};if(!HUB.f||!$("#hCard"))return;Object.assign(HUB.f,{name:g("#hName"),email:g("#hEmail2"),specialty:g("#hSpec"),phone:g("#hPhone"),cedula:g("#hCed")});if($("#hOk"))HUB.f.consent=$("#hOk").checked;HUB.f.carnot=$("#hCarnot").checked}
+function hubKeep(){const g=id=>{const x=$(id);return x?x.value:undefined};if(!HUB.f||!$("#hCard"))return;Object.assign(HUB.f,{name:g("#hName"),email:g("#hEmail2"),trato:g("#hTrato"),specialty:g("#hSpec"),phone:g("#hPhone"),cedula:g("#hCed")});if($("#hOk"))HUB.f.consent=$("#hOk").checked;HUB.f.carnot=$("#hCarnot").checked}
 function hubBind(){
  if($("#hManual"))$("#hManual").onclick=()=>{HUB.mode="manual";HUB.err="";renderPar()};
  if($("#hOther"))$("#hOther").onclick=()=>{try{localStorage.removeItem("pulso.ticket")}catch(e){}HUB.user=null;HUB.mode="email";HUB.err="";renderPar()};
@@ -791,10 +791,10 @@ function hubBind(){
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(f.email||"").trim())){HUB.err="Escriba un correo válido.";renderPar();return}
   if(!HUB.user.consent&&!f.consent){HUB.err="Para continuar, acepte el aviso de privacidad.";renderPar();return}
   let name=String(f.name).trim();const u0=HUB.user;
-  const same=HUB.user.consent&&name===u0.name&&String(f.email).trim().toLowerCase()===String(u0.email).toLowerCase()&&f.specialty===u0.specialty&&String(f.phone||"")===String(u0.phone||"")&&String(f.cedula||"")===String(u0.cedula||"")&&!!f.carnot===!!u0.carnot;
+  const same=HUB.user.consent&&name===u0.name&&String(f.email).trim().toLowerCase()===String(u0.email).toLowerCase()&&f.specialty===u0.specialty&&String(f.phone||"")===String(u0.phone||"")&&String(f.cedula||"")===String(u0.cedula||"")&&!!f.carnot===!!u0.carnot&&(f.trato||"")===(u0.trato||"");
   if(same){hubJoin(name,u0.id);return}/* sin cambios: entra sin esperar al servidor */
   HUB.busy=true;HUB.err="";renderPar();
-  try{const r=await hubCall("updateProfile",{id:HUB.user.id,name,email:f.email,specialty:f.specialty,phone:f.phone,cedula:f.cedula,consent:!!(f.consent||HUB.user.consent),carnot:!!f.carnot,canal:"Reto PULSO"});
+  try{const r=await hubCall("updateProfile",{id:HUB.user.id,name,email:f.email,specialty:f.specialty,phone:f.phone,cedula:f.cedula,trato:f.trato,consent:!!(f.consent||HUB.user.consent),carnot:!!f.carnot,canal:"Reto PULSO"});
    HUB.busy=false;if(!r.success){HUB.err=r.message||"No se pudo guardar.";renderPar();return}HUB.user=r.user;name=r.user.name}
   catch(x){HUB.busy=false}/* sin conexión: entra igual con su nombre; los datos se corrigen en el registro */
   hubJoin(name,HUB.user.id)};
