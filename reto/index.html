@@ -524,7 +524,7 @@ function apply(a){
  else if(a.t==="ck"){ckOp(a.op);renderAll()}
  else if(a.t==="board"){S.board=!S.board;renderAll()}
  else if(a.t==="pause"){S.paused=!S.paused;renderAll()}
- else if(a.t==="join"){const o=S.players[a.id];S.players[a.id]={name:String(a.name).slice(0,80),inst:String(a.inst||"").slice(0,80),tid:String(a.tid||"").slice(0,12),pts:o?o.pts:0,fast:o?o.fast:0};if(a.id==="me")S.me=a.id;renderAll()}
+ else if(a.t==="join"){let o=S.players[a.id];if(!o){const nn=x=>String(x||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g," ").trim();const tid=String(a.tid||"").toUpperCase();const old=Object.keys(S.players).find(k=>k!==a.id&&(tid?String(S.players[k].tid||"").toUpperCase()===tid:(!S.players[k].tid&&nn(S.players[k].name)===nn(a.name))));if(old){o=S.players[old];delete S.players[old];Object.keys(S.ans||{}).forEach(q=>{if(S.ans[q][old]&&!S.ans[q][a.id])S.ans[q][a.id]=S.ans[q][old];delete S.ans[q][old]})}}/* mismo médico desde otro celular o navegador: conserva su puntaje */S.players[a.id]={name:String(a.name).slice(0,80),inst:String(a.inst||"").slice(0,80),tid:String(a.tid||"").slice(0,12),pts:o?o.pts:0,fast:o?o.fast:0};if(a.id==="me")S.me=a.id;renderAll()}
  else if(a.t==="answer"){const s=P();if(s.k!=="tiempo"||S.closed||S.paused)return;const k=qkey(s);S.ans[k]=S.ans[k]||{};if(S.ans[k][a.id])return;S.ans[k][a.id]={pick:a.pick,t:S.t};renderAll()}
  share();
 }
