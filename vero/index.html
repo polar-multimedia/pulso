@@ -119,13 +119,33 @@ try{localStorage.setItem('pulso.equipo.to',location.pathname.includes('/vero/')?
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const st={get(k){try{return localStorage.getItem(k)||''}catch(e){return''}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
-let API='',CODE=st.get('pulso.staff.code'),WHO=st.get('pulso.staff.who')||'',D=null,TAB=st.get('pulso.vero.tab')||'cliente',msg='',busy=0;
+let B=null,API='',CODE=st.get('pulso.staff.code'),WHO=st.get('pulso.staff.who')||'',D=null,TAB=st.get('pulso.vero.tab')||'cliente',msg='',busy=0;
 const PE=['Por llegar','Llegó','Montado','Retrasado','No llegó'];
 const SS={get(k){try{return JSON.parse(sessionStorage.getItem(k)||'null')}catch(e){return null}},set(k,v){try{sessionStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
 /* Para que cambiar entre Blanca y Vero sea inmediato: se muestra lo último que se tenía y se actualiza en segundo plano.
    Se guarda solo en esta pestaña del navegador (se borra al cerrarla). */
 function guarda(r){SS.set('pulso.vero',r)}
-function adelanta(){setTimeout(()=>{api('blanca',{}).then(r=>{if(r&&r.success)SS.set('pulso.blanca',r)}).catch(()=>{})},300)}
+/* Logística de Blanca, solo para consulta: foráneos, retrasos, asistencia y hotel (lo que mueve costos y factura). */
+function traeB(){api('blanca',{}).then(r=>{if(r&&r.success){B=r;SS.set('pulso.blanca',r);if(TAB==='log')render()}}).catch(()=>{})}
+const toMin=t=>{const m=String(t||'').match(/(\d{1,2}):(\d{2})/);return m?+m[1]*60+ +m[2]:0};
+const fmt=m=>{m=((m%1440)+1440)%1440;return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0')};
+const ESTV={prog:['Programado',''],air:['En vuelo','c-air'],delay:['Retrasado','c-delay'],land:['Aterrizó','c-land'],pick:['Con el chofer','c-pick'],done:['Ya llegó','c-done'],cancel:['Cancelado','c-cancel']};
+function logistica(){if(!B)return '<div class="card"><p>Cargando la logística de Blanca…</p></div>';
+ const T=(B.traslados||[]).filter(p=>!(p.s==='cancel'&&!p.flight)),av=T.filter(p=>p.flight),ti=T.filter(p=>!p.flight);
+ const eta=p=>toMin(p.land)+(p.s==='delay'?(+p.d||0):0),ord={cancel:0,delay:1,air:2,land:3,pick:4,prog:5,done:6};
+ const ok=T.filter(p=>p.arrived||p.s==='done').length,al=T.filter(p=>p.s==='cancel'||(p.s==='delay'&&p.d>=20)).length;
+ const fila=p=>{const e=ESTV[p.s]||ESTV.prog,lbl=p.flight?e[0]+(p.s==='delay'?' +'+p.d+' min':''):(p.s==='prog'?'Por llegar':p.s==='pick'?'En camino':'Ya llegó');
+  return `<div class="li"><div><div class="nm">${esc(p.trato+' '+p.name)}</div><div class="meta">${esc(p.from)}${p.flight?' · '+esc(p.flight)+' · aterriza '+fmt(eta(p)):' · por tierra'} → ${p.to==='hotel'?'hotel':'InSpace'}</div></div><span class="chip ${p.flight?e[1]:p.s==='prog'?'':p.s==='pick'?'c-air':'c-done'}">${esc(p.arrived?'Ya está en PULSO':lbl)}</span></div>`};
+ const R=B.rooming||[],early=R.filter(r=>r['Early check-in']&&!/^(no|—|-)$/i.test(String(r['Early check-in']).trim())).length,late=R.filter(r=>/late/i.test(String(r['Nota']||''))).length;
+ return `<div class="card"><div class="big"><span class="n">${ok}</span><span class="of">de ${T.length} foráneos ya llegaron</span></div>
+ <div class="mini" style="margin-top:10px"><div><b style="${al?'color:var(--warn)':''}">${al}</b><span>con retraso o cancelación</span></div><div><b>${R.length}</b><span>habitaciones en el hotel</span></div></div>
+ <p class="note">Solo para consultar. Blanca lleva los vuelos y los traslados; si algo cambia, ella lo marca y aquí se ve.</p></div>
+ <div class="block"><h3>En avión</h3><span>${av.length}</span></div><div class="card">${av.sort((a,b)=>(ord[a.s]??5)-(ord[b.s]??5)||eta(a)-eta(b)).map(fila).join('')||'<p>Sin vuelos.</p>'}</div>
+ ${ti.length?`<div class="block"><h3>Por tierra</h3><span>${ti.length}</span></div><div class="card">${ti.map(fila).join('')}</div>`:''}
+ <div class="block"><h3>Hotel · lo que se factura</h3><span>${esc(String(B.hotel||'').replace(/\s*\(.*\)\s*$/,''))}</span></div>
+ <div class="card"><div class="mini"><div><b>${early}</b><span>early check-in (antes de las 15:00)</span></div><div><b>${late}</b><span>late checkout (después de las 12:00)</span></div></div>
+ ${R.map(r=>`<div class="li"><div><div class="nm">${esc(r['Huésped'])}</div><div class="meta">${esc([r['Origen'],r['Habitación'],r['Early check-in']?'Early check-in: '+r['Early check-in']:''].filter(Boolean).join(' · '))}</div>${r['Nota']?`<div class="meta" style="color:var(--warn)">${esc(r['Nota'])}</div>`:''}</div></div>`).join('')||'<p>No hay rooming capturado.</p>'}</div>`}
+function adelanta(){setTimeout(traeB,300)}
 async function api(action,body){if(!API){const c=await fetch('../config.json',{cache:'no-store'}).then(r=>r.json());API=c.appsScriptUrl}
  const r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action,idToken:'codigo:'+CODE,who:WHO,...body}),redirect:'follow'});return r.json()}
 function login(){const m=msg;msg='';$('#app').innerHTML=`<div class="card"><p>${esc(m||'Entra con tu clave.')}</p><a class="btn full" href="../equipo/">Ir a la entrada del equipo</a></div>`;if(!m)location.replace('../equipo/')}
@@ -135,8 +155,9 @@ function render(){if(!D)return;const c=D.counts,pct=c.esperados?Math.min(100,Mat
  $('#app').innerHTML=`<div class="card"><div class="big"><span class="n">${c.llegaron}</span><span class="of">de ${c.esperados} esperados · ${pct}%</span></div><div class="meter"><i style="width:${pct}%"></i></div>
  <div class="mini"><div><b>${c.confirmados}</b><span>confirmados con Carnot</span></div><div><b>${c.enSitio}</b><span>registrados en la entrada</span></div><div><b>${pend.length}</b><span>proveedores por llegar</span></div><div><b>${c.extras}</b><span>extras de alimentos</span></div></div>
  <div class="acts"><a class="btn wa sm" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(textoCliente())}">Mandar el número a Carnot</a></div></div>
- <div class="tabs">${[['cliente','Carnot por representante'],['prov','Proveedores ('+P.length+')'],['cierre','Cierre para facturar']].map(t=>`<button data-tab="${t[0]}" class="${TAB===t[0]?'on':''}">${t[1]}</button>`).join('')}</div>
+ <div class="tabs">${[['cliente','Carnot por representante'],['log','Foráneos y hotel'],['prov','Proveedores ('+P.length+')'],['cierre','Cierre para facturar']].map(t=>`<button data-tab="${t[0]}" class="${TAB===t[0]?'on':''}">${t[1]}</button>`).join('')}</div>
  <div class="${TAB==='cliente'?'':'hide'}"><div class="card">${D.byRep.length?D.byRep.map(r=>{const p=r.confirmados?Math.round(r.asistieron/r.confirmados*100):0;return `<div class="rep"><b>${esc(r.rep)}</b><span class="meta">${r.asistieron} de ${r.confirmados}</span><div class="bar"><i style="width:${p}%"></i></div></div>`}).join(''):'<p>Aún no hay datos por representante.</p>'}</div></div>
+ <div class="${TAB==='log'?'':'hide'}">${TAB==='log'?logistica():''}</div>
  <div class="${TAB==='prov'?'':'hide'}">${P.map(p=>`<div class="p ${p['Estado']==='Retrasado'?'alert':''}"><div class="row"><div><div class="nm">${esc(p['Proveedor'])}</div><div class="meta">${esc(p['Qué entrega'])}${p['Hora']?' · '+esc(p['Hora'])+' h':''}</div></div><span class="chip ${p['Estado']==='Llegó'||p['Estado']==='Montado'?'c-land':p['Estado']==='Retrasado'?'c-delay':p['Estado']==='No llegó'?'c-cancel':''}">${esc(p['Estado']||'Por llegar')}</span></div>
   <div class="states" style="margin-top:10px">${PE.map(e=>`<button data-row="${p._row}" data-e="${e}" class="${(p['Estado']||'Por llegar')===e?'on':''}">${e}</button>`).join('')}</div>
   ${p['Hora real']?`<div class="by">${esc(p['Hora real'])}</div>`:''}${p['Nota']?`<div class="by">${esc(p['Nota'])}</div>`:''}${p['Contacto']?`<div class="acts"><a class="btn ghost sm" href="tel:${esc(p['Contacto'].replace(/[^\d+]/g,''))}">Llamar</a></div>`:''}</div>`).join('')}
@@ -160,9 +181,9 @@ function render(){if(!D)return;const c=D.counts,pct=c.esperados?Math.min(100,Mat
  <a href="../fotos/">Subir fotos al reporte<span>Con el momento o el ponente</span></a>
  <a href="https://polar-multimedia.github.io/trineo/carnot-pulso-reporte-2026/?c=prueba&nt=1">Reporte final (vista de prueba)<span>Así lo recibe la cadena de Carnot</span></a></details>`}
 async function save(body){busy++;try{const r=await api('veroSet',body);if(!r.success)alert(r.message||'No se guardó');}catch(e){alert('No se guardó: revisa tu conexión.')}busy--;refresh(true)}
-async function refresh(force){if(!CODE||(busy&&!force))return;try{const r=await api('vero',{});if(r.success){D=r;guarda(r);if(force||!document.activeElement||!/INPUT|TEXTAREA/.test(document.activeElement.tagName))render()}else if(r.expired){CODE='';login()}}catch(e){}}
+async function refresh(force){if(!CODE||(busy&&!force))return;try{const r=await api('vero',{});if(r.success){D=r;guarda(r);if(TAB==='log')traeB();if(force||!document.activeElement||!/INPUT|TEXTAREA/.test(document.activeElement.tagName))render()}else if(r.expired){CODE='';login()}}catch(e){}}
 document.addEventListener('click',e=>{
- const t=e.target.closest('[data-tab]');if(t){TAB=t.dataset.tab;st.set('pulso.vero.tab',TAB);render();return}
+ const t=e.target.closest('[data-tab]');if(t){TAB=t.dataset.tab;st.set('pulso.vero.tab',TAB);render();if(TAB==='log')traeB();return}
  const pb=e.target.closest('[data-row]');if(pb){const p=D.proveedores.find(x=>x._row==pb.dataset.row);if(p){p['Estado']=pb.dataset.e;render()}save({type:'prov',row:+pb.dataset.row,estado:pb.dataset.e});return}
  if(e.target.id==='padd'){const n=$('#pn').value.trim();if(!n)return alert('Escribe el nombre del proveedor');save({type:'provAdd',hora:$('#ph').value,nombre:n,que:$('#pq').value,contacto:$('#pc').value});return}
  if(e.target.id==='csave'){save({type:'cierre',oc:$('#coc').value,monto:$('#cmo').value,nota:$('#cno').value});return}
@@ -170,7 +191,7 @@ document.addEventListener('click',e=>{
  if(e.target.id==='out'){try{sessionStorage.clear()}catch(x){}CODE='';st.set('pulso.staff.code','');st.set('pulso.equipo.to','');D=null;location.replace('../equipo/')}});
 const tick=()=>{$('#clk').textContent=new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'America/Mexico_City'})};tick();setInterval(tick,15000);
 setInterval(refresh,30000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh()});
-if(CODE){const C=SS.get('pulso.vero');if(C){D=C;render()}else $('#app').innerHTML='<div class="card"><p>Cargando…</p></div>';api('vero',{}).then(r=>{if(r&&r.success){guarda(r);adelanta()}if(!r.success&&/desconocida/i.test(r.message||'')){msg='La consola se activa en cuanto Roberto actualice el servidor (versión 6). Intenta en un rato.';login();return}if(r.success){D=r;render()}else login()}).catch(()=>{msg='Sin conexión. Intenta de nuevo.';login()})}else login();
+if(CODE){B=SS.get('pulso.blanca');const C=SS.get('pulso.vero');if(C){D=C;render()}else $('#app').innerHTML='<div class="card"><p>Cargando…</p></div>';api('vero',{}).then(r=>{if(r&&r.success){guarda(r);adelanta()}if(!r.success&&/desconocida/i.test(r.message||'')){msg='La consola se activa en cuanto Roberto actualice el servidor (versión 6). Intenta en un rato.';login();return}if(r.success){D=r;render()}else login()}).catch(()=>{msg='Sin conexión. Intenta de nuevo.';login()})}else login();
 </script>
 </body>
 </html>

@@ -186,7 +186,8 @@ function hello(){return `<details class="more"><summary>¿Cómo funciona esta co
  Los mensajes a los doctores van firmados como «el asistente de Blanca».</div></details>`}
 function nextUp(){if(!D)return[];const T=D.traslados,now=nowMin(),out=[];
  T.filter(p=>p.s==='cancel'&&p.flight).forEach(p=>out.push({t:`Se canceló el vuelo de ${p.trato} ${p.name}`,why:`Hay que buscarle otro vuelo; mientras, ${D.driver.name} no debe ir por ${a(p,'ella','él')}.`,acts:[['wa',wa(D.driver.phone,driverMsg(p)),'Avisar a '+D.driver.name]]}));
- T.filter(p=>p.s==='delay'&&p.d>=20).forEach(p=>out.push({t:`${p.trato} ${p.name} viene con ${p.d} min de retraso`,why:`Avísale a ${D.driver.name} para que no entre antes al estacionamiento del aeropuerto (no dejan esperar mucho). Nueva recogida: ${fmt(pickup(p))}.${p.d>=60?' Pasa de una hora: revisa si conviene separar su bloque.':''}`,acts:[['wa',wa(D.driver.phone,driverMsg(p)),'Avisar a '+D.driver.name],['wa',wa(p.phone,welcome(p)),'Avisarle a '+a(p,'ella','él')]]}));
+ reagrupa().forEach(r=>out.push({t:r.t,why:r.why,acts:[['tab','foraneos','Ver vuelos']]}));
+ T.filter(p=>p.s==='delay'&&p.d>=20&&!reagrupa().some(r=>r.keys.includes(p.key))).forEach(p=>out.push({t:`${p.trato} ${p.name} viene con ${p.d} min de retraso`,why:`Nueva recogida: ${fmt(pickup(p))}. ${D.driver.name} ya ve el retraso en su sistema.${p.d>=60?' Pasa de una hora: revisa si conviene separar su bloque.':''}`,acts:[['wa',wa(p.phone,welcome(p)),'Avisarle a '+a(p,'ella','él')]]}));
  T.filter(p=>p.s==='land').forEach(p=>out.push({t:`Aterrizó ${p.trato} ${p.name}`,why:`Mándale su bienvenida para que sepa dónde ${a(p,'la','lo')} espera ${D.driver.name}. Cuando suba a la camioneta, márcalo «Con el chofer».`,acts:[['wa',wa(p.phone,welcome(p)),'Bienvenida'],['set',p.key+'|pick','Ya está con el chofer']]}));
  const blocks={};T.filter(p=>p.flight&&!['done','pick','cancel'].includes(p.s)).forEach(p=>{(blocks[p.block]=blocks[p.block]||[]).push(p)});
  const nb=Object.keys(blocks).map(b=>({b,ps:blocks[b],pk:Math.max(...blocks[b].map(pickup))})).filter(x=>x.pk>=now-60).sort((x,y)=>x.pk-y.pk)[0];
@@ -194,6 +195,17 @@ function nextUp(){if(!D)return[];const T=D.traslados,now=nowMin(),out=[];
  if(D.sinRegistro.length)out.push({t:`${D.sinRegistro.length} confirmaron con Carnot y no tienen boleto`,why:'Si llegan, se registran en la entrada en un minuto. Si quieres, llámales desde la pestaña «Sin registro».',acts:[['tab','sin','Ver la lista']]});
  return out.slice(0,3)}
 
+/* Cuando un retraso acerca la recogida de alguien a la de otro bloque, se sugiere juntarlos en una sola camioneta.
+   Solo es una sugerencia para Blanca: el chofer ve los retrasos en su propio sistema. */
+function reagrupa(){if(!D)return[];const T=D.traslados.filter(p=>p.flight&&!['done','pick','cancel'].includes(p.s)),out=[];
+ const B={};T.forEach(p=>{(B[p.block]=B[p.block]||[]).push(p)});
+ T.filter(p=>p.s==='delay'&&p.d>=20).forEach(p=>{const pk=eta(p)+30;
+  Object.keys(B).filter(b=>b!=String(p.block)).forEach(b=>{const ps=B[b].filter(x=>x.key!==p.key),bp=Math.max(...ps.map(pickup));
+   if(!ps.length||Math.abs(bp-pk)>30||out.some(o=>o.keys.includes(p.key)))return;
+   const misma=ps.every(x=>x.to===p.to),dst=x=>x.to==='hotel'?'hotel':'InSpace';
+   out.push({keys:[p.key,...ps.map(x=>x.key)],t:`Con el retraso, ${p.trato} ${first(p)} puede irse con el bloque ${b}`,
+    why:`${p.trato} ${p.name} ahora aterriza a las ${fmt(eta(p))} (+${p.d} min). El bloque ${b} (${ps.map(x=>x.trato+' '+first(x)).join(', ')}) se recoge a las ${fmt(bp)}: una sola camioneta a las ${fmt(Math.max(pk,bp))} podría llevarlos a todos.${misma?'':' Ojo: no van al mismo lugar ('+dst(p)+' y '+[...new Set(ps.map(dst))].join('/')+').'}`})})});
+ return out}
 /* Foráneos primero: es lo que más le importa a Blanca. Junta cada foráneo con su vuelo y traslado. */
 function foraneosData(){const T=D.traslados;return D.foraneos.map(f=>{const t=T.find(x=>x.id&&x.id===f.id)||T.find(x=>first(x).toLowerCase()===String(f.name).split(' ')[0].toLowerCase()&&x.from);
  let st='Sin vuelo capturado',cls='',ord=5;
@@ -313,8 +325,8 @@ function llegadas(soloAvion){const T=D.traslados.filter(p=>p.flight);if(!D.trasl
    <div class="route"><div class="ap"><b>${esc(o[0])}</b><span>${esc(o[1])}</span></div><div class="track"><i style="width:${pr}%"></i><span style="position:absolute;left:${pr}%">${PLANE}</span></div><div class="ap r"><b>MEX</b><span>CDMX · T${esc(p.terminal||'2')}</span></div></div>
    <div class="facts">${p.off?`<div><small>Despegó</small><b>${esc(p.off)}</b></div>`:`<div><small>Llega en</small><b>${esc(falta(p))}</b></div>`}<div><small>Hora estimada</small><b>${fmt(eta(p))}</b></div><div><small>Terminal</small><b>${esc(p.terminal||'2')}</b></div><div><small>Puerta</small><b>${esc(p.gate||'—')}</b></div></div>
    <div class="by" style="margin-top:6px">${esc(fuente(p))}</div>
-   <div class="pickup"><div><span>Recogida → ${p.to==='hotel'?'hotel':'InSpace'}${pickup(p)!==toMin(p.pick)?' (antes '+p.pick+')':''}</span><br><b>${fmt(pickup(p))}</b></div><a class="btn wa sm" href="${wa(D.driver.phone,driverMsg(p))}" target="_blank" rel="noopener">Avisar a ${esc(D.driver.name)}</a></div>
-   ${al?`<div class="msg">Avísale a ${esc(D.driver.name)}: no debe entrar antes al estacionamiento del aeropuerto.${p.d>=60?' Pasa de una hora: revisa si conviene reacomodar el bloque.':''}</div>`:''}
+   <div class="pickup"><div><span>Recogida → ${p.to==='hotel'?'hotel':'InSpace'}${pickup(p)!==toMin(p.pick)?' (antes '+p.pick+')':''}</span><br><b>${fmt(pickup(p))}</b></div><a class="btn ghost sm" href="${wa(D.driver.phone,driverMsg(p))}" target="_blank" rel="noopener">Escribir a ${esc(D.driver.name)}</a></div>
+   ${al?(()=>{const r=reagrupa().find(x=>x.keys[0]===p.key);return `<div class="msg">${r?esc(r.why):'Nueva recogida a las '+fmt(pickup(p))+'.'+(p.d>=60?' Pasa de una hora: revisa si conviene reacomodar el bloque.':'')}</div>`})():''}
    <div class="acts"><a class="btn wa sm" href="${wa(p.phone,welcome(p))}" target="_blank" rel="noopener">Bienvenida</a><a class="btn ghost sm" href="${fa(p.flight)}" target="_blank" rel="noopener">Ver vuelo en vivo</a></div>
    <details class="st" ${['prog'].includes(p.s)?'':'open'}><summary>Cambiar estado</summary><div class="states" style="margin-top:8px">${EST.map(e=>`<button data-k="${p.key}" data-s="${e[0]}" class="${p.s===e[0]?'on':''}">${e[1]}</button>`).join('')}</div>
    <div class="delay ${p.s==='delay'?'show':''}">Retraso <input type="number" min="0" step="5" inputmode="numeric" data-d="${p.key}" value="${p.d||''}"> minutos</div></details>
