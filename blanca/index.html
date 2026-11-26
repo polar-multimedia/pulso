@@ -194,11 +194,22 @@ function foraneosLista(){const F=foraneosData();if(!F.length)return '<div class=
 let ASF='in',ASQ='';
 function asistencia(){const A=D.asistencia;if(!A)return '<div class="card"><p>La lista completa aparece en cuanto Roberto actualice el servidor. Mientras, «Sin registro» y «Fuera de lista» sí funcionan.</p></div>';
  const nn=x=>String(x||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+ const forIds=D.foraneos.map(f=>f.id).filter(Boolean);
  const S={in:A.filter(x=>x.in).sort((a,b)=>b.at.localeCompare(a.at)),falta:A.filter(x=>!x.in).sort((a,b)=>a.name.localeCompare(b.name,'es')),sin:D.sinRegistro.map(x=>({name:x.name,city:x.city,rep:x.rep,phone:x.phone}))};
- const L=S[ASF].filter(x=>!ASQ||nn(x.name+' '+x.city+' '+x.rep).includes(nn(ASQ)));
- return `<div class="card"><div class="tabs" style="margin:0 0 10px">${[['in','Ya están ('+S.in.length+')'],['falta','Con boleto, por llegar ('+S.falta.length+')'],['sin','Sin boleto ('+S.sin.length+')']].map(t=>`<button data-asf="${t[0]}" class="${ASF===t[0]?'on':''}">${t[1]}</button>`).join('')}</div>
- <input id="asq" placeholder="Buscar por nombre, ciudad o representante" value="${esc(ASQ)}" style="margin-bottom:6px">
- ${L.length?L.map(x=>`<div class="li"><div><div class="nm">${esc(x.name)}</div><div class="meta">${esc([x.city,x.rep?'Repre: '+x.rep:''].filter(Boolean).join(' · '))}</div>${ASF==='in'?`<div class="meta">Llegó ${esc(x.at||'')}${/reto/i.test(x.how)?' · por el Reto':x.origin==='En sitio'?' · se registró en la entrada':''}</div>`:''}</div>${ASF==='in'?'<span class="chip c-done">Aquí</span>':x.phone?`<a class="btn ghost sm" href="tel:${esc(String(x.phone).replace(/\D/g,''))}">Llamar</a>`:''}</div>`).join(''):'<p>No hay nadie en esta lista.</p>'}</div>`}
+ const L=S[ASF].filter(x=>!ASQ||nn(x.name+' '+x.city+' '+x.rep+' '+(x.specialty||'')).includes(nn(ASQ)));
+ // Llegadas cada 15 minutos (solo de los que ya están)
+ const b={};S.in.forEach(x=>{if(!x.at)return;const m=toMin(x.at);const k=fmt(Math.floor(m/15)*15);b[k]=(b[k]||0)+1});
+ const ks=Object.keys(b).sort(),mx=Math.max(1,...Object.values(b));
+ const chart=ASF==='in'&&ks.length?`<div class="card"><h2 style="font-size:14px">Llegadas cada 15 minutos</h2><div style="display:flex;align-items:flex-end;gap:4px;height:90px;margin-top:8px">${ks.map(k=>`<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%"><span style="font-size:10.5px;font-weight:800">${b[k]}</span><i style="display:block;width:100%;max-width:26px;height:${Math.max(6,Math.round(b[k]/mx*70))}px;border-radius:5px 5px 2px 2px;background:linear-gradient(180deg,var(--cian),#1F9C9B)"></i><span style="font-size:9.5px;color:var(--mut);font-weight:700;margin-top:3px">${k}</span></div>`).join('')}</div></div>`:'';
+ const ini=n=>String(n).split(' ').filter(Boolean).slice(0,2).map(w=>w[0]).join('').toUpperCase();
+ const card=x=>{const fo=x.id&&forIds.includes(x.id);const how=/reto/i.test(x.how)?'Entró por el Reto':x.origin==='En sitio'?'Se registró en la entrada':x.in?'Escaneó su boleto':'';
+  return `<div class="fl" style="padding:12px 14px"><div class="hd"><span class="al" style="background:${x.in?'linear-gradient(135deg,#1F9C9B,#3DDC97)':'linear-gradient(135deg,#24324D,#3A4D73)'}">${esc(ini(x.name))}</span><div class="who"><div class="nm">${esc((x.trato?x.trato+' ':'')+x.name)}</div><div class="meta">${esc([x.specialty,x.city].filter(Boolean).join(' · '))}</div></div>${x.in?`<span class="chip c-done">${esc(x.at||'Aquí')}</span>`:fo?'<span class="chip c-air">Foráneo</span>':''}</div>
+  <div class="meta" style="margin-top:8px">${esc([x.rep?'Repre: '+x.rep:'',how,fo&&x.in?'Foráneo':''].filter(Boolean).join(' · '))}</div>
+  ${ASF==='falta'&&x.id?`<div class="acts"><button class="btn sm" data-ci="${esc(x.id)}">Registrar su llegada</button></div>`:''}
+  ${ASF==='sin'?`<div class="acts">${x.phone?`<a class="btn ghost sm" href="tel:${esc(String(x.phone).replace(/\D/g,''))}">Llamar</a>`:''}<a class="btn ghost sm" href="../acceso/">Registrarlo en la entrada</a></div>`:''}</div>`};
+ return chart+`<div class="card" style="padding-bottom:6px"><div class="tabs" style="margin:0 0 10px">${[['in','Ya están ('+S.in.length+')'],['falta','Con boleto, por llegar ('+S.falta.length+')'],['sin','Sin boleto ('+S.sin.length+')']].map(t=>`<button data-asf="${t[0]}" class="${ASF===t[0]?'on':''}">${t[1]}</button>`).join('')}</div>
+ <input id="asq" placeholder="Buscar por nombre, ciudad, especialidad o representante" value="${esc(ASQ)}"></div>`+
+ (L.length?L.slice(0,80).map(card).join('')+(L.length>80?`<p class="note">Se muestran 80 de ${L.length}; usa el buscador.</p>`:''):'<div class="card"><p>No hay nadie en esta lista.</p></div>')}
 function prep(){if(!D||D._prep)return;const nn=x=>String(x||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/^(dr|dra)\.?\s+/,'').trim();
  const X=D.traslados.filter(p=>p.s==='cancel'&&!p.flight),keys=X.map(p=>p.id||nn(p.name));
  const out=x=>keys.includes(x.id||'')||X.some(p=>nn(p.name)===nn(x.name));
@@ -283,6 +294,7 @@ function lista(L,intro,phone){return `<div class="card"><p>${esc(intro)}</p>${L.
 async function refresh(){if(!CODE||busy)return;try{const r=await api('blanca',{});if(r.success){D=r;guarda(r);lastOk=Date.now();if(!document.activeElement||document.activeElement.tagName!=='INPUT')render()}else if(r.expired){CODE='';login()}}catch(e){}}
 async function setState(key,s,d){const p=D.traslados.find(x=>x.key===key);if(!p)return;p.s=s;if(d!=null)p.d=d;else if(s==='delay'&&!p.d)p.d=20;p.by=WHO;p.at=new Date().toISOString();p.src='Manual';render();busy++;try{await api('trasladoSet',{key,s,d:p.d})}catch(e){alert('No se guardó: revisa tu conexión.')}busy--}
 document.addEventListener('click',async e=>{
+ const ci=e.target.closest('[data-ci]');if(ci){const x=(D.asistencia||[]).find(y=>y.id===ci.dataset.ci);if(!x||!confirm('¿Registrar la llegada de '+x.name+'?'))return;ci.disabled=true;ci.textContent='Registrando…';try{const r=await api('checkin',{id:x.id});if(r.success||r.alreadyCheckedIn){x.in=true;x.at=new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',hour12:false});x.how='Consola';D.counts.llegaron++;render();refresh()}else alert(r.message||'No se pudo registrar')}catch(err){alert('Sin conexión. Intenta de nuevo.')}return}
  const as=e.target.closest('[data-asis]');if(as){ASF=as.dataset.asis;TAB='asis';st.set('pulso.blanca.tab',TAB);render();window.scrollTo({top:document.querySelector('.tabs').offsetTop-10,behavior:'smooth'});return}
  const af=e.target.closest('[data-asf]');if(af){ASF=af.dataset.asf;render();return}
  const h=e.target.closest('[data-hello]');if(h){st.set('pulso.blanca.hello','1');render();return}
