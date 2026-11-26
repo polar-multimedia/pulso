@@ -697,6 +697,29 @@ function itemsPanel(){const e=ESC[S.es];if(!e.it.length)return `<div class="nota
  if(it&&it.p){const run=CK&&CK.id===it.p?(MASTER?CK.run:S.clk&&S.clk.run):false;
   h+=`<div class="clk"><span>Reloj de ${DECKS[it.p].who}</span><b data-ck="${it.p}">--:--</b></div><div class="row"><button class="sec" id="cCk">${run?"Pausar reloj":"Reanudar reloj"}</button><button class="sec" id="cCkR">Reiniciar reloj</button></div>`}
  return h}
+/* ===== Ganadores: revisar y enviar correos (con reconfirmación) ===== */
+const WIN={open:false,busy:false,list:null,msg:"",step:0,api:""};
+async function winCall(action,body){if(!WIN.api){const c=await fetch("../config.json",{cache:"no-store"}).then(r=>r.json());WIN.api=c.appsScriptUrl}
+ const r=await fetch(WIN.api,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action,pin:PIN,...body}),redirect:"follow"});return r.json()}
+function winPanel(){const e=x=>String(x==null?"":x).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+ if(!WIN.open)return`<button class="sec" id="wOpen" style="width:100%;margin:12px 0 4px;padding:14px;font-weight:800;border-radius:12px">🏆 Ganadores · revisar y enviar correos</button>`;
+ const L=WIN.list||[];const ok=L.filter(w=>!w.sent&&w.email);
+ let h=`<div style="margin:12px 0 4px;padding:14px;border:1px solid rgba(200,230,46,.55);border-radius:14px;background:rgba(200,230,46,.06)"><div class="pkl" style="margin:0 0 8px">Ganadores del Reto</div>`;
+ if(WIN.busy&&!L.length)h+=`<div style="font-size:13px;opacity:.8">Leyendo el marcador…</div>`;
+ L.forEach(w=>{h+=`<div style="padding:8px 0;border-top:1px solid rgba(255,255,255,.1)"><b>${w.place}. ${e(w.name)}</b> · ${Number(w.pts).toLocaleString("es-MX")} pts<div style="font-size:12px;opacity:.8">${e(w.email||"sin correo")}${w.sent?" · <b style='color:#C8E62E'>correo ya enviado</b>":""}</div>${(w.alerts||[]).map(a=>`<div style="font-size:12px;color:#ffb28a;font-weight:700">⚠ ${e(a)}</div>`).join("")}</div>`});
+ if(WIN.msg)h+=`<div style="font-size:12.5px;margin-top:8px;font-weight:700;white-space:pre-line">${e(WIN.msg)}</div>`;
+ if(WIN.step===0)h+=`<div class="row" style="margin-top:10px"><button class="sec" id="wRef" ${WIN.busy?"disabled":""}>Actualizar</button><button class="sec" id="wSend" ${WIN.busy||!ok.length?"disabled":""} style="background:#C8E62E;color:#0B1A40;font-weight:800">Enviar correos (${ok.length})</button></div>`;
+ else h+=`<div style="margin-top:10px;font-size:13px;font-weight:800">¿Confirmas? Se enviará el correo de felicitación a ${ok.length} ganador${ok.length===1?"":"es"}, con copia a Polar, Ángel y la Dra. Karen. No se puede deshacer.</div><div class="row" style="margin-top:8px"><button class="sec" id="wNo">Cancelar</button><button class="sec" id="wYes" style="background:#ff6b5a;color:#fff;font-weight:800" ${WIN.busy?"disabled":""}>${WIN.busy?"Enviando…":"Sí, enviar ahora"}</button></div>`;
+ h+=`<button class="sec" id="wClose" style="width:100%;margin-top:8px;opacity:.7">Cerrar</button></div>`;return h}
+async function winLoad(keep){WIN.busy=true;if(!keep)WIN.msg="";renderCtl();try{const r=await winCall("winnersPreview",{});if(r.success)WIN.list=r.winners;else WIN.msg=r.message||"No se pudo leer el marcador"}catch(x){WIN.msg="Sin conexión con el registro"}WIN.busy=false;renderCtl()}
+function winBind(g){if(!g("#wOpen")&&!g("#wClose"))return;
+ if(g("#wOpen"))g("#wOpen").onclick=()=>{WIN.open=true;WIN.step=0;winLoad()};
+ if(g("#wClose"))g("#wClose").onclick=()=>{WIN.open=false;WIN.step=0;renderCtl()};
+ if(g("#wRef"))g("#wRef").onclick=()=>winLoad();
+ if(g("#wSend"))g("#wSend").onclick=()=>{WIN.step=1;renderCtl()};
+ if(g("#wNo"))g("#wNo").onclick=()=>{WIN.step=0;renderCtl()};
+ if(g("#wYes"))g("#wYes").onclick=async()=>{WIN.busy=true;renderCtl();const ids=(WIN.list||[]).filter(w=>!w.sent&&w.email).map(w=>w.tid);
+  try{const r=await winCall("sendWinners",{ids});WIN.msg=r.success?r.results.join("\n"):(r.message||"No se pudo enviar")}catch(x){WIN.msg="Sin conexión: no se enviaron"}WIN.busy=false;WIN.step=0;await winLoad(true)};}
 let rstAt=0;
 function renderCtl(){const el=$("#ctl");if(!el)return;
  if(NET&&MODE==="productor"&&PIN!==CTL_PIN){el.innerHTML=`<div class="notch"></div><form class="gate" id="pinF"><div class="big" style="font-size:22px;font-weight:800;text-align:center">Productor</div><input id="pinI" inputmode="numeric" autocomplete="off" placeholder="Código" aria-label="Código del productor"><div class="err" id="pinE" style="color:var(--coral);font-weight:700;font-size:12px;min-height:16px;text-align:center"></div><button type="submit">Entrar</button></form>`;
@@ -707,6 +730,7 @@ function renderCtl(){const el=$("#ctl");if(!el)return;
    ${S.cue!=null?`<div class="cue" style="margin-top:6px"><small>Pide a InSpace ahora</small>Escena ${escLabel(S.cue)}</div>`:""}
    <div class="sigl"><small>Señal en vivo</small>${sigLabel()}</div></div>
   ${e.r?retoPanel():itemsPanel()}
+  ${winPanel()}
   <div class="pkl" style="margin-top:6px">Escaleta de la noche</div>
   <div class="esc">${ESC.map((x,i)=>`<button class="eb${i===S.es?" on":""}${i<S.es?" past":""}" data-e="${i}"><b>${x.c}</b><span>${x.n}<small>${x.h?x.h+" · ":""}${x.b}</small></span></button>`).join("")}</div>
   <button id="cReset" class="sec" style="margin:14px 0 24px;width:100%;padding:14px;border:1px solid ${Date.now()-rstAt<4000?"#ff6b5a":"rgba(255,255,255,.18)"};color:${Date.now()-rstAt<4000?"#fff":"#ff8d80"};background:${Date.now()-rstAt<4000?"#c4362a":"transparent"};font-weight:800;border-radius:12px">${Date.now()-rstAt<4000?"Toca otra vez para confirmar":"Reiniciar todo (pruebas)"}</button>`;
@@ -718,6 +742,7 @@ function renderCtl(){const el=$("#ctl");if(!el)return;
    el.querySelectorAll("[data-j]").forEach(b=>b.onclick=()=>{const v=b.dataset.j,j=S.sl[it.p]||0,n=DECKS[it.p].n;act({t:"slide",d:v==="first"?-j:v==="last"?n-1-j:+v})})}
   if(g("#cCk")){g("#cCk").onclick=()=>act({t:"ck",op:"toggle"});g("#cCkR").onclick=()=>act({t:"ck",op:"reset"})}}
  el.querySelectorAll(".eb").forEach(b=>b.onclick=()=>act({t:"scene",i:+b.dataset.e}));
+ winBind(g);
  const rb=g("#cReset");if(rb)rb.onclick=()=>{if(Date.now()-rstAt<4000){rstAt=0;act({t:"reset"})}else{rstAt=Date.now();renderCtl();setTimeout(renderCtl,4100)}};
  el.scrollTop=sc0;tickClock()}
 /* ================== Clicker del ponente ================== */

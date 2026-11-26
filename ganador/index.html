@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#071433">
+<meta name="robots" content="noindex">
+<title>Ganadores · PULSO</title>
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#030A1E;--card:#071433;--tx:#EAF1FF;--mut:#A9B7D3;--cian:#49E6FF;--coral:#FF6B5B;--line:rgba(255,255,255,.14)}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--tx);font-family:Manrope,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+body{background:radial-gradient(70vmax 50vmax at 50% -10%,rgba(30,70,168,.5),transparent 65%),linear-gradient(180deg,#071433,#030A1E);min-height:100vh}
+main{max-width:520px;margin:0 auto;padding:28px 16px 48px}
+.logo{display:block;height:40px;margin:0 auto 22px}
+.card{background:rgba(7,20,51,.82);border:1px solid var(--line);border-radius:20px;padding:22px 18px}
+h1{font-size:20px;font-weight:800;margin:0 0 6px}
+p{font-size:14px;line-height:1.55;font-weight:600;color:var(--mut);margin:0 0 14px}
+.name{font-size:22px;font-weight:800;color:#fff;margin:6px 0 16px}
+label{display:block;font-size:12px;font-weight:800;color:var(--mut);margin:14px 0 6px}
+input{width:100%;padding:13px 14px;border-radius:12px;border:1px solid var(--line);background:rgba(3,10,30,.7);color:#fff;font:700 15px Manrope,system-ui,sans-serif}
+input:focus{outline:none;border-color:var(--cian)}
+.btn{display:block;width:100%;margin-top:14px;padding:15px;border-radius:999px;border:none;background:var(--cian);color:#071433;font:800 15px Manrope,system-ui,sans-serif;cursor:pointer;text-align:center;text-decoration:none}
+.btn.ghost{background:transparent;color:var(--tx);border:1px solid var(--line)}
+.btn:disabled{opacity:.55}
+.err{color:var(--coral);font-weight:700;font-size:13px;min-height:18px;margin-top:10px}
+.ok{color:var(--cian);font-weight:700;font-size:13px;margin-top:10px}
+.lnk{background:none;border:none;color:var(--mut);text-decoration:underline;font:700 13px Manrope,system-ui,sans-serif;margin-top:14px;cursor:pointer;padding:4px}
+.foot{font-size:11px;color:var(--mut);text-align:center;margin-top:22px;font-weight:600;line-height:1.5}
+.foot a{color:var(--cian)}
+</style>
+</head>
+<body>
+<main>
+  <img class="logo" src="../img/pulso-logo.png" alt="PULSO by Lacteol">
+  <div class="card" id="app"><p>Confirmando…</p></div>
+  <div class="foot">Dudas o correcciones: <a href="mailto:pulso@polarmultimedia.com">pulso@polarmultimedia.com</a></div>
+</main>
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+(async()=>{const q=new URLSearchParams(location.search);const a=$('#app');
+ try{const c=await fetch('../config.json',{cache:'no-store'}).then(r=>r.json());
+  const r=await fetch(c.appsScriptUrl,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'winnerConfirm',t:q.get('t')||'',k:q.get('k')||''}),redirect:'follow'}).then(r=>r.json());
+  a.innerHTML=r.success?`<h1>¡Gracias, ${esc(r.name)}!</h1><p>Sus datos quedaron confirmados. El equipo organizador se pondrá en contacto con usted para los siguientes pasos de su beca para el CONAPM 2027.</p><p>Si después nota algún error, escríbanos a <a href="mailto:pulso@polarmultimedia.com" style="color:var(--cian)">pulso@polarmultimedia.com</a>.</p>`:`<h1>No pudimos confirmar</h1><p>${esc(r.message||'Liga no válida.')} Escríbanos a <a href="mailto:pulso@polarmultimedia.com" style="color:var(--cian)">pulso@polarmultimedia.com</a>.</p>`}
+ catch(e){a.innerHTML='<h1>Sin conexión</h1><p>Intente de nuevo en un momento.</p>'}})();
+</script>
+</body>
+</html>
