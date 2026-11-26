@@ -122,6 +122,11 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const st={get(k){try{return localStorage.getItem(k)||''}catch(e){return''}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
 let API='',CODE=st.get('pulso.staff.code'),WHO=st.get('pulso.staff.who')||'',D=null,TAB=st.get('pulso.vero.tab')||'cliente',msg='',busy=0;
 const PE=['Por llegar','Llegó','Montado','Retrasado','No llegó'];
+const SS={get(k){try{return JSON.parse(sessionStorage.getItem(k)||'null')}catch(e){return null}},set(k,v){try{sessionStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+/* Para que cambiar entre Blanca y Vero sea inmediato: se muestra lo último que se tenía y se actualiza en segundo plano.
+   Se guarda solo en esta pestaña del navegador (se borra al cerrarla). */
+function guarda(r){SS.set('pulso.vero',r)}
+function adelanta(){setTimeout(()=>{api('blanca',{}).then(r=>{if(r&&r.success)SS.set('pulso.blanca',r)}).catch(()=>{})},300)}
 async function api(action,body){if(!API){const c=await fetch('../config.json',{cache:'no-store'}).then(r=>r.json());API=c.appsScriptUrl}
  const r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action,idToken:'codigo:'+CODE,who:WHO,...body}),redirect:'follow'});return r.json()}
 function login(){const m=msg;msg='';$('#app').innerHTML=`<div class="card"><p>${esc(m||'Entra con tu clave.')}</p><a class="btn full" href="../equipo/">Ir a la entrada del equipo</a></div>`;if(!m)location.replace('../equipo/')}
@@ -155,17 +160,17 @@ function render(){if(!D)return;const c=D.counts,pct=c.esperados?Math.min(100,Mat
  <a href="../fotos/">Subir fotos al reporte<span>Con el momento o el ponente</span></a>
  <a href="https://polar-multimedia.github.io/trineo/carnot-pulso-reporte-2026/?c=prueba&nt=1">Reporte final (vista de prueba)<span>Así lo recibe la cadena de Carnot</span></a></details>`}
 async function save(body){busy++;try{const r=await api('veroSet',body);if(!r.success)alert(r.message||'No se guardó');}catch(e){alert('No se guardó: revisa tu conexión.')}busy--;refresh(true)}
-async function refresh(force){if(!CODE||(busy&&!force))return;try{const r=await api('vero',{});if(r.success){D=r;if(force||!document.activeElement||!/INPUT|TEXTAREA/.test(document.activeElement.tagName))render()}else if(r.expired){CODE='';login()}}catch(e){}}
+async function refresh(force){if(!CODE||(busy&&!force))return;try{const r=await api('vero',{});if(r.success){D=r;guarda(r);if(force||!document.activeElement||!/INPUT|TEXTAREA/.test(document.activeElement.tagName))render()}else if(r.expired){CODE='';login()}}catch(e){}}
 document.addEventListener('click',e=>{
  const t=e.target.closest('[data-tab]');if(t){TAB=t.dataset.tab;st.set('pulso.vero.tab',TAB);render();return}
  const pb=e.target.closest('[data-row]');if(pb){const p=D.proveedores.find(x=>x._row==pb.dataset.row);if(p){p['Estado']=pb.dataset.e;render()}save({type:'prov',row:+pb.dataset.row,estado:pb.dataset.e});return}
  if(e.target.id==='padd'){const n=$('#pn').value.trim();if(!n)return alert('Escribe el nombre del proveedor');save({type:'provAdd',hora:$('#ph').value,nombre:n,que:$('#pq').value,contacto:$('#pc').value});return}
  if(e.target.id==='csave'){save({type:'cierre',oc:$('#coc').value,monto:$('#cmo').value,nota:$('#cno').value});return}
  if(e.target.id==='clisto'){const on=!D.cierre.listo;if(on&&!confirm('¿Confirmas que el cierre está completo y listo para facturar?'))return;save({type:'cierre',oc:$('#coc').value,monto:$('#cmo').value,nota:$('#cno').value,listo:on});return}
- if(e.target.id==='out'){CODE='';st.set('pulso.staff.code','');st.set('pulso.equipo.to','');D=null;location.replace('../equipo/')}});
+ if(e.target.id==='out'){try{sessionStorage.clear()}catch(x){}CODE='';st.set('pulso.staff.code','');st.set('pulso.equipo.to','');D=null;location.replace('../equipo/')}});
 const tick=()=>{$('#clk').textContent=new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'America/Mexico_City'})};tick();setInterval(tick,15000);
 setInterval(refresh,30000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh()});
-if(CODE){$('#app').innerHTML='<div class="card"><p>Cargando…</p></div>';api('vero',{}).then(r=>{if(!r.success&&/desconocida/i.test(r.message||'')){msg='La consola se activa en cuanto Roberto actualice el servidor (versión 6). Intenta en un rato.';login();return}if(r.success){D=r;render()}else login()}).catch(()=>{msg='Sin conexión. Intenta de nuevo.';login()})}else login();
+if(CODE){const C=SS.get('pulso.vero');if(C){D=C;render()}else $('#app').innerHTML='<div class="card"><p>Cargando…</p></div>';api('vero',{}).then(r=>{if(r&&r.success){guarda(r);adelanta()}if(!r.success&&/desconocida/i.test(r.message||'')){msg='La consola se activa en cuanto Roberto actualice el servidor (versión 6). Intenta en un rato.';login();return}if(r.success){D=r;render()}else login()}).catch(()=>{msg='Sin conexión. Intenta de nuevo.';login()})}else login();
 </script>
 </body>
 </html>

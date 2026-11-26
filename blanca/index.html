@@ -130,6 +130,11 @@ const st={get(k){try{return localStorage.getItem(k)||''}catch(e){return''}},set(
 let API='',CODE=st.get('pulso.staff.code'),WHO=st.get('pulso.staff.who')||'',D=null,TAB=st.get('pulso.blanca.tab')||'foraneos',msg='',busy=0,lastOk=0;
 const EST=[['prog','Programado'],['air','En vuelo'],['delay','Retrasado'],['land','Aterrizó'],['pick','Con el chofer'],['done','Entregado'],['cancel','Cancelado']];
 const EVENTO='InSpace Del Valle';
+const SS={get(k){try{return JSON.parse(sessionStorage.getItem(k)||'null')}catch(e){return null}},set(k,v){try{sessionStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+/* Para que cambiar entre Blanca y Vero sea inmediato: se muestra lo último que se tenía y se actualiza en segundo plano.
+   Se guarda solo en esta pestaña del navegador (se borra al cerrarla). */
+function guarda(r){SS.set('pulso.blanca',r)}
+function adelanta(){setTimeout(()=>{api('vero',{}).then(r=>{if(r&&r.success)SS.set('pulso.vero',r)}).catch(()=>{})},300)}
 async function api(action,body){if(!API){const c=await fetch('../config.json',{cache:'no-store'}).then(r=>r.json());API=c.appsScriptUrl}
  const r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action,idToken:'codigo:'+CODE,who:WHO,...body}),redirect:'follow'});return r.json()}
 const toMin=t=>{const m=String(t||'').match(/(\d{1,2}):(\d{2})/);return m?+m[1]*60+ +m[2]:0};
@@ -213,6 +218,14 @@ const airline=f=>{const k=String(f||'').replace(/\s+/g,'').slice(0,2).toUpperCas
 const PLANE='<svg viewBox="0 0 24 24"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z" transform="rotate(90 12 12)"/></svg>';
 function progress(p){if(['land','pick','done'].includes(p.s))return 100;if(p.s!=='air'&&p.s!=='delay')return 0;
  const now=nowMin(),arr=eta(p),dep=p.off?toMin(p.off):arr-120;return Math.max(5,Math.min(95,Math.round((now-dep)/Math.max(30,arr-dep)*100)))}
+const DIA='2026-11-26';
+function falta(p){if(['land','pick','done'].includes(p.s))return 'Ya llegó';if(p.s==='cancel')return '—';
+ const t=Date.parse(DIA+'T'+fmt(eta(p))+':00-06:00'),m=Math.round((t-Date.now())/60000);
+ if(m<=0)return m>-30?'Llegando':'Ya debió llegar';if(m<60)return m+' min';const h=Math.floor(m/60);return h+' h '+String(m%60).padStart(2,'0')}
+function fuente(p){const hora=p.at?new Date(p.at).toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',hour12:false}):'';
+ if(p.src==='Automático')return 'Hora estimada según el rastreo del vuelo de las '+hora+'.';
+ if(p.src==='Manual'&&p.at)return 'Estado marcado por '+(p.by||'el equipo')+' a las '+hora+'.';
+ return 'Hora del horario programado (jueves 26). El rastreo en vivo empieza 90 min antes de que aterrice.'}
 function llegadas(){const T=D.traslados;if(!T.length)return '<div class="card"><p>No hay traslados capturados.</p></div>';
  const blocks=[...new Set(T.map(p=>p.block))].sort((x,y)=>x-y);
  return blocks.map(b=>{const ps=T.filter(p=>p.block===b),pk=Math.max(...ps.map(pickup)),moved=pk!==toMin(ps[0].pick);
@@ -221,7 +234,8 @@ function llegadas(){const T=D.traslados;if(!T.length)return '<div class="card"><
   ps.map(p=>{const al=p.s==='delay'&&p.d>=20,o=iata(p.from),a=airline(p.flight),pr=progress(p);return `<div class="fl ${al?'alert':''} ${p.s==='cancel'?'cancel':''}">
    <div class="hd"><span class="al ${a[2]}" title="${esc(a[1])}">${esc(a[0])}</span><div class="who"><div class="nm">${esc(p.trato+' '+p.name)}</div><div class="meta">${esc(a[1])} · vuelo ${esc(p.flight)}${p.arrived?' · ya está en PULSO':''}</div></div>${chip(p)}</div>
    <div class="route"><div class="ap"><b>${esc(o[0])}</b><span>${esc(o[1])}</span></div><div class="track"><i style="width:${pr}%"></i><span style="position:absolute;left:${pr}%">${PLANE}</span></div><div class="ap r"><b>MEX</b><span>CDMX · T${esc(p.terminal||'2')}</span></div></div>
-   <div class="facts"><div><small>Despegó</small><b>${esc(p.off||'—')}</b></div><div><small>Aterriza</small><b>${fmt(eta(p))}</b></div><div><small>Terminal</small><b>${esc(p.terminal||'2')}</b></div><div><small>Puerta</small><b>${esc(p.gate||'—')}</b></div></div>
+   <div class="facts">${p.off?`<div><small>Despegó</small><b>${esc(p.off)}</b></div>`:`<div><small>Llega en</small><b>${esc(falta(p))}</b></div>`}<div><small>Hora estimada</small><b>${fmt(eta(p))}</b></div><div><small>Terminal</small><b>${esc(p.terminal||'2')}</b></div><div><small>Puerta</small><b>${esc(p.gate||'—')}</b></div></div>
+   <div class="by" style="margin-top:6px">${esc(fuente(p))}</div>
    <div class="pickup"><div><span>Recogida → ${p.to==='hotel'?'hotel':'InSpace'}${pickup(p)!==toMin(p.pick)?' (antes '+p.pick+')':''}</span><br><b>${fmt(pickup(p))}</b></div><a class="btn wa sm" href="${wa(D.driver.phone,driverMsg(p))}" target="_blank" rel="noopener">Avisar a ${esc(D.driver.name)}</a></div>
    ${al?`<div class="msg">Avísale a ${esc(D.driver.name)}: no debe entrar antes al estacionamiento del aeropuerto.${p.d>=60?' Pasa de una hora: revisa si conviene reacomodar el bloque.':''}</div>`:''}
    <div class="acts"><a class="btn wa sm" href="${wa(p.phone,welcome(p))}" target="_blank" rel="noopener">Bienvenida</a><a class="btn ghost sm" href="${fa(p.flight)}" target="_blank" rel="noopener">Ver vuelo en vivo</a></div>
@@ -237,7 +251,7 @@ function salidas(){const T=D.traslados.filter(p=>p.lobby),g={};T.forEach(p=>{(g[
 
 function lista(L,intro,phone){return `<div class="card"><p>${esc(intro)}</p>${L.length?L.map(x=>`<div class="li"><div><div class="nm">${esc(x.name)}</div><div class="meta">${esc([x.city,x.rep?'Repre: '+x.rep:''].filter(Boolean).join(' · '))}${x.arrived?' · ya llegó':x.registered?' · tiene boleto':''}</div></div>${phone&&x.phone?`<a class="btn ghost sm" href="tel:${esc(String(x.phone).replace(/\D/g,''))}">Llamar</a>`:''}</div>`).join(''):'<p>No hay nadie en esta lista.</p>'}</div>`}
 
-async function refresh(){if(!CODE||busy)return;try{const r=await api('blanca',{});if(r.success){D=r;lastOk=Date.now();if(!document.activeElement||document.activeElement.tagName!=='INPUT')render()}else if(r.expired){CODE='';login()}}catch(e){}}
+async function refresh(){if(!CODE||busy)return;try{const r=await api('blanca',{});if(r.success){D=r;guarda(r);lastOk=Date.now();if(!document.activeElement||document.activeElement.tagName!=='INPUT')render()}else if(r.expired){CODE='';login()}}catch(e){}}
 async function setState(key,s,d){const p=D.traslados.find(x=>x.key===key);if(!p)return;p.s=s;if(d!=null)p.d=d;else if(s==='delay'&&!p.d)p.d=20;p.by=WHO;p.at=new Date().toISOString();p.src='Manual';render();busy++;try{await api('trasladoSet',{key,s,d:p.d})}catch(e){alert('No se guardó: revisa tu conexión.')}busy--}
 document.addEventListener('click',async e=>{
  const h=e.target.closest('[data-hello]');if(h){st.set('pulso.blanca.hello','1');render();return}
@@ -245,11 +259,11 @@ document.addEventListener('click',async e=>{
  const sb=e.target.closest('[data-set]');if(sb){const [k,s]=sb.dataset.set.split('|');setState(k,s);return}
  const t=e.target.closest('[data-tab]');if(t){TAB=t.dataset.tab;st.set('pulso.blanca.tab',TAB);render();window.scrollTo({top:document.querySelector('.tabs').offsetTop-10,behavior:'smooth'});return}
  const x=e.target.closest('[data-x]');if(x){const dl=+x.dataset.x;D.counts.extras=Math.max(0,D.counts.extras+dl);render();busy++;try{const r=await api('extras',{delta:dl});if(r.success){D.counts.extras=r.extras;render()}}catch(err){}busy--;return}
- if(e.target.id==='out'){CODE='';st.set('pulso.staff.code','');st.set('pulso.equipo.to','');D=null;location.replace('../equipo/')}});
+ if(e.target.id==='out'){try{sessionStorage.clear()}catch(x){}CODE='';st.set('pulso.staff.code','');st.set('pulso.equipo.to','');D=null;location.replace('../equipo/')}});
 document.addEventListener('change',e=>{const i=e.target.closest('[data-d]');if(i){setState(i.dataset.d,'delay',Math.max(0,+i.value||0))}});
 const tick=()=>{$('#clk').textContent=new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'America/Mexico_City'})};tick();setInterval(tick,15000);
 setInterval(refresh,20000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh()});
-if(CODE){$('#app').innerHTML='<div class="card"><p>Cargando…</p></div>';api('blanca',{}).then(r=>{if(!r.success&&/desconocida/i.test(r.message||'')){msg='La consola se activa en cuanto Roberto actualice el servidor (versión 6). Intenta en un rato.';login();return}if(r.success){D=r;render()}else login()}).catch(()=>{msg='Sin conexión. Intenta de nuevo.';login()})}else login();
+if(CODE){const C=SS.get('pulso.blanca');if(C){D=C;render()}else $('#app').innerHTML='<div class="card"><p>Cargando…</p></div>';api('blanca',{}).then(r=>{if(r&&r.success){guarda(r);adelanta()}if(!r.success&&/desconocida/i.test(r.message||'')){msg='La consola se activa en cuanto Roberto actualice el servidor (versión 6). Intenta en un rato.';login();return}if(r.success){D=r;render()}else login()}).catch(()=>{msg='Sin conexión. Intenta de nuevo.';login()})}else login();
 </script>
 </body>
 </html>
