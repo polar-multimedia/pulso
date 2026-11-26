@@ -770,7 +770,14 @@ function renderCtl(){const el=$("#ctl");if(!el)return;
   ${CTOP()?cierrePanel():""}
   <div class="pkl" style="margin-top:6px">Escaleta de la noche</div>
   <div class="esc">${ESC.map((x,i)=>`<button class="eb${i===S.es?" on":""}${i<S.es?" past":""}" data-e="${i}"><b>${x.c}</b><span>${x.n}<small>${x.h?x.h+" · ":""}${x.b}</small></span></button>`).join("")}</div>
-  <details id="cTools" ${TOOLS?"open":""} style="margin:14px 0 24px;border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:10px 12px"><summary style="font-weight:800;font-size:13px;opacity:.8;cursor:pointer">Envíos del cierre y herramientas</summary>
+  <div class="pkl" style="margin-top:18px">Equipo · como Roberto</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:6px 0 4px">
+   <button data-eq="agenda" style="padding:12px 6px;border-radius:14px;border:1px solid rgba(61,220,151,.55);background:rgba(61,220,151,.14);color:#fff;font:800 13px Manrope,sans-serif">✓ Zonas listas<br><small style="font-weight:600;opacity:.75">con foto</small></button>
+   <button data-eq="scan" style="padding:12px 6px;border-radius:14px;border:0;background:linear-gradient(135deg,#FF8A3D,#E0179D);color:#fff;font:800 13px Manrope,sans-serif">Escanear<br><small style="font-weight:600;opacity:.85">check-in</small></button>
+   <button data-eq="fotos" style="padding:12px 6px;border-radius:14px;border:0;background:linear-gradient(135deg,#49E6FF,#2F6BFF);color:#04212B;font:800 13px Manrope,sans-serif">Fotos<br><small style="font-weight:600;opacity:.8">al reporte</small></button>
+  </div>
+  <div style="font-size:12px;opacity:.65;margin-bottom:4px">Se abre la consola del equipo en otra pestaña, a tu nombre.</div>
+  <details id="cTools" ${TOOLS?"open":""} style="margin:14px 0 96px;border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:10px 12px"><summary style="font-weight:800;font-size:13px;opacity:.8;cursor:pointer">Envíos del cierre y herramientas</summary>
   <div style="font-size:12px;opacity:.7;margin:6px 0 4px">Ganadores aparece arriba desde el último caso del Reto (E15); el cierre, desde la cena (E17).</div>
   ${WTOP()?"":winPanel()}
   ${CTOP()?"":cierrePanel()}
@@ -927,6 +934,10 @@ function boot(){
 }
 boot();
 
+/* Accesos a la consola del equipo desde el productor (quedan a nombre de Roberto) */
+document.addEventListener("click",e=>{const b=e.target.closest("[data-eq]");if(!b)return;
+ try{localStorage.setItem("pulso.staff.code","18");localStorage.setItem("pulso.staff.who","Roberto");localStorage.setItem("pulso.equipo.to","../blanca/");localStorage.setItem("pulso.blanca.tab",b.dataset.eq)}catch(x){}
+ window.open(new URL("../blanca/?nt=1",location.href).href,"pulso-equipo")});
 /* ===== Música del evento =====
    Las piezas viven en línea (reto/musica/). El estado (sonando, pieza, volumen) viaja con la señal como todo lo demás,
    así que se controla desde el productor en cualquier aparato. Suena SOLO en la computadora donde se activa «Sonar aquí»
