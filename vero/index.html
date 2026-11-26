@@ -97,6 +97,8 @@ details.more a span{display:block;color:var(--mut);font-size:12px;font-weight:60
 .top{position:sticky;top:0;z-index:15;margin:-18px -14px 12px;padding:12px 14px 10px;background:linear-gradient(180deg,rgba(7,20,51,.98),rgba(7,20,51,.9));backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:1px solid rgba(255,255,255,.08)}
 .menu{width:auto!important;padding:0 12px;gap:6px;display:flex!important;align-items:center;font:800 13px Manrope,sans-serif}
 .menu.on{background:var(--cian);color:#071433;border-color:var(--cian)}
+.scanb{background:linear-gradient(135deg,#FF8A5B,#E0179D)!important;border-color:transparent!important;color:#fff!important}
+.scanb.on{outline:2px solid #fff}
 </style>
 <style>
 .f{display:grid;gap:8px}
@@ -110,11 +112,14 @@ details.more a span{display:block;color:var(--mut);font-size:12px;font-weight:60
 .rep .bar{grid-column:1/-1;height:6px;border-radius:6px;background:rgba(255,255,255,.1);overflow:hidden}
 .rep .bar i{display:block;height:100%;background:var(--cian)}
 .listo{background:var(--ok);color:#03210f}
+.top .menu{flex-direction:column;justify-content:center;gap:2px!important;height:46px!important;padding:0 8px!important;font-size:10.5px!important;min-width:52px}
+.top .menu svg{width:20px!important;height:20px!important}
+.top .clk{font-size:13px!important}
 </style>
 </head>
 <body>
 <main>
-  <div class="top"><img src="../img/pulso-logo.png" alt="PULSO by Lacteol"><div style="display:flex;align-items:center;gap:10px"><span class="clk" id="clk"></span><button class="menu" data-tab="mas" aria-label="Más opciones"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>Más</button></div></div>
+  <div class="top"><img src="../img/pulso-logo.png" alt="PULSO by Lacteol"><div style="display:flex;align-items:center;gap:10px"><span class="clk" id="clk"></span><button class="menu scanb" data-tab="scan" aria-label="Escanear boletos"><svg viewBox="0 0 24 24"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3M7 12h10"/></svg>Escanear</button><button class="menu fotob" data-tab="fotos" aria-label="Subir fotos al reporte"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2.5"/><circle cx="9" cy="10" r="1.8"/><path d="M21 16l-5-5-8 8"/></svg>Fotos</button><button class="menu" data-tab="mas" aria-label="Más opciones"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>Más</button></div></div>
   <div id="app"></div>
 </main>
 <link rel="stylesheet" href="../equipo/consola.css">
@@ -207,13 +212,13 @@ function mas(){return MONTAJE.vivo(D.enLinea,D.actividad)+`<div class="card"><h2
  <a href="../fotos/">Subir fotos al reporte<span>Con el momento o el ponente</span></a>
  <a href="https://polar-multimedia.github.io/trineo/carnot-pulso-reporte-2026/?c=prueba&nt=1">Reporte final (vista de prueba)<span>Así lo recibe la cadena de Carnot</span></a></details>
  <div class="sync">Se actualiza cada 30 s<br><button class="lnk" id="out">Salir</button></div>`}
-function render(){if(!D)return;if(!['inicio','foraneos','montaje','prov','cierre','mas'].includes(TAB))TAB='inicio';
+function render(){if(!D)return;if(!['inicio','foraneos','montaje','prov','cierre','mas','scan','fotos'].includes(TAB))TAB='inicio';
  const M=D.montaje,sec=t=>`<div class="sec">${t}</div>`;
- const body=TAB==='inicio'?resumen():TAB==='foraneos'?sec('Foráneos')+foraneos():TAB==='montaje'?sec('Montaje · fotos de testigo')+MONTAJE.html(M):TAB==='prov'?sec('Proveedores ('+D.proveedores.length+')')+proveedores():TAB==='cierre'?sec('Cierre para facturar')+cierre():mas();
+ const body=TAB==='inicio'?resumen():TAB==='foraneos'?sec('Foráneos')+foraneos():TAB==='montaje'?sec('Montaje · fotos de testigo')+MONTAJE.html(M):TAB==='prov'?sec('Proveedores ('+D.proveedores.length+')')+proveedores():TAB==='cierre'?sec('Cierre para facturar')+cierre():TAB==='fotos'?`<div class="sec">Subir fotos al reporte</div><iframe src="../fotos/?embed=1" allow="camera; fullscreen" title="Subir fotos" style="width:100%;height:calc(100vh - 200px);min-height:520px;border:0;border-radius:16px;background:#fff"></iframe><p class="note">Elige el momento o el ponente y sube las fotos; van directo al reporte final de Carnot.</p>`:TAB==='scan'?`<div class="sec">Escáner de la entrada</div><iframe src="../acceso/?embed=1" allow="camera; fullscreen" title="Escáner de la entrada" style="width:100%;height:calc(100vh - 200px);min-height:520px;border:0;border-radius:16px;background:#fff"></iframe><p class="note">Escanea el QR del boleto o búscalo por nombre. Lo que registres aquí aparece al instante en asistencia.</p>`:mas();
  const al=B&&VUELOS.alertas(B),pp=D.proveedores.some(p=>p['Estado']==='Retrasado');
- $('#app').innerHTML=body+`<nav class="bn">${[['inicio','Resumen'],['foraneos','Foráneos'],['montaje','Montaje'],['prov','Proveedores'],['cierre','Cierre']].map(t=>t[0]==='montaje'?`<button data-tab="montaje" class="ag ${TAB==='montaje'?'on':''}"><span class="ring">${ICON.montaje}</span>${t[1]}</button>`:`<button data-tab="${t[0]}" class="${TAB===t[0]?'on':''}">${(t[0]==='foraneos'&&al)||(t[0]==='prov'&&pp)?'<span class="dot"></span>':''}${ICON[t[0]]}${t[1]}</button>`).join('')}</nav>`;document.querySelectorAll('.menu').forEach(b=>b.classList.toggle('on',TAB==='mas'))}
+ $('#app').innerHTML=body+`<nav class="bn">${[['inicio','Resumen'],['foraneos','Foráneos'],['montaje','Montaje'],['prov','Proveedores'],['cierre','Cierre']].map(t=>t[0]==='montaje'?`<button data-tab="montaje" class="ag ${TAB==='montaje'?'on':''}"><span class="ring">${ICON.montaje}</span>${t[1]}</button>`:`<button data-tab="${t[0]}" class="${TAB===t[0]?'on':''}">${(t[0]==='foraneos'&&al)||(t[0]==='prov'&&pp)?'<span class="dot"></span>':''}${ICON[t[0]]}${t[1]}</button>`).join('')}</nav>`;document.querySelectorAll('.menu').forEach(b=>b.classList.toggle('on',TAB===b.dataset.tab))}
 async function save(body){busy++;try{const r=await api('veroSet',body);if(!r.success)alert(r.message||'No se guardó');}catch(e){alert('No se guardó: revisa tu conexión.')}busy--;refresh(true)}
-async function refresh(force){if(!CODE||(busy&&!force))return;try{const r=await api('vero',{});if(r.success){D=r;guarda(r);traeB();if(force||!document.activeElement||!/INPUT|TEXTAREA/.test(document.activeElement.tagName))render()}else if(r.expired){CODE='';login()}}catch(e){}}
+async function refresh(force){if(!CODE||(busy&&!force))return;try{const r=await api('vero',{});if(r.success){D=r;guarda(r);traeB();if(TAB==='scan'||TAB==='fotos')return;if(force||!document.activeElement||!/INPUT|TEXTAREA/.test(document.activeElement.tagName))render()}else if(r.expired){CODE='';login()}}catch(e){}}
 MONTAJE.bind(()=>D&&D.montaje,m=>{D.montaje=m;guarda(D)},()=>render());
 document.addEventListener('click',e=>{
  const v=e.target.closest('[data-vseg]');if(v){VSEG=v.dataset.vseg;st.set('pulso.vero.vseg',VSEG);render();return}

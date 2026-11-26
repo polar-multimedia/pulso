@@ -72,6 +72,7 @@ label{display:block;font-size:12px;font-weight:800;color:var(--mut);margin:14px 
 .err{color:var(--coral);font-weight:800;font-size:14px;margin-top:10px;min-height:18px}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--panel);border:1px solid var(--line);padding:12px 16px;border-radius:12px;font-weight:700;font-size:14px;z-index:60;display:none;max-width:90vw}
 .chk{display:flex;gap:10px;align-items:flex-start;margin:12px 0 4px;font-size:13px;font-weight:600;line-height:1.4;text-transform:none;letter-spacing:0}.chk input{width:20px;height:20px;flex:none;margin-top:1px;accent-color:#49E6FF}.chk a{color:#49E6FF}
+html.embed header .top{display:none}html.embed body{background:transparent}
 </style>
 </head>
 <body>
@@ -155,7 +156,8 @@ label{display:block;font-size:12px;font-weight:800;color:var(--mut);margin:14px 
 <div class="toast" id="toast"></div>
 
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-<script>
+<script>if(/[?&]embed=1/.test(location.search))document.documentElement.classList.add("embed");
+
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const store={get(k){try{return localStorage.getItem(k)||''}catch(e){return''}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
