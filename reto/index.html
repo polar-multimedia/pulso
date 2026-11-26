@@ -492,7 +492,8 @@ function fbConnect(){firebase.initializeApp(FBCFG);fdb=firebase.database();const
  if(MASTER)setInterval(()=>{if(netUp)R("hb").set(JSON.stringify({id:MID,t:Date.now()}))},3000);
  setInterval(sigStat,2000);
  fbPend.splice(0).forEach(a=>R("acts").push(a));
- if(MASTER){R("acts").on("child_added",sn=>{let a=null;try{a=JSON.parse(sn.val())}catch(e){}sn.ref.remove();if(a&&Date.now()-(a.ts||0)<120000)apply(a)})}
+ if(MASTER){R("big").once("value",sn=>{let v=null;try{v=JSON.parse(sn.val())}catch(e){}if(v&&v.players&&!Object.keys(S.players||{}).length){S.players=v.players;S.played=Object.assign({},v.played||{},S.played||{});if(v.ans)Object.keys(v.ans).forEach(k=>{S.ans[k]=Object.assign({},v.ans[k],S.ans[k]||{})});renderAll()}});/* si la señal se abre en otra compu, recupera el marcador */
+  R("acts").on("child_added",sn=>{let a=null;try{a=JSON.parse(sn.val())}catch(e){}sn.ref.remove();if(a&&Date.now()-(a.ts||0)<120000)apply(a)})}
  else{R("state").on("value",sn=>{let v=null;try{v=JSON.parse(sn.val())}catch(e){}if(!v)return;if(v.ep&&v.ep!==EPSEEN){EPSEEN=v.ep;LOCAL_ME=null;delete S.players[ME];S.ans={};try{localStorage.setItem("retoEp_"+ROOM,String(v.ep));localStorage.removeItem("retoMe_"+ROOM)}catch(e){}}Object.assign(S,v);S.rx=performance.now();renderAll()});
   R("big").on("value",sn=>{let v=null;try{v=JSON.parse(sn.val())}catch(e){}if(!v)return;S.players=v.players||{};S.played=v.played||{};if(v.ans)Object.assign(S.ans,v.ans);if(LOCAL_ME&&!S.players[ME])S.players[ME]=LOCAL_ME;renderAll()})}}
 function fbShare(force){if(!fdb)return;const go=()=>{fbLast=Date.now();fbT=null;const o=snapshot();delete o.players;delete o.ans;delete o.played;o.pc=nPlayers();
