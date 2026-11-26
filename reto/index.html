@@ -968,13 +968,15 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-eq]");if(!
   ORDER=[];if(P)ORDER.push(P);R.forEach((x,k)=>{ORDER.push(x);if(P&&k%2===1&&k<R.length-1)ORDER.push(P)});ready=true;draw();sync()});
  const M=()=>Object.assign({on:false,i:0,v:.8,k:0},S.mus||{}),cur=()=>ORDER.length?ORDER[((M().i%ORDER.length)+ORDER.length)%ORDER.length]:null;
  /* motor de audio (solo «Sonar aquí») */
- const A=new Audio();A.preload="auto";let curK=-1,curI=-1,fadeT=null;
- function fade(to,ms,cb){cancelAnimationFrame(fadeT);const from=A.volume,t0=performance.now();(function f(t){const k=Math.min(1,(t-t0)/ms);A.volume=Math.max(0,Math.min(1,from+(to-from)*k));if(k<1)fadeT=requestAnimationFrame(f);else cb&&cb()})(t0)}
+ const A=new Audio();A.preload="auto";let curK=-1,curI=-1,fadeT=null,fadeTo=null,fadeCb=null;
+ /* fundidos con reloj normal (no se congelan si la pestaña no está al frente) y sin reiniciarse a cada revisión */
+ function fade(to,ms,cb){if(fadeT&&fadeTo===to){if(cb)fadeCb=cb;return}clearInterval(fadeT);fadeTo=to;fadeCb=cb||null;const from=A.volume,t0=Date.now();
+  fadeT=setInterval(()=>{const k=Math.min(1,(Date.now()-t0)/ms);A.volume=Math.max(0,Math.min(1,from+(to-from)*k));if(k>=1){clearInterval(fadeT);fadeT=null;fadeTo=null;const c=fadeCb;fadeCb=null;c&&c()}},40)}
  function sync(){if(!ready||!aqui()||!ORDER.length)return;const m=M(),idx=((m.i%ORDER.length)+ORDER.length)%ORDER.length;
-  if(idx!==curI||m.k!==curK){const first=curI<0;curI=idx;curK=m.k;const go=()=>{A.src=BASE+ORDER[idx][1];A.volume=0;if(m.on)A.play().then(()=>fade(m.v,1500)).catch(()=>{})};if(first||A.paused)go();else fade(0,2500,go);return}
-  if(m.on&&A.paused){A.volume=0;A.play().then(()=>fade(m.v,1500)).catch(()=>{})}
-  else if(!m.on&&!A.paused)fade(0,1500,()=>A.pause());
-  else if(m.on&&!A.paused&&Math.abs(A.volume-m.v)>.02&&!A._fading)A.volume=m.v}
+  if(idx!==curI||m.k!==curK){const first=curI<0;curI=idx;curK=m.k;const go=()=>{A.src=BASE+ORDER[idx][1];A.volume=0;const n=M();if(n.on)A.play().then(()=>{if(M().on)fade(M().v,1500)}).catch(()=>{})};if(first||A.paused)go();else fade(0,2500,go);return}
+  if(m.on&&A.paused&&!A._starting){A._starting=1;A.volume=0;A.play().then(()=>{A._starting=0;if(M().on)fade(M().v,1500);else A.pause()}).catch(()=>{A._starting=0})}
+  else if(!m.on&&!A.paused)fade(0,1500,()=>{if(!M().on)A.pause()});
+  else if(m.on&&!A.paused&&!fadeT&&!A._out&&Math.abs(A.volume-m.v)>.02)fade(m.v,600)}
  A.addEventListener("ended",()=>act({t:"mus",op:"next",from:M().i}));
  A.addEventListener("timeupdate",()=>{if(A.duration&&A.duration-A.currentTime<3&&!A._out){A._out=1;fade(0,2800)}});
  A.addEventListener("loadeddata",()=>{A._out=0});
