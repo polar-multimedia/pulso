@@ -165,10 +165,10 @@ function hello(){return `<details class="more"><summary>¿Cómo funciona esta co
  <b>Sin registro</b>: confirmaron con Carnot pero no tienen boleto; ahí está su teléfono.<br>
  Los mensajes a los doctores van firmados como «el asistente de Blanca».</div></details>`}
 function nextUp(){if(!D)return[];const T=D.traslados,now=nowMin(),out=[];
- T.filter(p=>p.s==='cancel').forEach(p=>out.push({t:`Se canceló el vuelo de ${p.trato} ${p.name}`,why:`Hay que buscarle otro vuelo; mientras, ${D.driver.name} no debe ir por ${a(p,'ella','él')}.`,acts:[['wa',wa(D.driver.phone,driverMsg(p)),'Avisar a '+D.driver.name]]}));
+ T.filter(p=>p.s==='cancel'&&p.flight).forEach(p=>out.push({t:`Se canceló el vuelo de ${p.trato} ${p.name}`,why:`Hay que buscarle otro vuelo; mientras, ${D.driver.name} no debe ir por ${a(p,'ella','él')}.`,acts:[['wa',wa(D.driver.phone,driverMsg(p)),'Avisar a '+D.driver.name]]}));
  T.filter(p=>p.s==='delay'&&p.d>=20).forEach(p=>out.push({t:`${p.trato} ${p.name} viene con ${p.d} min de retraso`,why:`Avísale a ${D.driver.name} para que no entre antes al estacionamiento del aeropuerto (no dejan esperar mucho). Nueva recogida: ${fmt(pickup(p))}.${p.d>=60?' Pasa de una hora: revisa si conviene separar su bloque.':''}`,acts:[['wa',wa(D.driver.phone,driverMsg(p)),'Avisar a '+D.driver.name],['wa',wa(p.phone,welcome(p)),'Avisarle a '+a(p,'ella','él')]]}));
  T.filter(p=>p.s==='land').forEach(p=>out.push({t:`Aterrizó ${p.trato} ${p.name}`,why:`Mándale su bienvenida para que sepa dónde ${a(p,'la','lo')} espera ${D.driver.name}. Cuando suba a la camioneta, márcalo «Con el chofer».`,acts:[['wa',wa(p.phone,welcome(p)),'Bienvenida'],['set',p.key+'|pick','Ya está con el chofer']]}));
- const blocks={};T.filter(p=>!['done','pick','cancel'].includes(p.s)).forEach(p=>{(blocks[p.block]=blocks[p.block]||[]).push(p)});
+ const blocks={};T.filter(p=>p.flight&&!['done','pick','cancel'].includes(p.s)).forEach(p=>{(blocks[p.block]=blocks[p.block]||[]).push(p)});
  const nb=Object.keys(blocks).map(b=>({b,ps:blocks[b],pk:Math.max(...blocks[b].map(pickup))})).filter(x=>x.pk>=now-60).sort((x,y)=>x.pk-y.pk)[0];
  if(nb)out.push({t:`Siguiente recogida: bloque ${nb.b} a las ${fmt(nb.pk)}`,why:`${nb.ps.map(p=>p.trato+' '+first(p)).join(', ')}. Se recoge 30 minutos después de aterrizar para dar tiempo a salir del avión.`,acts:[['wa',wa(D.driver.phone,nb.ps.map(driverMsg).join('\n')),'Recordar a '+D.driver.name]]});
  if(D.sinRegistro.length)out.push({t:`${D.sinRegistro.length} confirmaron con Carnot y no tienen boleto`,why:'Si llegan, se registran en la entrada en un minuto. Si quieres, llámales desde la pestaña «Sin registro».',acts:[['tab','sin','Ver la lista']]});
@@ -177,15 +177,18 @@ function nextUp(){if(!D)return[];const T=D.traslados,now=nowMin(),out=[];
 /* Foráneos primero: es lo que más le importa a Blanca. Junta cada foráneo con su vuelo y traslado. */
 function foraneosData(){const T=D.traslados;return D.foraneos.map(f=>{const t=T.find(x=>x.id&&x.id===f.id)||T.find(x=>first(x).toLowerCase()===String(f.name).split(' ')[0].toLowerCase()&&x.from);
  let st='Sin vuelo capturado',cls='',ord=5;
- if(f.arrived||(t&&t.arrived)){st='Ya está en PULSO';cls='c-done';ord=9}
+ if(t&&t.s==='cancel'&&!t.flight){st='Canceló';cls='';ord=10}
+ else if(f.arrived||(t&&t.arrived)){st='Ya está en PULSO';cls='c-done';ord=9}
+ else if(t&&!t.flight){st=t.s==='prog'?'Por tierra':t.s==='pick'?'En camino':'Ya llegó';cls=t.s==='prog'?'':t.s==='pick'?'c-air':'c-done';ord=t.s==='prog'?7:4}
  else if(t){const e=EST.find(x=>x[0]===t.s)||EST[0];st=e[1]+(t.s==='delay'?' +'+t.d+' min':'');cls='c-'+t.s;ord={cancel:0,delay:1,land:2,air:3,pick:4,prog:6,done:8}[t.s]??6}
  return {f,t,st,cls,ord}}).sort((a,b)=>a.ord-b.ord||a.f.name.localeCompare(b.f.name,'es'))}
 function sinVuelo(){const F=foraneosData().filter(x=>!x.t);if(!F.length)return '';
  return `<div class="block"><h3>Foráneos sin vuelo capturado</h3><span>${F.length}</span></div><div class="card"><p>Viajan por su cuenta o falta capturar su vuelo. Si alguno sí vuela, pásale a Roberto su número de vuelo.</p>${F.map(x=>`<div class="li"><div><div class="nm">${esc(x.f.name)}</div><div class="meta">${esc([x.f.city,x.f.rep?'Repre: '+x.f.rep:''].filter(Boolean).join(' · '))}</div><div class="meta">${x.f.arrived?'Ya está en PULSO':x.f.registered?'Tiene boleto':'Sin boleto'}</div></div><div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end"><span class="chip ${x.cls}">${esc(x.st)}</span>${x.f.phone?`<a class="btn ghost sm" href="tel:${esc(String(x.f.phone).replace(/\D/g,''))}">Llamar</a>`:''}</div></div>`).join('')}</div>`}
-function foraneosCard(){const F=foraneosData(),n=F.length,ok=F.filter(x=>x.ord===9).length,camino=F.filter(x=>x.t&&['air','delay','land','pick'].includes(x.t.s)).length,alerta=F.filter(x=>x.ord<=1).length,pct=n?Math.round(ok/n*100):0;
+function foraneosCard(){const ALL=foraneosData(),F=ALL.filter(x=>x.ord!==10),OUT=ALL.filter(x=>x.ord===10),n=F.length,ok=F.filter(x=>x.ord===9).length,camino=F.filter(x=>x.t&&['air','delay','land','pick'].includes(x.t.s)).length,alerta=F.filter(x=>x.ord<=1).length,pct=n?Math.round(ok/n*100):0;
  return `<div class="card" style="border-color:rgba(73,230,255,.45)"><div class="big"><span class="n">${ok}</span><span class="of">de ${n} foráneos ya están en PULSO</span></div><div class="meter"><i style="width:${pct}%"></i></div>
  <div class="mini"><div><b>${camino}</b><span>en camino (en vuelo, aterrizaron o con el chofer)</span></div><div><b style="${alerta?'color:var(--warn)':''}">${alerta}</b><span>con retraso o cancelación</span></div></div>
- <div style="margin-top:12px">${F.slice(0,6).map(x=>`<div class="li"><div><div class="nm">${esc(x.t?x.t.trato+' '+x.t.name:x.f.name)}</div><div class="meta">${esc(x.f.city||(x.t&&x.t.from)||'')}${x.t?' · '+esc(x.t.flight)+' · aterriza '+fmt(eta(x.t)):''}</div></div><span class="chip ${x.cls}">${esc(x.st)}</span></div>`).join('')}</div>
+ <div style="margin-top:12px">${F.slice(0,6).map(x=>`<div class="li"><div><div class="nm">${esc(x.t?x.t.trato+' '+x.t.name:x.f.name)}</div><div class="meta">${esc(x.f.city||(x.t&&x.t.from)||'')}${x.t&&x.t.flight?' · '+esc(x.t.flight)+' · aterriza '+fmt(eta(x.t)):x.t?' · '+esc(x.t.blockType.split(' · ')[0]):''}</div></div><span class="chip ${x.cls}">${esc(x.st)}</span></div>`).join('')}</div>
+ ${OUT.length?`<div class="note">Cancelaron: ${OUT.map(x=>esc(x.t?x.t.trato+' '+x.t.name:x.f.name)).join(', ')}. Ya no se cuentan.</div>`:''}
  <button class="btn ghost sm" style="margin-top:8px" data-tab="foraneos">Ver vuelos y traslados de los ${n}</button></div>`}
 function foraneosLista(){const F=foraneosData();if(!F.length)return '<div class="card"><p>No hay foráneos en la lista.</p></div>';
  return `<div class="card"><p>Médicos que viajan desde otra ciudad, ordenados por lo que necesita atención primero.</p>${F.map(x=>`<div class="li"><div><div class="nm">${esc(x.t?x.t.trato+' '+x.t.name:x.f.name)}</div><div class="meta">${esc([x.f.city||(x.t&&x.t.from),x.f.rep?'Repre: '+x.f.rep:''].filter(Boolean).join(' · '))}</div>${x.t?`<div class="meta">${esc(x.t.flight)} · aterriza ${fmt(eta(x.t))} · recogida ${fmt(pickup(x.t))} → ${x.t.to==='hotel'?'hotel':'InSpace'}</div>`:`<div class="meta">${x.f.registered?'Tiene boleto':'Sin boleto'} · sin vuelo capturado (viaja por su cuenta o falta su vuelo)</div>`}</div><div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end"><span class="chip ${x.cls}">${esc(x.st)}</span>${x.f.phone?`<a class="btn ghost sm" href="tel:${esc(String(x.f.phone).replace(/\D/g,''))}">Llamar</a>`:''}</div></div>`).join('')}</div>`}
@@ -239,7 +242,17 @@ function fuente(p){const hora=p.at?new Date(p.at).toLocaleTimeString('es-MX',{ho
  if(p.src==='Automático')return 'Hora estimada según el rastreo del vuelo de las '+hora+'.';
  if(p.src==='Manual'&&p.at)return 'Estado marcado por '+(p.by||'el equipo')+' a las '+hora+'.';
  return 'Hora del horario programado (jueves 26). El rastreo en vivo empieza 90 min antes de que aterrice.'}
-function llegadas(){const T=D.traslados;if(!T.length)return '<div class="card"><p>No hay traslados capturados.</p></div>';
+const CAR='<svg viewBox="0 0 24 24" width="22" height="22" fill="#fff"><path d="M5 11l1.5-4.5A2 2 0 0 1 8.4 5h7.2a2 2 0 0 1 1.9 1.5L19 11a2 2 0 0 1 2 2v4h-2v1.5a1.5 1.5 0 0 1-3 0V17H8v1.5a1.5 1.5 0 0 1-3 0V17H3v-4a2 2 0 0 1 2-2zm2.1 0h9.8l-1.1-3.5H8.2zM6.5 15a1.2 1.2 0 1 0 0-2.4 1.2 1.2 0 0 0 0 2.4zm11 0a1.2 1.2 0 1 0 0-2.4 1.2 1.2 0 0 0 0 2.4z"/></svg>';
+const TIERRA=[['prog','Por llegar'],['pick','En camino'],['done','Ya llegó']];
+function porTierra(){const G=D.traslados.filter(p=>!p.flight&&p.s!=='cancel'),X=D.traslados.filter(p=>!p.flight&&p.s==='cancel');if(!G.length&&!X.length)return '';
+ return `<div class="block"><h3>Por tierra</h3><span>${G.length}</span></div>`+G.map(p=>{const pl=p.blockType.split(' · ');return `<div class="fl">
+  <div class="hd"><span class="al" style="background:linear-gradient(135deg,#1F6F78,#4ECBCA)">${CAR}</span><div class="who"><div class="nm">${esc(p.trato+' '+p.name)}</div><div class="meta">${esc(p.from)} → ${p.to==='hotel'?'hotel':'InSpace'}</div></div><span class="chip ${p.s==='prog'?'':p.s==='pick'?'c-air':'c-done'}">${esc((TIERRA.find(x=>x[0]===p.s)||[0,'Por llegar'])[1])}</span></div>
+  <div class="note" style="color:var(--tx);font-size:14px">${pl.map(esc).join('<br>')}</div>
+  ${p.pick||p.dep?`<div class="facts" style="grid-template-columns:1fr 1fr">${p.pick?`<div><small>${p.key==='facundo'?'Lo recogen':'Camioneta'}</small><b>${esc(p.pick)}</b></div>`:''}${p.dep?`<div><small>Regreso</small><b>${esc(p.dep)}</b></div>`:''}</div>`:''}
+  <div class="acts">${p.phone?`<a class="btn ghost sm" href="tel:${esc(p.phone)}">Llamar</a><a class="btn wa sm" target="_blank" rel="noopener" href="${wa(p.phone,'')}">WhatsApp</a>`:''}</div>
+  <div class="states" style="margin-top:10px">${TIERRA.map(e=>`<button data-k="${p.key}" data-s="${e[0]}" class="${p.s===e[0]?'on':''}">${e[1]}</button>`).join('')}</div></div>`}).join('')+
+ (X.length?`<div class="card"><p>Cancelaron: ${X.map(p=>esc(p.trato+' '+p.name+' ('+p.from+')')).join(', ')}. Ya no se cuentan.</p></div>`:'')}
+function llegadas(){const T=D.traslados.filter(p=>p.flight);if(!D.traslados.length)return '<div class="card"><p>No hay traslados capturados.</p></div>';
  const blocks=[...new Set(T.map(p=>p.block))].sort((x,y)=>x-y);
  return blocks.map(b=>{const ps=T.filter(p=>p.block===b),pk=Math.max(...ps.map(pickup)),moved=pk!==toMin(ps[0].pick);
   return `<div class="block"><h3>Bloque ${b} · recogida ${fmt(pk)}</h3><span>${esc(ps[0].blockType)}${moved?' · se recorrió':''}</span></div>`+
@@ -254,7 +267,7 @@ function llegadas(){const T=D.traslados;if(!T.length)return '<div class="card"><
    <div class="acts"><a class="btn wa sm" href="${wa(p.phone,welcome(p))}" target="_blank" rel="noopener">Bienvenida</a><a class="btn ghost sm" href="${fa(p.flight)}" target="_blank" rel="noopener">Ver vuelo en vivo</a></div>
    <details class="st" ${['prog'].includes(p.s)?'':'open'}><summary>Cambiar estado</summary><div class="states" style="margin-top:8px">${EST.map(e=>`<button data-k="${p.key}" data-s="${e[0]}" class="${p.s===e[0]?'on':''}">${e[1]}</button>`).join('')}</div>
    <div class="delay ${p.s==='delay'?'show':''}">Retraso <input type="number" min="0" step="5" inputmode="numeric" data-d="${p.key}" value="${p.d||''}"> minutos</div></details>
-   ${p.at?`<div class="by">Último cambio: ${esc(p.by||'')} · ${new Date(p.at).toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',hour12:false})}${p.src==='Automático'?' (rastreo automático)':''}</div>`:''}</div>`}).join('')}).join('')}
+   ${p.at?`<div class="by">Último cambio: ${esc(p.by||'')} · ${new Date(p.at).toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',hour12:false})}${p.src==='Automático'?' (rastreo automático)':''}</div>`:''}</div>`}).join('')}).join('')+porTierra()}
 function salidas(){const T=D.traslados.filter(p=>p.lobby),g={};T.forEach(p=>{(g[p.lobby]=g[p.lobby]||[]).push(p)});
  return `<div class="card"><p>Viernes 27 · del hotel a la Terminal 2. La hora de lobby da tiempo para llegar y documentar con calma (vuelo nacional: 2 horas antes en el aeropuerto).</p></div>`+
  Object.keys(g).sort().map(t=>`<div class="p"><div class="row"><div class="nm">Lobby ${t}</div><span class="chip">${g[t].length>1?'Camioneta':'Individual'}</span></div>`+
