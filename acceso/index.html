@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#071433">
+<title>Acceso PULSO</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--noche:#030A1E;--navy:#071433;--panel:#0D1D45;--line:rgba(255,255,255,.12);--cian:#49E6FF;--coral:#FF6B5B;--naranja:#FF9A3C;--verde:#3DDC97;--txt:#EAF1FF;--mut:#9FB3D6}
+*{box-sizing:border-box;margin:0;padding:0}[hidden]{display:none!important}
+html,body{background:var(--noche);color:var(--txt);font-family:Manrope,system-ui,sans-serif;font-weight:500;-webkit-tap-highlight-color:transparent}
+body{min-height:100dvh;padding-bottom:env(safe-area-inset-bottom)}
+button,input{font:inherit;color:inherit}
+.wrap{max-width:560px;margin:0 auto;padding:0 16px}
+header{position:sticky;top:0;z-index:20;background:rgba(3,10,30,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top)}
+.top{display:flex;align-items:center;justify-content:space-between;padding:10px 0 6px}
+.top img{height:20px}
+.who{font-size:12px;color:var(--mut);font-weight:700;background:none;border:0}
+.count{display:flex;align-items:baseline;gap:8px;padding:2px 0 4px}
+.count b{font-size:40px;font-weight:800;line-height:1}
+.count span{font-size:16px;font-weight:700;color:var(--mut)}
+.count small{margin-left:auto;font-size:12px;color:var(--mut);font-weight:700;text-align:right;line-height:1.4}
+.bar{height:6px;background:rgba(255,255,255,.1);border-radius:6px;overflow:hidden;margin-bottom:10px}
+.bar i{display:block;height:100%;width:0;background:var(--cian);transition:width .4s}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding-bottom:10px}
+.tabs button{background:transparent;border:1px solid var(--line);border-radius:999px;padding:9px 0;font-size:13px;font-weight:800;color:var(--mut)}
+.tabs button.on{background:var(--cian);color:var(--navy);border-color:var(--cian)}
+main{padding-top:16px}
+.view{display:none}.view.on{display:block}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px}
+#reader{width:100%;border-radius:16px;overflow:hidden;background:#000;min-height:260px}
+#reader video{object-fit:cover}
+.row{display:flex;gap:8px;margin-top:12px}
+.field{width:100%;background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:12px;padding:13px 14px;font-size:16px;font-weight:700;outline:none}
+.field:focus{border-color:var(--cian)}
+label{display:block;font-size:12px;font-weight:800;color:var(--mut);margin:14px 0 6px;letter-spacing:.02em}
+.btn{background:var(--cian);color:var(--navy);border:0;border-radius:999px;padding:14px 18px;font-weight:800;font-size:15px;white-space:nowrap}
+.btn.ghost{background:transparent;color:var(--txt);border:1px solid var(--line)}
+.btn.warn{background:var(--naranja)}
+.btn.block{width:100%;margin-top:16px}
+.btn:disabled{opacity:.5}
+.hint{font-size:13px;color:var(--mut);margin-top:10px;line-height:1.45}
+.list{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.p{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;display:flex;gap:12px;align-items:center}
+.p .i{flex:1;min-width:0}
+.p .n{font-weight:800;font-size:16px;line-height:1.25}
+.p .m{font-size:13px;color:var(--mut);margin-top:3px;word-break:break-word}
+.tag{display:inline-block;font-size:11px;font-weight:800;padding:3px 8px;border-radius:999px;margin-top:6px;margin-right:4px}
+.tag.ok{background:rgba(61,220,151,.15);color:var(--verde)}
+.tag.sim{background:rgba(255,154,60,.15);color:var(--naranja)}
+.tag.site{background:rgba(73,230,255,.15);color:var(--cian)}
+.p .btn{padding:11px 14px;font-size:13px}
+.grp{border:1px solid rgba(255,154,60,.35);border-radius:18px;padding:12px;background:rgba(255,154,60,.05)}
+.grp h4{font-size:12px;color:var(--naranja);font-weight:800;margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em}
+.grp .p{margin-top:8px}
+#res{position:fixed;inset:0;z-index:50;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(3,10,30,.85)}
+#res.on{display:flex}
+#res .box{width:100%;max-width:440px;border-radius:24px;padding:28px 22px;text-align:center}
+#res .ic{font-size:56px;line-height:1;font-weight:800}
+#res h2{font-size:24px;font-weight:800;margin-top:12px;line-height:1.2}
+#res p{font-size:15px;margin-top:8px;font-weight:700;opacity:.9;line-height:1.4}
+#res .acts{display:flex;flex-direction:column;gap:10px;margin-top:20px}
+.ok-bg{background:#0E5B44}.warn-bg{background:#7A4A12}.err-bg{background:#7B2230}
+#login{min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:24px}
+#login .card{width:100%;max-width:380px;text-align:center;padding:28px 22px}
+#login img{height:30px;margin-bottom:18px}
+#login h1{font-size:18px;font-weight:800}
+#code{text-align:center;font-size:30px;letter-spacing:.3em;margin-top:18px}
+.err{color:var(--coral);font-weight:800;font-size:14px;margin-top:10px;min-height:18px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--panel);border:1px solid var(--line);padding:12px 16px;border-radius:12px;font-weight:700;font-size:14px;z-index:60;display:none;max-width:90vw}
+</style>
+</head>
+<body>
+
+<section id="login" hidden>
+  <div class="card">
+    <img src="../img/pulso-logo.png" alt="PULSO">
+    <h1>Acceso de registro</h1>
+    <input id="code" class="field" inputmode="numeric" autocomplete="off" placeholder="····">
+    <label for="whoIn" style="text-align:left">¿Quién registra? (opcional)</label>
+    <input id="whoIn" class="field" placeholder="Ej. Blanca" autocomplete="off">
+    <div class="err" id="loginErr"></div>
+    <button class="btn block" id="loginBtn">Entrar</button>
+  </div>
+</section>
+
+<section id="app" hidden>
+  <header>
+    <div class="wrap">
+      <div class="top"><img src="../img/pulso-logo.png" alt="PULSO"><button class="who" id="whoBtn"></button></div>
+      <div class="count"><b id="cIn">–</b><span>/ <span id="cCap">150</span> adentro</span><small id="cMeta"></small></div>
+      <div class="bar"><i id="cBar"></i></div>
+      <nav class="tabs">
+        <button data-v="scan" class="on">Escanear</button>
+        <button data-v="find">Buscar</button>
+        <button data-v="new">Nuevo</button>
+        <button data-v="dup">Duplicados</button>
+      </nav>
+    </div>
+  </header>
+  <main class="wrap">
+    <div class="view on" id="v-scan">
+      <div id="reader"></div>
+      <div class="row">
+        <input id="manual" class="field" placeholder="Código del boleto (PL-…)" autocapitalize="characters" autocomplete="off">
+        <button class="btn" id="manualBtn">Validar</button>
+      </div>
+      <p class="hint">Apunte la cámara al QR del boleto. Si el médico no encuentra su QR, use <b>Buscar</b>. Si no se registró, use <b>Nuevo</b>.</p>
+    </div>
+
+    <div class="view" id="v-find">
+      <input id="q" class="field" placeholder="Nombre, apellido, correo o celular" autocomplete="off" autocorrect="off" spellcheck="false">
+      <p class="hint">Encuentra aunque falten acentos o haya errores de dedo. Las coincidencias marcadas como <span class="tag sim" style="margin:0">parecida</span> confírmelas con el médico.</p>
+      <div class="list" id="findList"></div>
+    </div>
+
+    <div class="view" id="v-new">
+      <div class="card">
+        <label for="nName">Nombre completo, como saldrá en la constancia *</label>
+        <input id="nName" class="field" autocomplete="off" placeholder="Nombre(s) y apellidos">
+        <label for="nEmail">Correo electrónico * (ahí recibe su constancia)</label>
+        <input id="nEmail" class="field" type="email" inputmode="email" autocomplete="off" autocapitalize="none">
+        <label for="nPhone">Celular</label>
+        <input id="nPhone" class="field" type="tel" inputmode="tel" autocomplete="off">
+        <label for="nSpec">Especialidad</label>
+        <input id="nSpec" class="field" autocomplete="off" placeholder="Ej. Pediatría">
+        <label for="nCity">Ciudad</label>
+        <input id="nCity" class="field" autocomplete="off">
+        <div class="err" id="newErr"></div>
+        <button class="btn block" id="newBtn">Registrar y dar acceso</button>
+      </div>
+      <div class="list" id="newCands"></div>
+    </div>
+
+    <div class="view" id="v-dup">
+      <button class="btn block ghost" id="dupBtn" style="margin-top:0">Revisar posibles duplicados</button>
+      <p class="hint">Junta registros con el mismo celular, nombre muy parecido o correo casi igual. Para corregir o borrar uno, hágalo en la hoja «PULSO · Registros».</p>
+      <div class="list" id="dupList"></div>
+    </div>
+  </main>
+</section>
+
+<div id="res"><div class="box" id="resBox"></div></div>
+<div class="toast" id="toast"></div>
+
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const store={get(k){try{return localStorage.getItem(k)||''}catch(e){return''}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
+let API='',CODE=store.get('pulso.staff.code'),WHO=store.get('pulso.staff.who'),scanner=null,busy=false,CAP=150;
+
+async function api(action,body={}){
+  if(!API){const c=await fetch('../config.json',{cache:'no-store'}).then(r=>r.json());API=c.appsScriptUrl}
+  const r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action,idToken:'codigo:'+CODE,who:WHO,...body}),redirect:'follow'});
+  if(!r.ok)throw new Error('Sin respuesta del servidor ('+r.status+')');
+  const j=await r.json();
+  if(j.expired){logout('Código incorrecto. Vuelva a entrar.');throw new Error('expired')}
+  return j;
+}
+function toast(m){const t=$('#toast');t.textContent=m;t.style.display='block';clearTimeout(t._h);t._h=setTimeout(()=>t.style.display='none',3500)}
+function buzz(p){try{navigator.vibrate&&navigator.vibrate(p)}catch(e){}}
+
+// ── Entrada con código
+async function login(){
+  const c=$('#code').value.trim();if(!c)return;
+  $('#loginBtn').disabled=true;$('#loginErr').textContent='';
+  CODE=c;WHO=$('#whoIn').value.trim();
+  try{const j=await api('adminCheck');if(!j.success)throw new Error(j.message||'Código incorrecto');
+    store.set('pulso.staff.code',CODE);store.set('pulso.staff.who',WHO);start();
+  }catch(e){if(e.message!=='expired')$('#loginErr').textContent=e.message||'No se pudo entrar'}
+  $('#loginBtn').disabled=false;
+}
+function logout(msg){store.del('pulso.staff.code');CODE='';stopScan();$('#app').hidden=true;$('#login').hidden=false;$('#loginErr').textContent=msg||'';$('#code').value='';}
+$('#loginBtn').onclick=login;$('#code').onkeydown=e=>{if(e.key==='Enter')login()};
+$('#whoBtn').onclick=()=>{if(confirm('¿Salir del acceso de registro en este teléfono?'))logout()};
+
+function start(){
+  $('#login').hidden=true;$('#app').hidden=false;
+  $('#whoBtn').textContent=(WHO?WHO+' · ':'')+'Salir';
+  stats();setInterval(stats,20000);show('scan');
+}
+
+// ── Contador
+async function stats(){
+  try{const s=await api('staffStats');if(!s.success)return;CAP=s.capacity;
+    $('#cIn').textContent=s.inside;$('#cCap').textContent=s.capacity;
+    $('#cMeta').innerHTML=s.registered+' registrados<br>'+s.walkins+' en sitio';
+    const pct=Math.min(100,s.inside/s.capacity*100);$('#cBar').style.width=pct+'%';
+    $('#cBar').style.background=s.inside>=s.capacity?'var(--coral)':(s.inside>=s.capacity-10?'var(--naranja)':'var(--cian)');
+  }catch(e){}
+}
+
+// ── Pestañas
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>show(b.dataset.v));
+function show(v){
+  document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
+  document.querySelectorAll('.view').forEach(x=>x.classList.toggle('on',x.id==='v-'+v));
+  if(v==='scan')startScan();else stopScan();
+  if(v==='find')setTimeout(()=>$('#q').focus(),50);
+}
+
+// ── Escáner
+function idFrom(text){
+  try{const j=JSON.parse(text);if(j&&j.id)return String(j.id).toUpperCase()}catch(e){}
+  const m=String(text).match(/PL-[A-Z0-9]{6}/i);return m?m[0].toUpperCase():String(text).trim().toUpperCase();
+}
+async function startScan(){
+  if(scanner||!window.Html5Qrcode)return;
+  scanner=new Html5Qrcode('reader');
+  try{await scanner.start({facingMode:'environment'},{fps:10,qrbox:(w,h)=>{const s=Math.floor(Math.min(w,h)*0.7);return{width:s,height:s}}},t=>{if(!busy)checkin(idFrom(t))},()=>{})}
+  catch(e){$('#reader').innerHTML='<p class="hint" style="padding:20px">No se pudo abrir la cámara. Dé permiso de cámara al navegador o use el código manual.</p>';scanner=null}
+}
+async function stopScan(){if(scanner){try{await scanner.stop()}catch(e){}try{scanner.clear()}catch(e){}scanner=null}}
+$('#manualBtn').onclick=()=>{const v=$('#manual').value.trim();if(v){checkin(idFrom(v));$('#manual').value=''}};
+$('#manual').onkeydown=e=>{if(e.key==='Enter')$('#manualBtn').click()};
+
+async function checkin(id,force=false){
+  if(busy)return;busy=true;
+  try{const r=await api('checkin',{id,force});result(r,()=>checkin(id,true));if(r.success)stats();}
+  catch(e){if(e.message!=='expired')result({success:false,message:e.message})}
+}
+function result(r,forceFn){
+  const box=$('#resBox');let cls,ic,title,msg=r.message||'',acts='';
+  if(r.success){cls='ok-bg';ic='✓';title=r.guestName||'Acceso registrado';buzz(120)}
+  else if(r.alreadyCheckedIn){cls='warn-bg';ic='!';title=r.guestName||'';msg=r.message;buzz([80,60,80])}
+  else if(r.code==='FULL'){cls='err-bg';ic='150';title=r.guestName||'Cupo completo';buzz([200,80,200]);
+    acts='<button class="btn warn" id="forceBtn">Dar acceso de todos modos</button>'}
+  else{cls='err-bg';ic='✕';title='No encontrado';buzz([200,80,200]);
+    acts='<button class="btn" id="goFind">Buscar por nombre</button>'}
+  box.className='box '+cls;
+  box.innerHTML=`<div class="ic">${ic}</div><h2>${esc(title)}</h2><p>${esc(msg)}</p><div class="acts">${acts}<button class="btn ghost" id="closeRes">${r.success?'Siguiente':'Cerrar'}</button></div>`;
+  $('#res').classList.add('on');
+  const close=()=>{$('#res').classList.remove('on');busy=false;clearTimeout(box._t)};
+  $('#closeRes').onclick=close;
+  const fb=$('#forceBtn');if(fb)fb.onclick=()=>{close();forceFn&&forceFn()};
+  const gf=$('#goFind');if(gf)gf.onclick=()=>{close();show('find')};
+  if(r.success)box._t=setTimeout(close,2200);
+}
+
+// ── Búsqueda
+let qT=null;
+$('#q').oninput=()=>{clearTimeout(qT);qT=setTimeout(find,350)};
+async function find(){
+  const q=$('#q').value.trim();const L=$('#findList');
+  if(q.length<2){L.innerHTML='';return}
+  L.innerHTML='<p class="hint">Buscando…</p>';
+  try{const r=await api('staffSearch',{q});
+    if(q!==$('#q').value.trim())return;
+    L.innerHTML=r.results.length?r.results.map(personCard).join(''):'<p class="hint">Sin coincidencias. Pruebe solo con un apellido o con el celular. Si no está, regístrelo en <b>Nuevo</b>.</p>';
+    bindPersonBtns(L,find);
+  }catch(e){if(e.message!=='expired')L.innerHTML='<p class="err">'+esc(e.message)+'</p>'}
+}
+function personCard(u){
+  const tags=(u.checkedIn?`<span class="tag ok">Ya ingresó ${esc(u.checkedAt||'')}</span>`:'')+
+    (u.match&&u.match!=='exacta'?`<span class="tag sim">Coincidencia ${esc(u.match)}</span>`:'')+
+    (u.origin==='En sitio'?'<span class="tag site">Registro en sitio</span>':'');
+  const meta=[u.email,u.phone,[u.specialty,u.city].filter(Boolean).join(' · '),u.id].filter(Boolean).map(esc).join('<br>');
+  return `<div class="p"><div class="i"><div class="n">${esc(u.name)}</div><div class="m">${meta}</div>${tags}</div>${u.checkedIn?'':`<button class="btn" data-id="${esc(u.id)}">Dar acceso</button>`}</div>`;
+}
+function bindPersonBtns(root,after){
+  root.querySelectorAll('button[data-id]').forEach(b=>b.onclick=async()=>{
+    b.disabled=true;await checkin(b.dataset.id);const t=setInterval(()=>{if(!busy){clearInterval(t);after&&after()}},300)});
+}
+
+// ── Registro nuevo
+$('#newBtn').onclick=()=>walkin(false,false);
+async function walkin(confirmNew,force){
+  const d={name:$('#nName').value.trim(),email:$('#nEmail').value.trim(),phone:$('#nPhone').value.trim(),specialty:$('#nSpec').value.trim(),city:$('#nCity').value.trim()};
+  $('#newErr').textContent='';$('#newCands').innerHTML='';
+  if(d.name.split(/\s+/).length<2){$('#newErr').textContent='Escriba nombre y apellidos completos.';return}
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.email)){$('#newErr').textContent='Escriba un correo válido.';return}
+  $('#newBtn').disabled=true;$('#newBtn').textContent='Registrando…';
+  try{
+    const r=await api('walkin',{...d,confirmNew,force});
+    if(r.code==='MAYBE'){
+      $('#newCands').innerHTML='<div class="grp"><h4>¿Es alguna de estas personas?</h4>'+r.candidates.map(personCard).join('')+
+        '<button class="btn block warn" id="isNew">No es ninguna: registrar como nuevo</button></div>';
+      bindPersonBtns($('#newCands'),()=>{clearNew();});
+      $('#isNew').onclick=()=>walkin(true,force);
+      $('#newCands').scrollIntoView({behavior:'smooth'});
+    }else{
+      result(r,()=>walkin(true,true));
+      if(r.success){clearNew();stats();if(r.emailSent===false)toast('Registrado, pero el correo con su boleto no salió. Revise el correo escrito.')}
+    }
+  }catch(e){if(e.message!=='expired')$('#newErr').textContent=e.message}
+  $('#newBtn').disabled=false;$('#newBtn').textContent='Registrar y dar acceso';
+}
+function clearNew(){['#nName','#nEmail','#nPhone','#nSpec','#nCity'].forEach(s=>$(s).value='');$('#newCands').innerHTML=''}
+
+// ── Duplicados
+$('#dupBtn').onclick=async()=>{
+  const L=$('#dupList');L.innerHTML='<p class="hint">Revisando…</p>';
+  try{const r=await api('staffDupes');
+    L.innerHTML=r.groups.length?r.groups.map(g=>`<div class="grp"><h4>${esc(g.why)}</h4>${g.people.map(personCard).join('')}</div>`).join(''):'<p class="hint">No se encontraron posibles duplicados.</p>';
+    bindPersonBtns(L,()=>$('#dupBtn').click());
+  }catch(e){if(e.message!=='expired')L.innerHTML='<p class="err">'+esc(e.message)+'</p>'}
+};
+
+// ── Arranque
+if(CODE){$('#whoIn').value=WHO;start()}else{$('#login').hidden=false;setTimeout(()=>$('#code').focus(),100)}
+</script>
+</body>
+</html>
