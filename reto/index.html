@@ -704,6 +704,8 @@ function itemsPanel(){const e=ESC[S.es];if(!e.it.length)return `<div class="nota
  if(it&&it.p){const run=CK&&CK.id===it.p?(MASTER?CK.run:S.clk&&S.clk.run):false;
   h+=`<div class="clk"><span>Reloj de ${DECKS[it.p].who}</span><b data-ck="${it.p}">--:--</b></div><div class="row"><button class="sec" id="cCk">${run?"Pausar reloj":"Reanudar reloj"}</button><button class="sec" id="cCkR">Reiniciar reloj</button></div>`}
  return h}
+/* En el celular, los envíos solo suben arriba cuando toca: ganadores desde el último caso del Reto, cierre desde la cena. */
+let TOOLS=false;const WTOP=()=>S.es>=14||!!(WIN&&WIN.pending);const CTOP=()=>S.es>=16;
 /* ===== Ganadores: revisar y enviar correos (con reconfirmación) ===== */
 const WIN={open:false,busy:false,list:null,msg:"",step:0,api:"",pending:null,vivo:[],act:[]};
 setInterval(()=>{const e=document.getElementById("wCd");if(e&&WIN.pending){const s=Math.max(0,Math.round((WIN.pending.at-Date.now())/1000));e.textContent=s?Math.floor(s/60)+":"+String(s%60).padStart(2,"0"):"enviando…";if(!s&&!WIN.busy)setTimeout(()=>winLoad(true),20000)}},1000);
@@ -761,11 +763,16 @@ function renderCtl(){const el=$("#ctl");if(!el)return;
    ${S.cue!=null?`<div class="cue" style="margin-top:6px"><small>Pide a InSpace ahora</small>Escena ${escLabel(S.cue)}</div>`:""}
    <div class="sigl"><small>Señal en vivo</small>${sigLabel()}</div></div>
   ${e.r?retoPanel():itemsPanel()}
-  ${winPanel()}
-  ${cierrePanel()}
+  ${WTOP()?winPanel():""}
+  ${CTOP()?cierrePanel():""}
   <div class="pkl" style="margin-top:6px">Escaleta de la noche</div>
   <div class="esc">${ESC.map((x,i)=>`<button class="eb${i===S.es?" on":""}${i<S.es?" past":""}" data-e="${i}"><b>${x.c}</b><span>${x.n}<small>${x.h?x.h+" · ":""}${x.b}</small></span></button>`).join("")}</div>
-  <button id="cReset" class="sec" style="margin:14px 0 24px;width:100%;padding:14px;border:1px solid ${Date.now()-rstAt<4000?"#ff6b5a":"rgba(255,255,255,.18)"};color:${Date.now()-rstAt<4000?"#fff":"#ff8d80"};background:${Date.now()-rstAt<4000?"#c4362a":"transparent"};font-weight:800;border-radius:12px">${Date.now()-rstAt<4000?"Toca otra vez para confirmar":"Reiniciar todo (pruebas)"}</button>`;
+  <details id="cTools" ${TOOLS?"open":""} style="margin:14px 0 24px;border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:10px 12px"><summary style="font-weight:800;font-size:13px;opacity:.8;cursor:pointer">Envíos del cierre y herramientas</summary>
+  <div style="font-size:12px;opacity:.7;margin:6px 0 4px">Ganadores aparece arriba desde el último caso del Reto (E15); el cierre, desde la cena (E17).</div>
+  ${WTOP()?"":winPanel()}
+  ${CTOP()?"":cierrePanel()}
+  <button id="cReset" class="sec" style="margin:10px 0 4px;width:100%;padding:14px;border:1px solid ${Date.now()-rstAt<4000?"#ff6b5a":"rgba(255,255,255,.18)"};color:${Date.now()-rstAt<4000?"#fff":"#ff8d80"};background:${Date.now()-rstAt<4000?"#c4362a":"transparent"};font-weight:800;border-radius:12px">${Date.now()-rstAt<4000?"Toca otra vez para confirmar":"Reiniciar todo (pruebas)"}</button>
+  </details>`;
  const g=id=>el.querySelector(id);
  if(e.r){g("#cGo").onclick=()=>act({t:"next"});g("#cBack").onclick=()=>act({t:"back"});g("#cBoard").onclick=()=>act({t:"board"});g("#cPause").onclick=()=>act({t:"pause"});
   el.querySelectorAll(".pk button").forEach(b=>b.onclick=()=>act({t:"goto",i:+b.dataset.i}))}
@@ -776,6 +783,7 @@ function renderCtl(){const el=$("#ctl");if(!el)return;
  el.querySelectorAll(".eb").forEach(b=>b.onclick=()=>act({t:"scene",i:+b.dataset.e}));
  winBind(g);cierreBind(g);
  const rb=g("#cReset");if(rb)rb.onclick=()=>{if(Date.now()-rstAt<4000){rstAt=0;act({t:"reset"})}else{rstAt=Date.now();renderCtl();setTimeout(renderCtl,4100)}};
+ const tl=g("#cTools");if(tl)tl.ontoggle=()=>{TOOLS=tl.open};
  el.scrollTop=sc0;tickClock()}
 /* ================== Clicker del ponente ================== */
 let opt=null;
@@ -944,7 +952,7 @@ if(MODE==="productor")(function(){
  #mus input[type=range]{width:100%}`;document.head.appendChild(st);
  const pick=document.createElement("input");pick.type="file";pick.accept="audio/*";pick.multiple=true;pick.hidden=true;document.body.appendChild(pick);
  pick.onchange=()=>{files=[...pick.files];if(!files.length)return;build();load(0,false);open=true;draw()};
- function draw(){const ok=PIN===CTL_PIN;box.style.display=ok?"":"none";if(!ok)return;const cur=order[i];
+ function draw(){const ok=PIN===CTL_PIN&&innerWidth>=700;box.style.display=ok?"":"none";if(!ok)return;const cur=order[i];
   box.innerHTML=(open?`<div class="panel"><b>Música del evento</b><small>Elige los 6 archivos de «22_Musica_ambiente» desde esta computadora. Suenan en loop: «Pulso» abre y vuelve cada dos piezas.</small>
    ${order.length?`<ol>${order.map((f,k)=>`<li class="${k===i?"on":""}" data-k="${k}" style="cursor:pointer">${f.name.replace(/\.[a-z0-9]+$/i,"")}</li>`).join("")}</ol>`:""}
    <button class="pri" id="mPick" style="width:100%;margin:6px 0">${files.length?"Cambiar archivos":"Elegir música"}</button>
@@ -960,6 +968,6 @@ if(MODE==="productor")(function(){
   if(g("mVol"))g("mVol").oninput=e=>{vol=+e.target.value;if(!A.paused)A.volume=vol};
   box.querySelectorAll("[data-k]").forEach(li=>li.onclick=()=>{const k=+li.dataset.k;if(A.paused)load(k,false);else fade(0,1500,()=>load(k,true))})}
  A.addEventListener("play",draw);A.addEventListener("pause",draw);
- draw();setInterval(()=>{if((box.style.display==="none")!==(PIN!==CTL_PIN))draw()},1000);
+ draw();setInterval(()=>{if((box.style.display==="none")!==(PIN!==CTL_PIN||innerWidth<700))draw()},1000);
 })();
 </script>
