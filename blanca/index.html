@@ -127,7 +127,7 @@ try{localStorage.setItem('pulso.equipo.to',location.pathname.includes('/vero/')?
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const st={get(k){try{return localStorage.getItem(k)||''}catch(e){return''}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
-let API='',CODE=st.get('pulso.staff.code'),WHO=st.get('pulso.staff.who')||'',D=null,TAB=st.get('pulso.blanca.tab')||'foraneos',msg='',busy=0,lastOk=0;
+let API='',CODE=st.get('pulso.staff.code'),WHO=st.get('pulso.staff.who')||'',D=null,TAB=(st.get('pulso.blanca.tab')||'foraneos').replace('llegadas','foraneos'),msg='',busy=0,lastOk=0;
 const EST=[['prog','Programado'],['air','En vuelo'],['delay','Retrasado'],['land','Aterrizó'],['pick','Con el chofer'],['done','Entregado'],['cancel','Cancelado']];
 const EVENTO='InSpace Del Valle';
 const SS={get(k){try{return JSON.parse(sessionStorage.getItem(k)||'null')}catch(e){return null}},set(k,v){try{sessionStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
@@ -180,11 +180,13 @@ function foraneosData(){const T=D.traslados;return D.foraneos.map(f=>{const t=T.
  if(f.arrived||(t&&t.arrived)){st='Ya está en PULSO';cls='c-done';ord=9}
  else if(t){const e=EST.find(x=>x[0]===t.s)||EST[0];st=e[1]+(t.s==='delay'?' +'+t.d+' min':'');cls='c-'+t.s;ord={cancel:0,delay:1,land:2,air:3,pick:4,prog:6,done:8}[t.s]??6}
  return {f,t,st,cls,ord}}).sort((a,b)=>a.ord-b.ord||a.f.name.localeCompare(b.f.name,'es'))}
+function sinVuelo(){const F=foraneosData().filter(x=>!x.t);if(!F.length)return '';
+ return `<div class="block"><h3>Foráneos sin vuelo capturado</h3><span>${F.length}</span></div><div class="card"><p>Viajan por su cuenta o falta capturar su vuelo. Si alguno sí vuela, pásale a Roberto su número de vuelo.</p>${F.map(x=>`<div class="li"><div><div class="nm">${esc(x.f.name)}</div><div class="meta">${esc([x.f.city,x.f.rep?'Repre: '+x.f.rep:''].filter(Boolean).join(' · '))}</div><div class="meta">${x.f.arrived?'Ya está en PULSO':x.f.registered?'Tiene boleto':'Sin boleto'}</div></div><div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end"><span class="chip ${x.cls}">${esc(x.st)}</span>${x.f.phone?`<a class="btn ghost sm" href="tel:${esc(String(x.f.phone).replace(/\D/g,''))}">Llamar</a>`:''}</div></div>`).join('')}</div>`}
 function foraneosCard(){const F=foraneosData(),n=F.length,ok=F.filter(x=>x.ord===9).length,camino=F.filter(x=>x.t&&['air','delay','land','pick'].includes(x.t.s)).length,alerta=F.filter(x=>x.ord<=1).length,pct=n?Math.round(ok/n*100):0;
  return `<div class="card" style="border-color:rgba(73,230,255,.45)"><div class="big"><span class="n">${ok}</span><span class="of">de ${n} foráneos ya están en PULSO</span></div><div class="meter"><i style="width:${pct}%"></i></div>
  <div class="mini"><div><b>${camino}</b><span>en camino (en vuelo, aterrizaron o con el chofer)</span></div><div><b style="${alerta?'color:var(--warn)':''}">${alerta}</b><span>con retraso o cancelación</span></div></div>
  <div style="margin-top:12px">${F.slice(0,6).map(x=>`<div class="li"><div><div class="nm">${esc(x.t?x.t.trato+' '+x.t.name:x.f.name)}</div><div class="meta">${esc(x.f.city||(x.t&&x.t.from)||'')}${x.t?' · '+esc(x.t.flight)+' · aterriza '+fmt(eta(x.t)):''}</div></div><span class="chip ${x.cls}">${esc(x.st)}</span></div>`).join('')}</div>
- ${n>6?`<button class="btn ghost sm" style="margin-top:8px" data-tab="foraneos">Ver los ${n}</button>`:''}</div>`}
+ <button class="btn ghost sm" style="margin-top:8px" data-tab="foraneos">Ver vuelos y traslados de los ${n}</button></div>`}
 function foraneosLista(){const F=foraneosData();if(!F.length)return '<div class="card"><p>No hay foráneos en la lista.</p></div>';
  return `<div class="card"><p>Médicos que viajan desde otra ciudad, ordenados por lo que necesita atención primero.</p>${F.map(x=>`<div class="li"><div><div class="nm">${esc(x.t?x.t.trato+' '+x.t.name:x.f.name)}</div><div class="meta">${esc([x.f.city||(x.t&&x.t.from),x.f.rep?'Repre: '+x.f.rep:''].filter(Boolean).join(' · '))}</div>${x.t?`<div class="meta">${esc(x.t.flight)} · aterriza ${fmt(eta(x.t))} · recogida ${fmt(pickup(x.t))} → ${x.t.to==='hotel'?'hotel':'InSpace'}</div>`:`<div class="meta">${x.f.registered?'Tiene boleto':'Sin boleto'} · sin vuelo capturado (viaja por su cuenta o falta su vuelo)</div>`}</div><div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end"><span class="chip ${x.cls}">${esc(x.st)}</span>${x.f.phone?`<a class="btn ghost sm" href="tel:${esc(String(x.f.phone).replace(/\D/g,''))}">Llamar</a>`:''}</div></div>`).join('')}</div>`}
 function render(){if(!D)return;const c=D.counts,pct=c.esperados?Math.min(100,Math.round(c.llegaron/c.esperados*100)):0;const up=nextUp();
@@ -193,13 +195,13 @@ function render(){if(!D)return;const c=D.counts,pct=c.esperados?Math.min(100,Mat
  `<div class="card"><div class="row"><div><h2 style="margin:0">En total: ${c.llegaron} de ${c.esperados} esperados</h2><div class="meta">${c.registrados} con boleto · ${D.sinRegistro.length} confirmaron sin boleto · ${c.enSitio} en la entrada · ${D.fueraDeLista.length} fuera de lista · cupo ${c.capacidad}</div></div></div>
  <div class="meter"><i style="width:${pct}%"></i></div>
  <div class="extras" style="margin-top:4px"><div><b>${c.extras}</b><br><span class="meta">extras de alimentos</span></div><div class="pm"><button data-x="-1" aria-label="Restar uno">−</button><button data-x="1" aria-label="Sumar uno">+</button></div></div></div>`+
- `<div class="tabs">${[['foraneos','Foráneos ('+D.foraneos.length+')'],['llegadas','Traslados hoy'],['agenda','Agenda de hoy'],['hotel','Hotel'],['salidas','Salidas mañana'],['sin','Sin registro ('+D.sinRegistro.length+')'],['fuera','Fuera de lista ('+D.fueraDeLista.length+')']].map(t=>`<button data-tab="${t[0]}" class="${TAB===t[0]?'on':''}">${t[1]}</button>`).join('')}</div>
+ `<div class="tabs">${[['foraneos','Foráneos · vuelos y traslados'],['agenda','Agenda de hoy'],['hotel','Hotel'],['salidas','Salidas mañana'],['sin','Sin registro ('+D.sinRegistro.length+')'],['fuera','Fuera de lista ('+D.fueraDeLista.length+')']].map(t=>`<button data-tab="${t[0]}" class="${TAB===t[0]?'on':''}">${t[1]}</button>`).join('')}</div>
  <div id="t-agenda" class="${TAB==='agenda'?'':'hide'}">${agenda()}</div>
- <div id="t-llegadas" class="${TAB==='llegadas'?'':'hide'}">${llegadas()}</div>
+ 
  <div id="t-hotel" class="${TAB==='hotel'?'':'hide'}">${hotel()}</div>
  <div id="t-salidas" class="${TAB==='salidas'?'':'hide'}">${salidas()}</div>
  <div id="t-sin" class="${TAB==='sin'?'':'hide'}">${lista(D.sinRegistro,'Confirmaron con Carnot pero no tienen boleto. Si llegan, en la entrada los registran en un minuto.',true)}</div>
- <div id="t-foraneos" class="${TAB==='foraneos'?'':'hide'}">${foraneosLista()}</div>
+ <div id="t-foraneos" class="${TAB==='foraneos'||TAB==='llegadas'?'':'hide'}">${llegadas()}${sinVuelo()}</div>
  <div id="t-fuera" class="${TAB==='fuera'?'':'hide'}">${D.fueraDeLista.length?`<div class="card">${D.fueraDeLista.map(x=>`<div class="li"><div><div class="nm">${esc(x.name)}</div><div class="meta">${esc(x.origin||'')}</div></div></div>`).join('')}</div>`:'<div class="card"><p>Todavía nadie ha llegado sin estar en la lista de Carnot.</p></div>'}</div>
  ${hello()}<div class="sync">${D.rastreo?'Los vuelos se revisan solos cada 15 minutos cerca de su llegada'+(D.lastTrack?' · última revisión '+new Date(D.lastTrack).toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',hour12:false}):''):'Los estados de los vuelos los marca el equipo a mano y los ven todos'} · se actualiza cada 20 s<br><button class="lnk" id="out">Salir</button></div><details class="more"><summary>Más pantallas del equipo (para cubrir a Roberto)</summary>
  <a href="../acceso/">Acceso · escáner de la entrada<span>Registrar llegadas y registrar en sitio</span></a>
