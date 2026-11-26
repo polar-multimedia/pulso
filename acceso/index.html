@@ -267,7 +267,7 @@ function personCard(u){
 function bindPersonBtns(root,after){
   root.querySelectorAll('button[data-inv]').forEach(b=>b.onclick=()=>{const v=JSON.parse(b.dataset.inv);
     $('#nName').value=v.name||'';$('#nEmail').value=v.email||'';$('#nPhone').value=v.phone||'';$('#nSpec').value=v.specialty||'';$('#nCity').value=v.city||'';
-    show('new');$('#newErr').textContent=v.email?'Datos de la lista de invitados. Confirme nombre y correo con el médico.':'Pida su correo para la constancia.';setTimeout(()=>$((v.email?'#newBtn':'#nEmail')).focus(),100)});
+    show('new');$('#newErr').textContent='Datos de la lista de Carnot: confirme con el médico cómo quiere su nombre en la constancia (nombre y apellidos, en ese orden)'+(v.email?' y su correo.':' y pídale su correo.');setTimeout(()=>$((v.email?'#newBtn':'#nEmail')).focus(),100)});
   root.querySelectorAll('button[data-id]').forEach(b=>b.onclick=async()=>{
     b.disabled=true;await checkin(b.dataset.id);const t=setInterval(()=>{if(!busy){clearInterval(t);after&&after()}},300)});
 }
