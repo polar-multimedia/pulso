@@ -125,7 +125,7 @@ async function api(action,body){if(!API){const c=await fetch('../config.json',{c
  const r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action,idToken:'codigo:'+CODE,who:WHO,...body}),redirect:'follow'});return r.json()}
 function login(){$('#app').innerHTML=`<div class="card"><h1>Consola de Vero</h1><p>Asistencia para reportar a Carnot, proveedores al minuto y el cierre para facturar, en una sola pantalla.</p>
  <form id="f"><label for="c">Código de staff</label><input id="c" inputmode="numeric" autocomplete="off"><label for="w">Tu nombre</label><input id="w" value="${esc(WHO||'Vero')}"><div class="err">${esc(msg)}</div><button class="btn full">Entrar</button></form></div>`;
- $('#f').onsubmit=async e=>{e.preventDefault();CODE=$('#c').value.trim();WHO=$('#w').value.trim()||'Vero';try{const r=await api('vero',{});if(!r.success){CODE='';msg='Ese código no es correcto.';login();return}st.set('pulso.staff.code',CODE);st.set('pulso.staff.who',WHO);msg='';D=r;render()}catch(x){CODE='';msg='Sin conexión. Intenta de nuevo.';login()}}}
+ $('#f').onsubmit=async e=>{e.preventDefault();CODE=$('#c').value.trim();WHO=$('#w').value.trim()||'Vero';try{const r=await api('vero',{});if(!r.success){if(/desconocida/i.test(r.message||'')){msg='La consola se activa en cuanto Roberto actualice el servidor (versión 6). Intenta en un rato.';CODE='';login();return}CODE='';msg='Ese código no es correcto.';login();return}st.set('pulso.staff.code',CODE);st.set('pulso.staff.who',WHO);msg='';D=r;render()}catch(x){CODE='';msg='Sin conexión. Intenta de nuevo.';login()}}}
 function textoCliente(){const c=D.counts;return `PULSO by Lacteol · ${new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',hour12:false})} h\nLlegaron ${c.llegaron} médicos de ${c.esperados} esperados (${c.confirmados} confirmados con Carnot).\n${c.enSitio} se registraron en la entrada.`}
 function render(){if(!D)return;const c=D.counts,pct=c.esperados?Math.min(100,Math.round(c.llegaron/c.esperados*100)):0,P=D.proveedores,K=D.cierre;
  const pend=P.filter(p=>p['Estado']==='Por llegar'||p['Estado']==='Retrasado');
@@ -166,7 +166,7 @@ document.addEventListener('click',e=>{
  if(e.target.id==='out'){CODE='';st.set('pulso.staff.code','');D=null;login()}});
 const tick=()=>{$('#clk').textContent=new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'America/Mexico_City'})};tick();setInterval(tick,15000);
 setInterval(refresh,30000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh()});
-if(CODE){$('#app').innerHTML='<div class="card"><p>Cargando…</p></div>';api('vero',{}).then(r=>{if(r.success){D=r;render()}else login()}).catch(()=>{msg='Sin conexión. Intenta de nuevo.';login()})}else login();
+if(CODE){$('#app').innerHTML='<div class="card"><p>Cargando…</p></div>';api('vero',{}).then(r=>{if(!r.success&&/desconocida/i.test(r.message||'')){msg='La consola se activa en cuanto Roberto actualice el servidor (versión 6). Intenta en un rato.';login();return}if(r.success){D=r;render()}else login()}).catch(()=>{msg='Sin conexión. Intenta de nuevo.';login()})}else login();
 </script>
 </body>
 </html>
