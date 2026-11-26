@@ -111,23 +111,25 @@ details.more a span{display:block;color:var(--mut);font-size:12px;font-weight:60
 </head>
 <body>
 <main>
-  <div class="top"><img src="../img/pulso-logo.png" alt="PULSO by Lacteol"><span class="clk" id="clk"></span></div>
+  <div class="top"><img src="../img/pulso-logo.png" alt="PULSO by Lacteol"><div style="display:flex;align-items:center;gap:10px"><span class="clk" id="clk"></span><button class="menu" data-tab="mas" aria-label="Más opciones"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button></div></div>
   <div id="app"></div>
 </main>
+<link rel="stylesheet" href="../equipo/consola.css">
 <script src="../equipo/montaje.js"></script>
+<script src="../equipo/vuelos.js"></script>
 <script>
 try{localStorage.setItem('pulso.equipo.to',location.pathname.includes('/vero/')?'../vero/':'../blanca/')}catch(e){}
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const st={get(k){try{return localStorage.getItem(k)||''}catch(e){return''}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
-let B=null,API='',CODE=st.get('pulso.staff.code'),WHO=st.get('pulso.staff.who')||'',D=null,TAB=st.get('pulso.vero.tab')||'cliente',msg='',busy=0;
+let B=null,API='',CODE=st.get('pulso.staff.code'),WHO=st.get('pulso.staff.who')||'',D=null,TAB=st.get('pulso.vero.tab')||'inicio',msg='',busy=0;
 const PE=['Por llegar','Llegó','Montado','Retrasado','No llegó'];
 const SS={get(k){try{return JSON.parse(sessionStorage.getItem(k)||'null')}catch(e){return null}},set(k,v){try{sessionStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
 /* Para que cambiar entre Blanca y Vero sea inmediato: se muestra lo último que se tenía y se actualiza en segundo plano.
    Se guarda solo en esta pestaña del navegador (se borra al cerrarla). */
 function guarda(r){SS.set('pulso.vero',r)}
 /* Logística de Blanca, solo para consulta: foráneos, retrasos, asistencia y hotel (lo que mueve costos y factura). */
-function traeB(){api('blanca',{}).then(r=>{if(r&&r.success){B=r;SS.set('pulso.blanca',r);if(TAB==='log')render()}}).catch(()=>{})}
+function traeB(){api('blanca',{}).then(r=>{if(r&&r.success){B=r;SS.set('pulso.blanca',r);if((TAB==='foraneos'||TAB==='inicio')&&!(document.activeElement&&/INPUT|TEXTAREA/.test(document.activeElement.tagName)))render()}}).catch(()=>{})}
 const toMin=t=>{const m=String(t||'').match(/(\d{1,2}):(\d{2})/);return m?+m[1]*60+ +m[2]:0};
 const fmt=m=>{m=((m%1440)+1440)%1440;return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0')};
 const ESTV={prog:['Programado',''],air:['En vuelo','c-air'],delay:['Retrasado','c-delay'],land:['Aterrizó','c-land'],pick:['Con el chofer','c-pick'],done:['Ya llegó','c-done'],cancel:['Cancelado','c-cancel']};
@@ -151,20 +153,40 @@ async function api(action,body){if(!API){const c=await fetch('../config.json',{c
  const r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action,idToken:'codigo:'+CODE,who:WHO,...body}),redirect:'follow'});return r.json()}
 function login(){const m=msg;msg='';$('#app').innerHTML=`<div class="card"><p>${esc(m||'Entra con tu clave.')}</p><a class="btn full" href="../equipo/">Ir a la entrada del equipo</a></div>`;if(!m)location.replace('../equipo/')}
 function textoCliente(){const c=D.counts;return `PULSO by Lacteol · ${new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',hour12:false})} h\nLlegaron ${c.llegaron} médicos de ${c.esperados} esperados (${c.confirmados} confirmados con Carnot).\n${c.enSitio} se registraron en la entrada.`}
-function render(){if(!D)return;const c=D.counts,pct=c.esperados?Math.min(100,Math.round(c.llegaron/c.esperados*100)):0,P=D.proveedores,K=D.cierre;
- const pend=P.filter(p=>p['Estado']==='Por llegar'||p['Estado']==='Retrasado');
- $('#app').innerHTML=`<div class="card"><div class="big"><span class="n">${c.llegaron}</span><span class="of">de ${c.esperados} esperados · ${pct}%</span></div><div class="meter"><i style="width:${pct}%"></i></div>
- <div class="mini"><div><b>${c.confirmados}</b><span>confirmados con Carnot</span></div><div><b>${c.enSitio}</b><span>registrados en la entrada</span></div><div><b>${pend.length}</b><span>proveedores por llegar</span></div><div><b>${c.extras}</b><span>extras de alimentos</span></div></div>
+const ICON={inicio:'<svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>',
+ foraneos:'<svg viewBox="0 0 24 24"><path d="M2 16l20-6-20-6 4 6-4 6zM6 10h8"/></svg>',
+ montaje:'<svg viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.5"/></svg>',
+ prov:'<svg viewBox="0 0 24 24"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7"/><circle cx="7" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/></svg>',
+ cierre:'<svg viewBox="0 0 24 24"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4M10 12h5M10 16h5"/></svg>'};
+let VSEG=st.get('pulso.vero.vseg')||'avion';
+function resumen(){const c=D.counts,pct=c.esperados?Math.min(100,Math.round(c.llegaron/c.esperados*100)):0,P=D.proveedores,pend=P.filter(p=>p['Estado']==='Por llegar'||p['Estado']==='Retrasado');
+ const T=B?(B.traslados||[]).filter(p=>!(p.s==='cancel'&&!p.flight)):[],ok=T.filter(p=>p.arrived||p.s==='done').length,al=T.filter(p=>p.s==='cancel'||(p.s==='delay'&&p.d>=20)),M=D.montaje||[],mok=M.filter(x=>x.ok).length;
+ return `<div class="card"><div class="big"><span class="n">${c.llegaron}</span><span class="of">de ${c.esperados} esperados · ${pct}%</span></div><div class="meter"><i style="width:${pct}%"></i></div>
+ <div class="mini"><div><b>${c.confirmados}</b><span>confirmados con Carnot</span></div><div><b>${c.enSitio}</b><span>registrados en la entrada</span></div><div><b>${c.extras}</b><span>extras de alimentos</span></div><div><b>${c.constancias||0}</b><span>constancias enviadas</span></div></div>
  <div class="acts"><a class="btn wa sm" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(textoCliente())}">Mandar el número a Carnot</a></div></div>
- <div class="tabs">${[['cliente','Carnot por representante'],['montaje','Montaje'+(D.montaje?' ('+D.montaje.filter(x=>x.ok).length+'/'+D.montaje.length+')':'')],['log','Foráneos y hotel'],['prov','Proveedores ('+P.length+')'],['cierre','Cierre para facturar']].map(t=>`<button data-tab="${t[0]}" class="${TAB===t[0]?'on':''}">${t[1]}</button>`).join('')}</div>
- <div class="${TAB==='cliente'?'':'hide'}"><div class="card">${D.byRep.length?D.byRep.map(r=>{const p=r.confirmados?Math.round(r.asistieron/r.confirmados*100):0;return `<div class="rep"><b>${esc(r.rep)}</b><span class="meta">${r.asistieron} de ${r.confirmados}</span><div class="bar"><i style="width:${p}%"></i></div></div>`}).join(''):'<p>Aún no hay datos por representante.</p>'}</div>${MONTAJE.vivo(D.enLinea,D.actividad)}</div>
- <div class="${TAB==='montaje'?'':'hide'}">${TAB==='montaje'?MONTAJE.html(D.montaje):''}</div>
- <div class="${TAB==='log'?'':'hide'}">${TAB==='log'?logistica():''}</div>
- <div class="${TAB==='prov'?'':'hide'}">${P.map(p=>`<div class="p ${p['Estado']==='Retrasado'?'alert':''}"><div class="row"><div><div class="nm">${esc(p['Proveedor'])}</div><div class="meta">${esc(p['Qué entrega'])}${p['Hora']?' · '+esc(p['Hora'])+' h':''}</div></div><span class="chip ${p['Estado']==='Llegó'||p['Estado']==='Montado'?'c-land':p['Estado']==='Retrasado'?'c-delay':p['Estado']==='No llegó'?'c-cancel':''}">${esc(p['Estado']||'Por llegar')}</span></div>
-  <div class="states" style="margin-top:10px">${PE.map(e=>`<button data-row="${p._row}" data-e="${e}" class="${(p['Estado']||'Por llegar')===e?'on':''}">${e}</button>`).join('')}</div>
-  ${p['Hora real']?`<div class="by">${esc(p['Hora real'])}</div>`:''}${p['Nota']?`<div class="by">${esc(p['Nota'])}</div>`:''}${p['Contacto']?`<div class="acts"><a class="btn ghost sm" href="tel:${esc(p['Contacto'].replace(/[^\d+]/g,''))}">Llamar</a></div>`:''}</div>`).join('')}
-  <div class="card"><h2>Agregar proveedor</h2><div class="f"><input id="ph" placeholder="Hora (ej. 09:00)"><input id="pn" placeholder="Proveedor"><input id="pq" placeholder="Qué entrega"><input id="pc" placeholder="Teléfono de contacto"></div><button class="btn full" id="padd">Agregar</button></div></div>
- <div class="${TAB==='cierre'?'':'hide'}"><div class="card"><h2>Lo que necesitas para facturar</h2>
+ <div class="mini" style="margin-bottom:12px">
+  <div data-tab="foraneos" style="cursor:pointer"><b>${B?ok+' de '+T.length:'…'}</b><span>foráneos ya llegaron${al.length?` · <b style="display:inline;font-size:inherit;color:var(--warn)">${al.length} con retraso</b>`:''}</span></div>
+  <div data-tab="montaje" style="cursor:pointer"><b>${mok} de ${M.length}</b><span>zonas de montaje listas</span></div>
+  <div data-tab="prov" style="cursor:pointer"><b style="${pend.length?'color:var(--warn)':''}">${pend.length}</b><span>proveedores por llegar</span></div>
+  <div data-tab="cierre" style="cursor:pointer"><b>${D.cierre.listo?'✓':'—'}</b><span>${D.cierre.listo?'listo para facturar':'cierre pendiente'}</span></div></div>
+ <div class="sec">Carnot por representante</div><div class="card">${D.byRep.length?D.byRep.map(r=>{const p=r.confirmados?Math.round(r.asistieron/r.confirmados*100):0;return `<div class="rep"><b>${esc(r.rep)}</b><span class="meta">${r.asistieron} de ${r.confirmados}</span><div class="bar"><i style="width:${p}%"></i></div></div>`}).join(''):'<p>Aún no hay datos por representante.</p>'}</div>`}
+function foraneos(){if(!B)return '<div class="card"><p>Cargando vuelos y traslados…</p></div>';
+ const na=(B.traslados||[]).filter(p=>p.flight).length,nt=(B.traslados||[]).filter(p=>!p.flight&&p.s!=='cancel').length,R=B.rooming||[];
+ return `<div class="tabs" style="margin:2px 0 12px">${[['avion','✈ Avión ('+na+')'],['tierra','🚗 Tierra ('+nt+')'],['hotel','🏨 Hotel ('+R.filter(r=>r['Llegó al hotel']).length+'/'+R.length+')']].map(t=>`<button data-vseg="${t[0]}" class="${VSEG===t[0]?'on':''}">${t[1]}</button>`).join('')}</div>`+
+ (VSEG==='avion'?VUELOS.avion(B):VSEG==='tierra'?VUELOS.tierra(B):hotelV())+`<p class="note">Solo para consultar. Blanca lleva vuelos, traslados y hotel; lo que ella marca aquí se ve al momento.</p>`}
+function hotelV(){const R=B.rooming||[],early=R.filter(r=>r['Early check-in']&&!/^(no|—|-)$/i.test(String(r['Early check-in']).trim())).length,late=R.filter(r=>/late/i.test(String(r['Nota']||''))).length;
+ return `<div class="card"><div class="mini"><div><b>${R.filter(r=>r['Llegó al hotel']).length} de ${R.length}</b><span>ya llegaron al hotel</span></div><div><b>${early} · ${late}</b><span>early check-in · late checkout (se facturan)</span></div></div>
+ ${R.map(r=>`<div class="li"><div><div class="nm">${esc(r['Huésped'])}</div><div class="meta">${esc([r['Origen'],r['Habitación'],r['Early check-in']?'Early check-in: '+r['Early check-in']:''].filter(Boolean).join(' · '))}</div>${r['Nota']?`<div class="meta" style="color:var(--warn)">${esc(r['Nota'])}</div>`:''}</div>${r['Llegó al hotel']?`<span class="chip c-done">✓ ${esc(r['Llegó al hotel'])}</span>`:'<span class="chip">Por llegar</span>'}</div>`).join('')||'<p>No hay rooming capturado.</p>'}</div>`}
+function proveedores(){const P=D.proveedores,o={'Retrasado':0,'Por llegar':1,'Llegó':2,'Montado':3,'No llegó':4};
+ return P.slice().sort((a,b)=>(o[a['Estado']||'Por llegar']??1)-(o[b['Estado']||'Por llegar']??1)||String(a['Hora']).localeCompare(String(b['Hora']))).map(p=>{const e=p['Estado']||'Por llegar',pend=e==='Por llegar'||e==='Retrasado';
+  return `<div class="p ${e==='Retrasado'?'alert':''}"><div class="row"><div><div class="nm">${esc(p['Proveedor'])}</div><div class="meta">${esc(p['Qué entrega'])}${p['Hora']?' · esperado '+esc(p['Hora'])+' h':''}</div></div><span class="chip ${e==='Llegó'||e==='Montado'?'c-land':e==='Retrasado'?'c-delay':e==='No llegó'?'c-cancel':''}">${esc(e)}</span></div>
+  ${p['Hora real']?`<div class="by">${esc(e)} · ${esc(p['Hora real'])}</div>`:''}
+  <div class="acts">${pend?`<button class="btn sm" style="background:var(--ok);color:#03210f" data-row="${p._row}" data-e="Llegó">✓ Ya llegó</button>`:e==='Llegó'?`<button class="btn sm" style="background:var(--ok);color:#03210f" data-row="${p._row}" data-e="Montado">✓ Ya montó</button>`:''}
+   ${p['Contacto']?`<a class="btn ghost sm" href="tel:${esc(p['Contacto'].replace(/[^\d+]/g,''))}">Llamar</a>`:''}</div>
+  <details class="st" style="margin-top:8px"><summary style="font-size:12.5px;color:var(--mut);font-weight:800;cursor:pointer">Otro estado</summary><div class="states" style="margin-top:8px">${PE.map(x=>`<button data-row="${p._row}" data-e="${x}" class="${e===x?'on':''}">${x}</button>`).join('')}</div></details>
+  ${p['Nota']?`<div class="by">${esc(p['Nota'])}</div>`:''}</div>`}).join('')+
+ `<div class="card"><h2>Agregar proveedor</h2><div class="f"><input id="ph" placeholder="Hora esperada (ej. 09:00)"><input id="pn" placeholder="Proveedor"><input id="pq" placeholder="Qué entrega"><input id="pc" placeholder="Teléfono de contacto"></div><button class="btn full" id="padd">Agregar</button></div>`}
+function cierre(){const c=D.counts,K=D.cierre;return `<div class="card"><h2>Lo que necesitas para facturar</h2>
   <div class="chk"><span class="${K.fotos?'ok':'no'}">${K.fotos?'✓':'○'}</span>Fotos del evento: ${K.fotos}${K.fotosUrl?`<a class="btn ghost sm" target="_blank" rel="noopener" href="${esc(K.fotosUrl)}">Abrir</a>`:''}</div>
   <div class="chk"><span class="ok">✓</span>Lista de asistencia: ${c.llegaron} médicos<a class="btn ghost sm" target="_blank" rel="noopener" href="${esc(K.hoja)}">Abrir hoja</a></div>
   <div class="chk"><span class="${c.extras?'ok':'no'}">${c.extras?'✓':'○'}</span>Extras de alimentos: ${c.extras} (los cuenta Blanca)</div>
@@ -174,19 +196,25 @@ function render(){if(!D)return;const c=D.counts,pct=c.esperados?Math.min(100,Mat
   <div class="f" style="margin-top:10px"><input id="coc" placeholder="Número de orden de compra" value="${esc(K.oc)}"><input id="cmo" placeholder="Monto a facturar (MXN, sin IVA)" value="${esc(K.monto)}"><textarea id="cno" rows="3" placeholder="Notas para la factura">${esc(K.nota)}</textarea></div>
   <button class="btn full ghost" id="csave">Guardar</button>
   <button class="btn full ${K.listo?'listo':''}" id="clisto">${K.listo?'Listo para facturar · '+esc(K.listo):'Marcar: listo para facturar'}</button>
-  <p class="note">Solo tú decides cuándo el cierre está completo. Si lo marcas por error, tócalo otra vez para quitarlo.</p></div></div>
- <div class="sync">Se actualiza cada 30 s<br><button class="lnk" id="out">Salir</button></div>
- <div class="card" style="margin-top:14px"><h2>Cambiar de vista</h2><p>Para ver lo que ve Blanca: foráneos, vuelos, asistencia y hotel.</p><a class="btn full" href="../blanca/">Ir a la vista de Blanca</a></div>
- <details class="more"><summary>Más pantallas del equipo (para cubrir a Roberto)</summary>
+  <p class="note">Solo tú decides cuándo el cierre está completo. Si lo marcas por error, tócalo otra vez para quitarlo.</p></div>`}
+function mas(){return MONTAJE.vivo(D.enLinea,D.actividad)+`<div class="card"><h2>Cambiar de vista</h2><p>Para ver lo que ve Blanca: foráneos, vuelos, asistencia y hotel.</p><a class="btn full" href="../blanca/">Ir a la vista de Blanca</a></div>
+ <details class="more" open><summary>Más pantallas del equipo (para cubrir a Roberto)</summary>
  <a href="../acceso/">Acceso · escáner de la entrada<span>Registrar llegadas y registrar en sitio</span></a>
  <a href="../reto/#productor">Productor del Reto y de la Sala<span>Pide el PIN de producción</span></a>
  <a href="../fotos/">Subir fotos al reporte<span>Con el momento o el ponente</span></a>
- <a href="https://polar-multimedia.github.io/trineo/carnot-pulso-reporte-2026/?c=prueba&nt=1">Reporte final (vista de prueba)<span>Así lo recibe la cadena de Carnot</span></a></details>`}
+ <a href="https://polar-multimedia.github.io/trineo/carnot-pulso-reporte-2026/?c=prueba&nt=1">Reporte final (vista de prueba)<span>Así lo recibe la cadena de Carnot</span></a></details>
+ <div class="sync">Se actualiza cada 30 s<br><button class="lnk" id="out">Salir</button></div>`}
+function render(){if(!D)return;if(!['inicio','foraneos','montaje','prov','cierre','mas'].includes(TAB))TAB='inicio';
+ const M=D.montaje,sec=t=>`<div class="sec">${t}</div>`;
+ const body=TAB==='inicio'?resumen():TAB==='foraneos'?sec('Foráneos')+foraneos():TAB==='montaje'?sec('Montaje · fotos de testigo')+MONTAJE.html(M):TAB==='prov'?sec('Proveedores ('+D.proveedores.length+')')+proveedores():TAB==='cierre'?sec('Cierre para facturar')+cierre():mas();
+ const al=B&&VUELOS.alertas(B),pp=D.proveedores.some(p=>p['Estado']==='Retrasado');
+ $('#app').innerHTML=body+`<nav class="bn">${[['inicio','Resumen'],['foraneos','Foráneos'],['montaje','Montaje'],['prov','Proveedores'],['cierre','Cierre']].map(t=>t[0]==='montaje'?`<button data-tab="montaje" class="ag ${TAB==='montaje'?'on':''}"><span class="ring">${ICON.montaje}</span>${t[1]}</button>`:`<button data-tab="${t[0]}" class="${TAB===t[0]?'on':''}">${(t[0]==='foraneos'&&al)||(t[0]==='prov'&&pp)?'<span class="dot"></span>':''}${ICON[t[0]]}${t[1]}</button>`).join('')}</nav>`}
 async function save(body){busy++;try{const r=await api('veroSet',body);if(!r.success)alert(r.message||'No se guardó');}catch(e){alert('No se guardó: revisa tu conexión.')}busy--;refresh(true)}
-async function refresh(force){if(!CODE||(busy&&!force))return;try{const r=await api('vero',{});if(r.success){D=r;guarda(r);if(TAB==='log')traeB();if(force||!document.activeElement||!/INPUT|TEXTAREA/.test(document.activeElement.tagName))render()}else if(r.expired){CODE='';login()}}catch(e){}}
+async function refresh(force){if(!CODE||(busy&&!force))return;try{const r=await api('vero',{});if(r.success){D=r;guarda(r);traeB();if(force||!document.activeElement||!/INPUT|TEXTAREA/.test(document.activeElement.tagName))render()}else if(r.expired){CODE='';login()}}catch(e){}}
 MONTAJE.bind(()=>D&&D.montaje,m=>{D.montaje=m;guarda(D)},()=>render());
 document.addEventListener('click',e=>{
- const t=e.target.closest('[data-tab]');if(t){TAB=t.dataset.tab;st.set('pulso.vero.tab',TAB);render();if(TAB==='log')traeB();return}
+ const v=e.target.closest('[data-vseg]');if(v){VSEG=v.dataset.vseg;st.set('pulso.vero.vseg',VSEG);render();return}
+ const t=e.target.closest('[data-tab]');if(t){TAB=t.dataset.tab;st.set('pulso.vero.tab',TAB);render();window.scrollTo(0,0);if(TAB==='foraneos'||TAB==='inicio')traeB();return}
  const pb=e.target.closest('[data-row]');if(pb){const p=D.proveedores.find(x=>x._row==pb.dataset.row);if(p){p['Estado']=pb.dataset.e;render()}save({type:'prov',row:+pb.dataset.row,estado:pb.dataset.e});return}
  if(e.target.id==='padd'){const n=$('#pn').value.trim();if(!n)return alert('Escribe el nombre del proveedor');save({type:'provAdd',hora:$('#ph').value,nombre:n,que:$('#pq').value,contacto:$('#pc').value});return}
  if(e.target.id==='csave'){save({type:'cierre',oc:$('#coc').value,monto:$('#cmo').value,nota:$('#cno').value});return}
