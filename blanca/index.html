@@ -134,13 +134,12 @@ function login(){$('#app').innerHTML=`<div class="card"><h1>Consola de Blanca</h
  <form id="f"><label for="c">Código de staff</label><input id="c" inputmode="numeric" autocomplete="off"><label for="w">Tu nombre</label><input id="w" value="${esc(WHO||'Blanca')}"><div class="err">${esc(msg)}</div><button class="btn full">Entrar</button></form></div>`;
  $('#f').onsubmit=async e=>{e.preventDefault();CODE=$('#c').value.trim();WHO=$('#w').value.trim()||'Blanca';try{const r=await api('blanca',{});if(!r.success){if(/desconocida/i.test(r.message||'')){msg='La consola se activa en cuanto Roberto actualice el servidor (versión 6). Intenta en un rato.';CODE='';login();return}CODE='';msg='Ese código no es correcto.';login();return}st.set('pulso.staff.code',CODE);st.set('pulso.staff.who',WHO);msg='';D=r;lastOk=Date.now();render()}catch(x){CODE='';msg='Sin conexión. Intenta de nuevo.';login()}}}
 
-function hello(){if(st.get('pulso.blanca.hello'))return'';return `<div class="card hello"><h2>Hola, ${esc(WHO)}. Así funciona tu consola</h2><ol>
- <li><b>Arriba</b> ves cuántos médicos han llegado contra los que esperamos, y el contador de extras de alimentos.</li>
- <li><b>«Ahora toca»</b> te dice lo siguiente que hay que hacer y por qué, una cosa a la vez.</li>
- <li><b>Traslados:</b> cuando cambies el estado de un vuelo (en vuelo, retrasado, aterrizó…), lo ven todos. Los botones verdes abren WhatsApp con el mensaje ya escrito; tú solo lo revisas y lo mandas.</li>
- <li><b>Sin registro:</b> los que confirmaron con Carnot pero no tienen boleto, con su teléfono para llamarles.</li></ol>
- <p>Los mensajes a los doctores van firmados como «el asistente de Blanca», nunca como tú.</p><button class="btn sm" data-hello>Entendido</button></div>`}
-
+function hello(){return `<details class="more"><summary>¿Cómo funciona esta consola?</summary><div class="note" style="margin-top:8px">
+ <b>Arriba</b>: cuántos han llegado contra los esperados y los extras de alimentos.<br>
+ <b>Ahora toca</b>: lo siguiente que hay que hacer y por qué.<br>
+ <b>Traslados</b>: el estado de cada vuelo lo ven todos al instante. Los botones verdes abren WhatsApp con el mensaje ya escrito.<br>
+ <b>Sin registro</b>: confirmaron con Carnot pero no tienen boleto; ahí está su teléfono.<br>
+ Los mensajes a los doctores van firmados como «el asistente de Blanca».</div></details>`}
 function nextUp(){if(!D)return[];const T=D.traslados,now=nowMin(),out=[];
  T.filter(p=>p.s==='cancel').forEach(p=>out.push({t:`Se canceló el vuelo de ${p.trato} ${p.name}`,why:`Hay que buscarle otro vuelo; mientras, ${D.driver.name} no debe ir por ${a(p,'ella','él')}.`,acts:[['wa',wa(D.driver.phone,driverMsg(p)),'Avisar a '+D.driver.name]]}));
  T.filter(p=>p.s==='delay'&&p.d>=20).forEach(p=>out.push({t:`${p.trato} ${p.name} viene con ${p.d} min de retraso`,why:`Avísale a ${D.driver.name} para que no entre antes al estacionamiento del aeropuerto (no dejan esperar mucho). Nueva recogida: ${fmt(pickup(p))}.${p.d>=60?' Pasa de una hora: revisa si conviene separar su bloque.':''}`,acts:[['wa',wa(D.driver.phone,driverMsg(p)),'Avisar a '+D.driver.name],['wa',wa(p.phone,welcome(p)),'Avisarle a '+a(p,'ella','él')]]}));
@@ -152,7 +151,7 @@ function nextUp(){if(!D)return[];const T=D.traslados,now=nowMin(),out=[];
  return out.slice(0,4)}
 
 function render(){if(!D)return;const c=D.counts,pct=c.esperados?Math.min(100,Math.round(c.llegaron/c.esperados*100)):0;const up=nextUp();
- $('#app').innerHTML=hello()+`<div class="card"><div class="big"><span class="n">${c.llegaron}</span><span class="of">de ${c.esperados} esperados ya llegaron</span></div>
+ $('#app').innerHTML=`<div class="card"><div class="big"><span class="n">${c.llegaron}</span><span class="of">de ${c.esperados} esperados ya llegaron</span></div>
  <div class="meter"><i style="width:${pct}%"></i></div>
  <div class="mini"><div><b>${c.registrados}</b><span>con boleto</span></div><div><b>${D.sinRegistro.length}</b><span>confirmaron con Carnot, sin boleto</span></div><div><b>${c.enSitio}</b><span>se registraron en la entrada</span></div><div><b>${D.fueraDeLista.length}</b><span>llegaron sin estar en la lista de Carnot</span></div></div>
  <div class="extras"><div><b>${c.extras}</b><br><span class="meta">extras de alimentos</span></div><div class="pm"><button data-x="-1" aria-label="Restar uno">−</button><button data-x="1" aria-label="Sumar uno">+</button></div></div>
@@ -166,7 +165,7 @@ function render(){if(!D)return;const c=D.counts,pct=c.esperados?Math.min(100,Mat
  <div id="t-sin" class="${TAB==='sin'?'':'hide'}">${lista(D.sinRegistro,'Confirmaron con Carnot pero no tienen boleto. Si llegan, en la entrada los registran en un minuto.',true)}</div>
  <div id="t-foraneos" class="${TAB==='foraneos'?'':'hide'}">${lista(D.foraneos,'Médicos que viajan desde otra ciudad.',true)}</div>
  <div id="t-fuera" class="${TAB==='fuera'?'':'hide'}">${D.fueraDeLista.length?`<div class="card">${D.fueraDeLista.map(x=>`<div class="li"><div><div class="nm">${esc(x.name)}</div><div class="meta">${esc(x.origin||'')}</div></div></div>`).join('')}</div>`:'<div class="card"><p>Todavía nadie ha llegado sin estar en la lista de Carnot.</p></div>'}</div>
- <div class="sync">${D.rastreo?'Los vuelos se revisan solos cada 15 minutos cerca de su llegada'+(D.lastTrack?' · última revisión '+new Date(D.lastTrack).toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',hour12:false}):''):'Los estados de los vuelos los marca el equipo a mano y los ven todos'} · se actualiza cada 20 s<br><button class="lnk" id="out">Salir</button></div><details class="more"><summary>Más pantallas del equipo (para cubrir a Roberto)</summary>
+ ${hello()}<div class="sync">${D.rastreo?'Los vuelos se revisan solos cada 15 minutos cerca de su llegada'+(D.lastTrack?' · última revisión '+new Date(D.lastTrack).toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',hour12:false}):''):'Los estados de los vuelos los marca el equipo a mano y los ven todos'} · se actualiza cada 20 s<br><button class="lnk" id="out">Salir</button></div><details class="more"><summary>Más pantallas del equipo (para cubrir a Roberto)</summary>
  <a href="../acceso/">Acceso · escáner de la entrada<span>Registrar llegadas y registrar en sitio</span></a>
  <a href="../reto/#productor">Productor del Reto y de la Sala<span>Pide el PIN de producción</span></a>
  <a href="../fotos/">Subir fotos al reporte<span>Con el momento o el ponente</span></a>
