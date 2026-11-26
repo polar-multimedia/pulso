@@ -456,7 +456,7 @@ function ckOp(op){const p=curP();if(op==="reset"&&p)CK={id:p,left:DECKS[p].dur*6
 function curItem(){const e=ESC[S.es];return e&&S.src>=0?e.it[S.src]:null}
 function curP(){const it=curItem();return it&&it.p?it.p:null}
 const isReto=()=>!!ESC[S.es].r;
-function snapshot(){return {ep:S.ep||0,es:S.es,src:S.src,sl:S.sl,clk:CK?{id:CK.id,left:Math.round(ckLeft()),run:CK.run}:null,i:S.i,t:S.t,run:S.run,paused:S.paused,closed:S.closed,board:S.board,joined:S.joined,players:S.players,ans:S.ans,played:S.played,cue:S.cue}}
+function snapshot(){return {ep:S.ep||0,es:S.es,src:S.src,sl:S.sl,clk:CK?{id:CK.id,left:Math.round(ckLeft()),run:CK.run}:null,i:S.i,t:S.t,run:S.run,paused:S.paused,closed:S.closed,board:S.board,joined:S.joined,players:S.players,ans:S.ans,played:S.played,cue:S.cue,mus:S.mus||null}}
 function share(){if(!MASTER)return;if(bc)try{bc.postMessage({type:"state",s:snapshot()})}catch(e){}netShare();save()}
 let lastTap={};function act(a){if(NET&&MODE==="productor"&&(a.t==="next"||a.t==="back")){const n=Date.now();if(lastTap[a.t]&&n-lastTap[a.t]<450)return;lastTap[a.t]=n}
  a.uid=ME+"_"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);if(MODE==="productor")a.pin=PIN;else if(MODE==="ponente"){a.k=PKEY;a.deck=PID}if(MASTER)apply(a);else{if(bc)bc.postMessage({type:"act",a});netAct(a)}}
@@ -524,6 +524,9 @@ function applyCore(a){
  if(a.uid){if(seen.has(a.uid))return;seen.add(a.uid);if(seen.size>400)seen.delete(seen.values().next().value)}
  if(NET&&["next","back","board","pause","goto","scene","src","ck","reset"].includes(a.t)&&a.pin!==CTL_PIN&&!MASTER_LOCAL(a))return;
  if(a.t==="slide"&&NET&&!(a.pin===CTL_PIN||MASTER_LOCAL(a)||(PONK[a.deck]&&PONK[a.deck]===a.k)))return;
+ if(a.t==="mus"){if(NET&&a.pin!==CTL_PIN&&!MASTER_LOCAL(a)&&!MASTER)return;const m=Object.assign({on:false,i:0,v:.8,k:0},S.mus||{});
+  if(a.op==="play")m.on=true;else if(a.op==="pause")m.on=false;else if(a.op==="next"){m.i++;m.k++;if(a.from!=null&&a.from!==m.i-1){m.i--;m.k--}}else if(a.op==="goto"){m.i=+a.i||0;m.k++;m.on=true}else if(a.op==="vol")m.v=Math.max(0,Math.min(1,+a.v||0));
+  S.mus=m;share();renderAll();return}
  if(a.t==="reset"){resetAll();return}
  if(a.t==="goto")goTo(a.i);else if(a.t==="next")next();else if(a.t==="back")back();
  else if(a.t==="scene")gotoScene(a.i);
@@ -924,50 +927,61 @@ function boot(){
 }
 boot();
 
-/* ===== Música del evento (solo en el control del productor) =====
-   Se eligen los archivos desde esta computadora (por ejemplo la carpeta 22_Musica_ambiente de Google Drive en el escritorio).
-   Suena en un loop: «Pulso» abre y vuelve cada dos piezas. Cambio con fundido de 3 s. Nada sale de esta computadora. */
-if(MODE==="productor")(function(){
- const nn=x=>String(x||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/\.[a-z0-9]+$/,"").trim();
- const PREF=["pulso by lacteol","sera la melodia, doctor","pulso, vamos a escuchar","lo pequeno tambien cuenta","nada subliminal"];
- let files=[],order=[],i=0,vol=.8,open=false;const A=new Audio();A.preload="auto";
- function build(){const P=files.find(f=>nn(f.name)==="pulso"),R=files.filter(f=>f!==P).sort((a,b)=>{const x=PREF.indexOf(nn(a.name)),y=PREF.indexOf(nn(b.name));return (x<0?99:x)-(y<0?99:y)||a.name.localeCompare(b.name,"es")});
-  order=[];if(P)order.push(P);R.forEach((f,k)=>{order.push(f);if(P&&k%2===1&&k<R.length-1)order.push(P)});if(!order.length)order=files.slice();i=0}
- function fade(to,ms,cb){const from=A.volume,t0=performance.now();(function f(t){const k=Math.min(1,(t-t0)/ms);A.volume=Math.max(0,Math.min(1,from+(to-from)*k));if(k<1)requestAnimationFrame(f);else cb&&cb()})(t0)}
- function load(k,play){if(!order.length)return;i=(k+order.length)%order.length;if(A._u)URL.revokeObjectURL(A._u);A._u=URL.createObjectURL(order[i]);A.src=A._u;A.volume=0;if(play)A.play().then(()=>fade(vol,1500)).catch(()=>{});draw()}
- function next(){if(!order.length)return;if(A.paused)return load(i+1,false);fade(0,3000,()=>load(i+1,true))}
- A.addEventListener("ended",()=>load(i+1,true));
- A.addEventListener("timeupdate",()=>{if(A.duration&&A.duration-A.currentTime<3&&!A._f&&!A.paused){A._f=1;fade(0,2800)}});
- A.addEventListener("loadeddata",()=>{A._f=0});
- const box=document.createElement("div");box.id="mus";document.body.appendChild(box);
- const st=document.createElement("style");st.textContent=`#mus{position:fixed;right:12px;bottom:12px;z-index:9999;font:700 13px Manrope,system-ui,sans-serif;color:#EAF1FF}
- #mus .pill{display:flex;align-items:center;gap:8px;background:linear-gradient(135deg,rgba(18,92,110,.96),rgba(8,46,78,.97));border:1px solid rgba(73,230,255,.5);border-radius:999px;padding:6px 8px 6px 12px;box-shadow:0 8px 24px rgba(0,0,0,.45)}
+/* ===== Música del evento =====
+   Las piezas viven en línea (reto/musica/). El estado (sonando, pieza, volumen) viaja con la señal como todo lo demás,
+   así que se controla desde el productor en cualquier aparato. Suena SOLO en la computadora donde se activa «Sonar aquí»
+   (la conectada al audio de la sala). «Pulso» abre y vuelve cada dos piezas; cambios con fundido. */
+(function(){
+ const LISTA=[["Pulso","pulso.mp3"],["Pulso by Lacteol","pulso-by-lacteol.mp3"],["Será la Melodía, Doctor","sera-la-melodia-doctor.mp3"],["Pulso, vamos a escuchar","pulso-vamos-a-escuchar.mp3"],["Lo pequeño también cuenta","lo-pequeno-tambien-cuenta.mp3"],["Nada Subliminal","nada-subliminal.mp3"]];
+ const BASE=new URL("musica/",location.href).href;let ORDER=[],ready=false,open=false,box=null,sig="";
+ if(QS.get("sonar")==="1")try{localStorage.setItem("pulso.sonarAqui","1")}catch(e){}
+ const aqui=()=>{try{return localStorage.getItem("pulso.sonarAqui")==="1"}catch(e){return false}};
+ Promise.all(LISTA.map(x=>fetch(BASE+x[1],{method:"HEAD",cache:"no-store"}).then(r=>r.ok?x:null).catch(()=>null))).then(L=>{const ok=L.filter(Boolean),P=ok.find(x=>x[1]==="pulso.mp3"),R=ok.filter(x=>x!==P);
+  ORDER=[];if(P)ORDER.push(P);R.forEach((x,k)=>{ORDER.push(x);if(P&&k%2===1&&k<R.length-1)ORDER.push(P)});ready=true;draw();sync()});
+ const M=()=>Object.assign({on:false,i:0,v:.8,k:0},S.mus||{}),cur=()=>ORDER.length?ORDER[((M().i%ORDER.length)+ORDER.length)%ORDER.length]:null;
+ /* motor de audio (solo «Sonar aquí») */
+ const A=new Audio();A.preload="auto";let curK=-1,curI=-1,fadeT=null;
+ function fade(to,ms,cb){cancelAnimationFrame(fadeT);const from=A.volume,t0=performance.now();(function f(t){const k=Math.min(1,(t-t0)/ms);A.volume=Math.max(0,Math.min(1,from+(to-from)*k));if(k<1)fadeT=requestAnimationFrame(f);else cb&&cb()})(t0)}
+ function sync(){if(!ready||!aqui()||!ORDER.length)return;const m=M(),idx=((m.i%ORDER.length)+ORDER.length)%ORDER.length;
+  if(idx!==curI||m.k!==curK){const first=curI<0;curI=idx;curK=m.k;const go=()=>{A.src=BASE+ORDER[idx][1];A.volume=0;if(m.on)A.play().then(()=>fade(m.v,1500)).catch(()=>{})};if(first||A.paused)go();else fade(0,2500,go);return}
+  if(m.on&&A.paused){A.volume=0;A.play().then(()=>fade(m.v,1500)).catch(()=>{})}
+  else if(!m.on&&!A.paused)fade(0,1500,()=>A.pause());
+  else if(m.on&&!A.paused&&Math.abs(A.volume-m.v)>.02&&!A._fading)A.volume=m.v}
+ A.addEventListener("ended",()=>act({t:"mus",op:"next",from:M().i}));
+ A.addEventListener("timeupdate",()=>{if(A.duration&&A.duration-A.currentTime<3&&!A._out){A._out=1;fade(0,2800)}});
+ A.addEventListener("loadeddata",()=>{A._out=0});
+ setInterval(sync,700);
+ /* controles (solo en el productor) */
+ if(MODE!=="productor")return;
+ box=document.createElement("div");box.id="mus";document.body.appendChild(box);
+ const st=document.createElement("style");st.textContent=`#mus{position:fixed;right:10px;bottom:10px;z-index:9999;font:700 13px Manrope,system-ui,sans-serif;color:#EAF1FF}
+ #mus .pill{display:flex;align-items:center;gap:6px;background:linear-gradient(135deg,rgba(18,92,110,.96),rgba(8,46,78,.97));border:1px solid rgba(73,230,255,.5);border-radius:999px;padding:5px 6px 5px 12px;box-shadow:0 8px 24px rgba(0,0,0,.45)}
  #mus button{background:rgba(255,255,255,.12);border:0;color:#fff;border-radius:999px;min-width:34px;height:34px;font:800 14px Manrope,sans-serif;cursor:pointer;padding:0 10px}
  #mus button.pri{background:linear-gradient(135deg,#49E6FF,#7CF5D8);color:#04212B}
- #mus .nm{max-width:190px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
- #mus .panel{margin-bottom:8px;background:rgba(7,20,51,.97);border:1px solid rgba(255,255,255,.18);border-radius:16px;padding:12px;width:300px;box-shadow:0 8px 24px rgba(0,0,0,.45)}
- #mus .panel ol{margin:8px 0;padding-left:20px;max-height:220px;overflow:auto;font-weight:600;line-height:1.6}
+ #mus .nm{max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ #mus .panel{margin-bottom:8px;background:rgba(7,20,51,.97);border:1px solid rgba(255,255,255,.18);border-radius:16px;padding:12px;width:290px;max-width:calc(100vw - 20px);box-shadow:0 8px 24px rgba(0,0,0,.45)}
+ #mus .panel ol{margin:8px 0;padding-left:20px;max-height:210px;overflow:auto;font-weight:600;line-height:1.7}
  #mus .panel li.on{color:#49E6FF;font-weight:800}
  #mus .panel small{display:block;opacity:.75;font-weight:600;line-height:1.45}
+ #mus .aqui{display:flex;align-items:center;gap:8px;margin:8px 0;padding:8px 10px;border-radius:12px;background:rgba(255,255,255,.07);cursor:pointer}
+ #mus .aqui.on{background:rgba(61,220,151,.18);color:#3DDC97}
  #mus input[type=range]{width:100%}`;document.head.appendChild(st);
- const pick=document.createElement("input");pick.type="file";pick.accept="audio/*";pick.multiple=true;pick.hidden=true;document.body.appendChild(pick);
- pick.onchange=()=>{files=[...pick.files];if(!files.length)return;build();load(0,false);open=true;draw()};
- function draw(){const ok=PIN===CTL_PIN&&innerWidth>=700;box.style.display=ok?"":"none";if(!ok)return;const cur=order[i];
-  box.innerHTML=(open?`<div class="panel"><b>Música del evento</b><small>Elige los 6 archivos de «22_Musica_ambiente» desde esta computadora. Suenan en loop: «Pulso» abre y vuelve cada dos piezas.</small>
-   ${order.length?`<ol>${order.map((f,k)=>`<li class="${k===i?"on":""}" data-k="${k}" style="cursor:pointer">${f.name.replace(/\.[a-z0-9]+$/i,"")}</li>`).join("")}</ol>`:""}
-   <button class="pri" id="mPick" style="width:100%;margin:6px 0">${files.length?"Cambiar archivos":"Elegir música"}</button>
-   <small>Volumen</small><input type="range" id="mVol" min="0" max="1" step="0.05" value="${vol}"></div>`:"")+
-   `<div class="pill"><span>♫</span><span class="nm">${cur?cur.name.replace(/\.[a-z0-9]+$/i,""):"Música del evento"}</span>
-   ${files.length?`<button class="pri" id="mPlay">${A.paused?"▶":"❚❚"}</button><button id="mNext" title="Siguiente con fundido">⏭</button>`:`<button class="pri" id="mPick2">Elegir</button>`}
-   <button id="mOpen" title="Lista y volumen">${open?"×":"☰"}</button></div>`;
+ function draw(){if(!box)return;const ok=PIN===CTL_PIN;box.style.display=ok?"":"none";if(!ok)return;const m=M(),c=cur(),ci=ORDER.length?((m.i%ORDER.length)+ORDER.length)%ORDER.length:-1;
+  const key=[open,m.on,m.i,m.v,ready,aqui(),ORDER.length].join("|");if(key===sig)return;sig=key;
+  box.innerHTML=(open?`<div class="panel"><b>Música del evento</b><small>Loop: «Pulso» abre y vuelve cada dos piezas. Se controla desde cualquier productor; suena solo donde está activado «Sonar aquí».</small>
+   <div class="aqui ${aqui()?"on":""}" id="mAqui">${aqui()?"🔊 Esta computadora toca la música":"🔈 Sonar aquí (activa en la compu del audio)"}</div>
+   ${ORDER.length?`<ol>${ORDER.map((x,k)=>`<li class="${k===ci?"on":""}" data-k="${k}" style="cursor:pointer">${x[0]}</li>`).join("")}</ol>`:`<small>${ready?"Aún no hay piezas en línea.":"Cargando la lista…"}</small>`}
+   <small>Volumen</small><input type="range" id="mVol" min="0" max="1" step="0.05" value="${m.v}"></div>`:"")+
+   `<div class="pill"><span>♫</span><span class="nm">${c?c[0]:"Música"}</span>
+   <button class="pri" id="mPlay">${m.on?"❚❚":"▶"}</button><button id="mNext" title="Siguiente con fundido">⏭</button>
+   <button id="mOpen">${open?"×":"☰"}</button></div>`;
   const g=id=>box.querySelector("#"+id);
-  if(g("mPick"))g("mPick").onclick=()=>pick.click();if(g("mPick2"))g("mPick2").onclick=()=>pick.click();
-  if(g("mPlay"))g("mPlay").onclick=()=>{if(A.paused){A.volume=0;A.play().then(()=>fade(vol,1500));}else fade(0,1500,()=>A.pause());setTimeout(draw,1600);draw()};
-  if(g("mNext"))g("mNext").onclick=()=>next();
-  if(g("mOpen"))g("mOpen").onclick=()=>{open=!open;draw()};
-  if(g("mVol"))g("mVol").oninput=e=>{vol=+e.target.value;if(!A.paused)A.volume=vol};
-  box.querySelectorAll("[data-k]").forEach(li=>li.onclick=()=>{const k=+li.dataset.k;if(A.paused)load(k,false);else fade(0,1500,()=>load(k,true))})}
- A.addEventListener("play",draw);A.addEventListener("pause",draw);
- draw();setInterval(()=>{if((box.style.display==="none")!==(PIN!==CTL_PIN||innerWidth<700))draw()},1000);
+  g("mPlay").onclick=()=>act({t:"mus",op:M().on?"pause":"play"});
+  g("mNext").onclick=()=>act({t:"mus",op:"next",from:M().i});
+  g("mOpen").onclick=()=>{open=!open;draw()};
+  if(g("mVol"))g("mVol").onchange=e=>act({t:"mus",op:"vol",v:+e.target.value});
+  if(g("mAqui"))g("mAqui").onclick=()=>{const on=!aqui();try{localStorage.setItem("pulso.sonarAqui",on?"1":"0")}catch(e){}if(on){A.src=BASE+(cur()||["","pulso.mp3"])[1];A.volume=0;A.play().then(()=>{if(!M().on)A.pause()}).catch(()=>{});curI=-1;curK=-1}else{fade(0,800,()=>A.pause())}sig="";draw();sync()};
+  box.querySelectorAll("[data-k]").forEach(li=>li.onclick=()=>act({t:"mus",op:"goto",i:+li.dataset.k}))}
+ setInterval(draw,700);draw();
 })();
 </script>
