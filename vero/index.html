@@ -114,6 +114,7 @@ details.more a span{display:block;color:var(--mut);font-size:12px;font-weight:60
   <div class="top"><img src="../img/pulso-logo.png" alt="PULSO by Lacteol"><span class="clk" id="clk"></span></div>
   <div id="app"></div>
 </main>
+<script src="../equipo/montaje.js"></script>
 <script>
 try{localStorage.setItem('pulso.equipo.to',location.pathname.includes('/vero/')?'../vero/':'../blanca/')}catch(e){}
 const $=s=>document.querySelector(s);
@@ -155,8 +156,9 @@ function render(){if(!D)return;const c=D.counts,pct=c.esperados?Math.min(100,Mat
  $('#app').innerHTML=`<div class="card"><div class="big"><span class="n">${c.llegaron}</span><span class="of">de ${c.esperados} esperados · ${pct}%</span></div><div class="meter"><i style="width:${pct}%"></i></div>
  <div class="mini"><div><b>${c.confirmados}</b><span>confirmados con Carnot</span></div><div><b>${c.enSitio}</b><span>registrados en la entrada</span></div><div><b>${pend.length}</b><span>proveedores por llegar</span></div><div><b>${c.extras}</b><span>extras de alimentos</span></div></div>
  <div class="acts"><a class="btn wa sm" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(textoCliente())}">Mandar el número a Carnot</a></div></div>
- <div class="tabs">${[['cliente','Carnot por representante'],['log','Foráneos y hotel'],['prov','Proveedores ('+P.length+')'],['cierre','Cierre para facturar']].map(t=>`<button data-tab="${t[0]}" class="${TAB===t[0]?'on':''}">${t[1]}</button>`).join('')}</div>
- <div class="${TAB==='cliente'?'':'hide'}"><div class="card">${D.byRep.length?D.byRep.map(r=>{const p=r.confirmados?Math.round(r.asistieron/r.confirmados*100):0;return `<div class="rep"><b>${esc(r.rep)}</b><span class="meta">${r.asistieron} de ${r.confirmados}</span><div class="bar"><i style="width:${p}%"></i></div></div>`}).join(''):'<p>Aún no hay datos por representante.</p>'}</div></div>
+ <div class="tabs">${[['cliente','Carnot por representante'],['montaje','Montaje'+(D.montaje?' ('+D.montaje.filter(x=>x.ok).length+'/'+D.montaje.length+')':'')],['log','Foráneos y hotel'],['prov','Proveedores ('+P.length+')'],['cierre','Cierre para facturar']].map(t=>`<button data-tab="${t[0]}" class="${TAB===t[0]?'on':''}">${t[1]}</button>`).join('')}</div>
+ <div class="${TAB==='cliente'?'':'hide'}"><div class="card">${D.byRep.length?D.byRep.map(r=>{const p=r.confirmados?Math.round(r.asistieron/r.confirmados*100):0;return `<div class="rep"><b>${esc(r.rep)}</b><span class="meta">${r.asistieron} de ${r.confirmados}</span><div class="bar"><i style="width:${p}%"></i></div></div>`}).join(''):'<p>Aún no hay datos por representante.</p>'}</div>${MONTAJE.vivo(D.enLinea,D.actividad)}</div>
+ <div class="${TAB==='montaje'?'':'hide'}">${TAB==='montaje'?MONTAJE.html(D.montaje):''}</div>
  <div class="${TAB==='log'?'':'hide'}">${TAB==='log'?logistica():''}</div>
  <div class="${TAB==='prov'?'':'hide'}">${P.map(p=>`<div class="p ${p['Estado']==='Retrasado'?'alert':''}"><div class="row"><div><div class="nm">${esc(p['Proveedor'])}</div><div class="meta">${esc(p['Qué entrega'])}${p['Hora']?' · '+esc(p['Hora'])+' h':''}</div></div><span class="chip ${p['Estado']==='Llegó'||p['Estado']==='Montado'?'c-land':p['Estado']==='Retrasado'?'c-delay':p['Estado']==='No llegó'?'c-cancel':''}">${esc(p['Estado']||'Por llegar')}</span></div>
   <div class="states" style="margin-top:10px">${PE.map(e=>`<button data-row="${p._row}" data-e="${e}" class="${(p['Estado']||'Por llegar')===e?'on':''}">${e}</button>`).join('')}</div>
@@ -182,6 +184,7 @@ function render(){if(!D)return;const c=D.counts,pct=c.esperados?Math.min(100,Mat
  <a href="https://polar-multimedia.github.io/trineo/carnot-pulso-reporte-2026/?c=prueba&nt=1">Reporte final (vista de prueba)<span>Así lo recibe la cadena de Carnot</span></a></details>`}
 async function save(body){busy++;try{const r=await api('veroSet',body);if(!r.success)alert(r.message||'No se guardó');}catch(e){alert('No se guardó: revisa tu conexión.')}busy--;refresh(true)}
 async function refresh(force){if(!CODE||(busy&&!force))return;try{const r=await api('vero',{});if(r.success){D=r;guarda(r);if(TAB==='log')traeB();if(force||!document.activeElement||!/INPUT|TEXTAREA/.test(document.activeElement.tagName))render()}else if(r.expired){CODE='';login()}}catch(e){}}
+MONTAJE.bind(()=>D&&D.montaje,m=>{D.montaje=m;guarda(D)},()=>render());
 document.addEventListener('click',e=>{
  const t=e.target.closest('[data-tab]');if(t){TAB=t.dataset.tab;st.set('pulso.vero.tab',TAB);render();if(TAB==='log')traeB();return}
  const pb=e.target.closest('[data-row]');if(pb){const p=D.proveedores.find(x=>x._row==pb.dataset.row);if(p){p['Estado']=pb.dataset.e;render()}save({type:'prov',row:+pb.dataset.row,estado:pb.dataset.e});return}

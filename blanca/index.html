@@ -127,6 +127,13 @@ details.st{margin-top:10px}details.st summary{font-weight:800;font-size:13px;col
 .bn{position:fixed;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom));z-index:20;display:grid;grid-template-columns:repeat(5,1fr);gap:4px;padding:7px;border-radius:22px;background:linear-gradient(135deg,rgba(18,92,110,.92),rgba(8,46,78,.94));border:1px solid rgba(73,230,255,.45);box-shadow:0 10px 30px rgba(0,0,0,.45),0 0 24px rgba(73,230,255,.18);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);max-width:600px;margin:0 auto}
 .bn button{position:relative;background:none;border:0;border-radius:16px;color:#A7E9F2;font:800 10.5px Manrope,sans-serif;display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 2px;cursor:pointer;transition:background .2s,color .2s}
 .bn button svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.menu{width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:rgba(73,230,255,.10);color:#fff;display:grid;place-items:center;cursor:pointer}
+.menu svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round}
+.bn button.ag{margin-top:-22px}
+.bn button.ag .ring{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,#FF8A5B,#E0179D);color:#fff;box-shadow:0 6px 18px rgba(224,23,157,.5);border:3px solid #0B3A52}
+.bn button.ag .ring svg{width:26px;height:26px}
+.bn button.ag.on{background:none;box-shadow:none;color:#fff}
+.bn button.ag.on .ring{background:linear-gradient(135deg,#49E6FF,#7CF5D8);color:#04212B;box-shadow:0 6px 18px rgba(73,230,255,.55)}
 .bn button.on{color:#04212B;background:linear-gradient(135deg,#49E6FF,#7CF5D8);box-shadow:0 4px 14px rgba(73,230,255,.45)}
 .bn .dot{position:absolute;top:5px;right:calc(50% - 16px);width:8px;height:8px;border-radius:50%;background:var(--warn)}
 main{padding-bottom:110px}
@@ -139,9 +146,10 @@ main{padding-bottom:110px}
 </head>
 <body>
 <main>
-  <div class="top"><img src="../img/pulso-logo.png" alt="PULSO by Lacteol"><span class="clk" id="clk"></span></div>
+  <div class="top"><img src="../img/pulso-logo.png" alt="PULSO by Lacteol"><div style="display:flex;align-items:center;gap:10px"><span class="clk" id="clk"></span><button class="menu" data-tab="mas" aria-label="Más opciones"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button></div></div>
   <div id="app"></div>
 </main>
+<script src="../equipo/montaje.js"></script>
 <script>
 try{localStorage.setItem('pulso.equipo.to',location.pathname.includes('/vero/')?'../vero/':'../blanca/')}catch(e){}
 const $=s=>document.querySelector(s);
@@ -251,8 +259,9 @@ const ICON={inicio:'<svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-
  foraneos:'<svg viewBox="0 0 24 24"><path d="M2 16l20-6-20-6 4 6-4 6zM6 10h8"/></svg>',
  asis:'<svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5M16 4.5a3.5 3.5 0 0 1 0 7M18 14.8c2 .7 3.2 2.5 3.5 5.2"/></svg>',
  hotel:'<svg viewBox="0 0 24 24"><path d="M3 20V5M3 13h18v7M3 9h7a3 3 0 0 1 3 3v1"/><circle cx="7" cy="11" r="0" /></svg>',
+ agenda:'<svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M8 3v4M16 3v4M3.5 10h17M8 14h3M8 17h6"/></svg>',
  mas:'<svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>'};
-const TABMAP={llegadas:'foraneos',sin:'mas',agenda:'mas',fuera:'mas',salidas:'hotel'};
+const TABMAP={llegadas:'foraneos',sin:'mas',fuera:'mas',salidas:'hotel',montaje:'agenda'};
 const PIN='<svg viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>';
 const SEDE={name:'InSpace Del Valle',addr:'Calle J. Enrique Pestalozzi 35, Piedad Narvarte, 03000, Ciudad de México'};
 function lugar(nombre,dir,extra){const q=encodeURIComponent(nombre+', '+dir);
@@ -278,15 +287,18 @@ function render(){if(!D)return;prep();const c=D.counts,pct=c.esperados?Math.min(
   body=`<div class="tabs" style="margin:2px 0 12px">${[['avion','✈ En avión ('+na+')'],['tierra','🚗 Por tierra ('+nt+')']].map(t=>`<button data-vseg="${t[0]}" class="${VSEG===t[0]?'on':''}">${t[1]}</button>`).join('')}</div>`+(VSEG==='avion'?llegadas(true):porTierra()+sinVuelo())}
  else if(TAB==='asis')body=`<div class="sec">Asistencia</div>`+asistencia();
  else if(TAB==='hotel')body=hotelScreen();
- else body=`<div class="sec">Agenda de hoy</div>`+agenda()+`<div class="sec" id="s-sin">Sin boleto (${D.sinRegistro.length})</div>`+lista(D.sinRegistro,'Confirmaron con Carnot pero no tienen boleto. Si llegan, en la entrada los registran en un minuto.',true)+
+ else if(TAB==='agenda'){const M=D.montaje,pm=M?M.filter(x=>!x.ok).length:0;const mt=`<div class="sec">Montaje · fotos de testigo${M?' ('+(M.length-pm)+' de '+M.length+')':''}</div>`+MONTAJE.html(M),ag=`<div class="sec">Agenda de hoy</div>`+agenda();body=pm?mt+ag:ag+mt}
+ else body=`<div class="sec" id="s-sin">Sin boleto (${D.sinRegistro.length})</div>`+lista(D.sinRegistro,'Confirmaron con Carnot pero no tienen boleto. Si llegan, en la entrada los registran en un minuto.',true)+
   `<div class="sec">Llegaron sin estar en la lista de Carnot (${D.fueraDeLista.length})</div>`+(D.fueraDeLista.length?`<div class="card">${D.fueraDeLista.map(x=>`<div class="li"><div><div class="nm">${esc(x.name)}</div><div class="meta">${esc(x.origin||'')}</div></div></div>`).join('')}</div>`:'<div class="card"><p>Todavía nadie.</p></div>')+
-  `<div class="card"><h2>Cambiar de vista</h2><p>Para ver lo que ve Vero: asistencia para Carnot, proveedores y cierre.</p><a class="btn full" href="../vero/">Ir a la vista de Vero</a></div>`+hello()+`<details class="more" open><summary>Más pantallas del equipo (para cubrir a Roberto)</summary>
+  MONTAJE.vivo(D.enLinea,D.actividad)+`<div class="card"><h2>Cambiar de vista</h2><p>Para ver lo que ve Vero: asistencia para Carnot, proveedores y cierre.</p><a class="btn full" href="../vero/">Ir a la vista de Vero</a></div>`+hello()+`<details class="more" open><summary>Más pantallas del equipo (para cubrir a Roberto)</summary>
  <a href="../acceso/">Acceso · escáner de la entrada<span>Registrar llegadas y registrar en sitio</span></a>
  <a href="../reto/#productor">Productor del Reto y de la Sala<span>Pide el PIN de producción</span></a>
  <a href="../fotos/">Subir fotos al reporte<span>Con el momento o el ponente</span></a>
  <a href="https://polar-multimedia.github.io/trineo/carnot-pulso-reporte-2026/?c=prueba&nt=1">Reporte final (vista de prueba)<span>Así lo recibe la cadena de Carnot</span></a></details>
  <div class="sync">${D.rastreo?'Los vuelos se revisan solos cada 15 minutos cerca de su llegada'+(D.lastTrack?' · última revisión '+new Date(D.lastTrack).toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',hour12:false}):''):'Los estados de los vuelos los marca el equipo a mano'} · se actualiza cada 20 s<br><button class="lnk" id="out">Salir</button></div>`;
- $('#app').innerHTML=body+`<nav class="bn">${[['inicio','Resumen'],['foraneos','Foráneos'],['asis','Asistencia'],['hotel','Hotel'],['mas','Más']].map(t=>`<button data-tab="${t[0]}" class="${TAB===t[0]?'on':''}">${t[0]==='foraneos'&&alerta?'<span class="dot"></span>':''}${ICON[t[0]]}${t[1]}</button>`).join('')}</nav>`}
+ $('#app').innerHTML=body+`<nav class="bn">${[['inicio','Resumen'],['foraneos','Foráneos'],['agenda','Agenda'],['asis','Asistencia'],['hotel','Hotel']].map(t=>t[0]==='agenda'?`<button data-tab="agenda" class="ag ${TAB==='agenda'?'on':''}"><span class="ring">${ICON.agenda}</span>${t[1]}</button>`:`<button data-tab="${t[0]}" class="${TAB===t[0]?'on':''}">${t[0]==='foraneos'&&alerta?'<span class="dot"></span>':''}${ICON[t[0]]}${t[1]}</button>`).join('')}</nav>`;
+ document.querySelectorAll('.menu').forEach(b=>b.classList.toggle('on',TAB==='mas'))}
+MONTAJE.bind(()=>D&&D.montaje,m=>{D.montaje=m;guarda(D)},()=>render());
 function agenda(){const A=D.agenda||[],now=nowMin();let cur=-1;A.forEach((x,i)=>{const m=toMin(x[0]);if(m&&m<=now)cur=i});
  return `<div class="card"><p>Jueves 26. Lo que ya pasó se ve más tenue; lo que está pasando, resaltado.</p>${A.map((x,i)=>`<div class="li" style="${i<cur?'opacity:.55':''}${i===cur?';background:rgba(73,230,255,.10);border-radius:12px;padding-left:8px':''}"><div><div class="nm">${esc(x[0])} · ${esc(x[1])}</div><div class="meta">${esc(x[2])}</div><div class="meta" style="font-weight:600">${esc(x[3])}</div></div>${i===cur?'<span class="chip c-air">Ahora</span>':''}</div>`).join('')}</div>`}
 function hotel(){const R=D.rooming||[];if(!R.length)return '<div class="card"><p>No hay rooming capturado.</p></div>';
