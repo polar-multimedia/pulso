@@ -724,6 +724,21 @@ function winBind(g){if(!g("#wOpen")&&!g("#wClose"))return;
  if(g("#wNo"))g("#wNo").onclick=()=>{WIN.step=0;renderCtl()};
  if(g("#wYes"))g("#wYes").onclick=async()=>{WIN.busy=true;renderCtl();const ids=(WIN.list||[]).filter(w=>!w.sent&&w.email).map(w=>w.tid);
   try{const r=await winCall("sendWinners",{ids});WIN.msg=r.success?r.results.join("\n"):(r.message||"No se pudo enviar")}catch(x){WIN.msg="Sin conexión: no se enviaron"}WIN.busy=false;WIN.step=0;await winLoad(true)};}
+/* ===== Cierre del evento: reporte a la cadena + videomemoria a asistentes + resultados a representantes ===== */
+const CIE={open:false,busy:false,info:null,msg:"",step:0};
+function cierrePanel(){const e=x=>String(x==null?"":x).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+ if(!CIE.open)return`<button class="sec" id="kOpen" style="width:100%;margin:6px 0 4px;padding:14px;font-weight:800;border-radius:12px">🎬 Cierre del evento · enviar todo</button>`;
+ const i=CIE.info||{};let h=`<div style="margin:6px 0 4px;padding:14px;border:1px solid rgba(73,230,255,.5);border-radius:14px;background:rgba(73,230,255,.06)"><div class="pkl" style="margin:0 0 8px">Cierre del evento</div>`;
+ if(CIE.busy&&!CIE.info)h+=`<div style="font-size:13px;opacity:.8">Revisando…</div>`;
+ if(CIE.info)h+=`<div style="font-size:13px;line-height:1.6">${i.sent?`<b style="color:#C8E62E">Ya se envió: ${e(i.sent)}</b><br>`:""}Reporte final → ${i.cadena} personas de la cadena${i.report?"":" <b style='color:#ffb28a'>(falta la liga del reporte)</b>"}<br>Videomemoria → ${i.asistentes} asistentes<br>Resultados → ${i.repsConCorreo} representantes con correo<br>Fotos en el reporte: ${i.fotos}<br><span style="opacity:.75">Si no se manda antes, sale solo a las 22:40.</span></div>`;
+ if(CIE.msg)h+=`<div style="font-size:12.5px;margin-top:8px;font-weight:700;white-space:pre-line">${e(CIE.msg)}</div>`;
+ if(CIE.info&&!i.sent){if(CIE.step===0)h+=`<button class="sec" id="kSend" style="width:100%;margin-top:10px;background:#49E6FF;color:#0B1A40;font-weight:800">Enviar cierre ahora</button>`;
+  else h+=`<div style="margin-top:10px;font-size:13px;font-weight:800">¿Confirmas? Salen los tres envíos de una vez. No se puede deshacer.</div><div class="row" style="margin-top:8px"><button class="sec" id="kNo">Cancelar</button><button class="sec" id="kYes" style="background:#ff6b5a;color:#fff;font-weight:800" ${CIE.busy?"disabled":""}>${CIE.busy?"Enviando…":"Sí, enviar ahora"}</button></div>`}
+ h+=`<button class="sec" id="kClose" style="width:100%;margin-top:8px;opacity:.7">Cerrar</button></div>`;return h}
+async function cierreLoad(keep){CIE.busy=true;if(!keep)CIE.msg="";renderCtl();try{const r=await winCall("cierreEstado",{});if(r.success)CIE.info=r;else CIE.msg=r.message||"No disponible todavía"}catch(x){CIE.msg="Sin conexión con el registro"}CIE.busy=false;renderCtl()}
+function cierreBind(g){if(g("#kOpen"))g("#kOpen").onclick=()=>{CIE.open=true;CIE.step=0;cierreLoad()};if(g("#kClose"))g("#kClose").onclick=()=>{CIE.open=false;renderCtl()};
+ if(g("#kSend"))g("#kSend").onclick=()=>{CIE.step=1;renderCtl()};if(g("#kNo"))g("#kNo").onclick=()=>{CIE.step=0;renderCtl()};
+ if(g("#kYes"))g("#kYes").onclick=async()=>{CIE.busy=true;renderCtl();try{const r=await winCall("sendCierre",{});CIE.msg=r.success?r.results.join("\n"):(r.message||"No se pudo enviar")}catch(x){CIE.msg="Sin conexión: no se envió"}CIE.busy=false;CIE.step=0;await cierreLoad(true)}}
 let rstAt=0;
 function renderCtl(){const el=$("#ctl");if(!el)return;
  if(NET&&MODE==="productor"&&PIN!==CTL_PIN){el.innerHTML=`<div class="notch"></div><form class="gate" id="pinF"><div class="big" style="font-size:22px;font-weight:800;text-align:center">Productor</div><input id="pinI" inputmode="numeric" autocomplete="off" placeholder="Código" aria-label="Código del productor"><div class="err" id="pinE" style="color:var(--coral);font-weight:700;font-size:12px;min-height:16px;text-align:center"></div><button type="submit">Entrar</button></form>`;
@@ -735,6 +750,7 @@ function renderCtl(){const el=$("#ctl");if(!el)return;
    <div class="sigl"><small>Señal en vivo</small>${sigLabel()}</div></div>
   ${e.r?retoPanel():itemsPanel()}
   ${winPanel()}
+  ${cierrePanel()}
   <div class="pkl" style="margin-top:6px">Escaleta de la noche</div>
   <div class="esc">${ESC.map((x,i)=>`<button class="eb${i===S.es?" on":""}${i<S.es?" past":""}" data-e="${i}"><b>${x.c}</b><span>${x.n}<small>${x.h?x.h+" · ":""}${x.b}</small></span></button>`).join("")}</div>
   <button id="cReset" class="sec" style="margin:14px 0 24px;width:100%;padding:14px;border:1px solid ${Date.now()-rstAt<4000?"#ff6b5a":"rgba(255,255,255,.18)"};color:${Date.now()-rstAt<4000?"#fff":"#ff8d80"};background:${Date.now()-rstAt<4000?"#c4362a":"transparent"};font-weight:800;border-radius:12px">${Date.now()-rstAt<4000?"Toca otra vez para confirmar":"Reiniciar todo (pruebas)"}</button>`;
@@ -746,7 +762,7 @@ function renderCtl(){const el=$("#ctl");if(!el)return;
    el.querySelectorAll("[data-j]").forEach(b=>b.onclick=()=>{const v=b.dataset.j,j=S.sl[it.p]||0,n=DECKS[it.p].n;act({t:"slide",d:v==="first"?-j:v==="last"?n-1-j:+v})})}
   if(g("#cCk")){g("#cCk").onclick=()=>act({t:"ck",op:"toggle"});g("#cCkR").onclick=()=>act({t:"ck",op:"reset"})}}
  el.querySelectorAll(".eb").forEach(b=>b.onclick=()=>act({t:"scene",i:+b.dataset.e}));
- winBind(g);
+ winBind(g);cierreBind(g);
  const rb=g("#cReset");if(rb)rb.onclick=()=>{if(Date.now()-rstAt<4000){rstAt=0;act({t:"reset"})}else{rstAt=Date.now();renderCtl();setTimeout(renderCtl,4100)}};
  el.scrollTop=sc0;tickClock()}
 /* ================== Clicker del ponente ================== */
