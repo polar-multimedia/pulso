@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#071433">
+<meta name="robots" content="noindex">
+<title>Consola de Vero · PULSO</title>
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#030A1E;--card:#071433;--tx:#EAF1FF;--mut:#A9B7D3;--cian:#49E6FF;--coral:#FF6B5B;--ok:#3DDC97;--warn:#FFB547;--line:rgba(255,255,255,.14)}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--tx);font-family:Manrope,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+body{background:radial-gradient(70vmax 50vmax at 50% -10%,rgba(30,70,168,.5),transparent 65%),linear-gradient(180deg,#071433,#030A1E);min-height:100vh}
+main{max-width:620px;margin:0 auto;padding:18px 14px 60px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+.top img{height:30px}
+.top .clk{font-weight:800;font-size:15px;color:var(--mut)}
+.card{background:rgba(7,20,51,.85);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:12px}
+h1{font-size:19px;font-weight:800;margin:0 0 6px}
+h2{font-size:16px;font-weight:800;margin:0 0 4px}
+p{font-size:14.5px;line-height:1.55;font-weight:600;color:var(--mut);margin:0 0 10px}
+b{color:#fff}
+label{display:block;font-size:12.5px;font-weight:800;color:var(--mut);margin:12px 0 6px}
+input{width:100%;padding:13px 14px;border-radius:12px;border:1px solid var(--line);background:rgba(3,10,30,.7);color:#fff;font:700 16px Manrope,system-ui,sans-serif}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:12px 16px;border-radius:999px;border:none;background:var(--cian);color:#071433;font:800 14.5px Manrope,system-ui,sans-serif;cursor:pointer;text-decoration:none}
+.btn.full{display:flex;width:100%;margin-top:14px}
+.btn.ghost{background:transparent;color:var(--tx);border:1px solid var(--line)}
+.btn.wa{background:#25D366;color:#062b16}
+.btn.warn{background:var(--warn);color:#2b1800}
+.btn.sm{padding:9px 13px;font-size:13.5px}
+.err{color:var(--coral);font-weight:700;font-size:13.5px;min-height:18px;margin-top:10px}
+.hello{border-color:rgba(73,230,255,.45)}
+.hello ol{margin:6px 0 10px 18px;padding:0;color:var(--mut);font-weight:600;font-size:14.5px;line-height:1.6}
+.big{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.big .n{font-size:46px;font-weight:800;line-height:1;color:#fff}
+.big .of{font-size:18px;font-weight:800;color:var(--mut)}
+.meter{height:10px;border-radius:8px;background:rgba(255,255,255,.1);overflow:hidden;margin:10px 0 12px}
+.meter i{display:block;height:100%;background:linear-gradient(90deg,var(--cian),#7CF5C8);transition:width .6s}
+.mini{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.mini div{background:rgba(3,10,30,.6);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.mini b{display:block;font-size:22px}
+.mini span{font-size:12.5px;font-weight:700;color:var(--mut)}
+.extras{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px;background:rgba(3,10,30,.6);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.extras b{font-size:24px}
+.extras .pm{display:flex;gap:8px}
+.extras button{width:48px;height:44px;border-radius:12px;border:1px solid var(--line);background:rgba(73,230,255,.12);color:#fff;font:800 22px Manrope,sans-serif;cursor:pointer}
+.now{border-color:rgba(255,181,71,.55)}
+.now .item{padding:10px 0;border-top:1px solid var(--line)}
+.now .item:first-of-type{border-top:0;padding-top:4px}
+.now .why{font-size:13.5px;color:var(--mut);font-weight:600;margin-top:2px}
+.now .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.tabs{display:flex;gap:6px;overflow-x:auto;margin:4px 0 12px;padding-bottom:2px}
+.tabs button{flex:none;padding:10px 14px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--tx);font:800 13.5px Manrope,sans-serif;cursor:pointer}
+.tabs button.on{background:var(--cian);color:#071433;border-color:var(--cian)}
+.hide{display:none}
+.block{display:flex;justify-content:space-between;align-items:baseline;margin:16px 4px 8px}
+.block h3{margin:0;font-size:15px;font-weight:800}
+.block span{font-size:12.5px;color:var(--mut);font-weight:700}
+.p{border-radius:16px;padding:14px;margin-bottom:10px;background:rgba(7,20,51,.85);border:1px solid var(--line)}
+.p.alert{border-color:var(--warn);box-shadow:0 0 0 1px var(--warn) inset}
+.p.cancel{border-color:var(--coral)}
+.row{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.nm{font-weight:800;font-size:16px}
+.meta{font-size:13px;color:var(--mut);font-weight:700;margin-top:2px}
+.chip{flex:none;font-size:12px;font-weight:800;padding:5px 10px;border-radius:999px;background:rgba(255,255,255,.1)}
+.c-air{background:rgba(73,230,255,.18);color:var(--cian)}.c-delay{background:rgba(255,181,71,.2);color:var(--warn)}.c-land,.c-pick{background:rgba(61,220,151,.18);color:var(--ok)}.c-done{background:var(--ok);color:#03210f}.c-cancel{background:rgba(255,107,91,.22);color:var(--coral)}
+.times{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
+.times div{background:rgba(3,10,30,.6);border-radius:12px;padding:9px 11px}
+.times small{display:block;font-size:11.5px;color:var(--mut);font-weight:800}
+.times b{font-size:20px}
+.times s{color:var(--mut);font-size:13px;margin-left:6px}
+.states{display:flex;flex-wrap:wrap;gap:6px}
+.states button{padding:9px 11px;border-radius:10px;border:1px solid var(--line);background:transparent;color:var(--tx);font:800 13px Manrope,sans-serif;cursor:pointer}
+.states button.on{background:#fff;color:#071433}
+.delay{display:none;align-items:center;gap:8px;margin-top:8px;font-weight:700;font-size:14px}
+.delay.show{display:flex}
+.delay input{width:90px;padding:9px 10px}
+.msg{margin-top:10px;font-size:13.5px;font-weight:700;color:#2b1800;background:var(--warn);border-radius:10px;padding:9px 11px}
+.acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.by{font-size:11.5px;color:var(--mut);font-weight:700;margin-top:8px}
+.li{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 2px;border-top:1px solid var(--line)}
+.li:first-child{border-top:0}
+.li .nm{font-size:15px}
+.note{font-size:12.5px;color:var(--mut);font-weight:600;margin-top:10px;line-height:1.5}
+.lnk{background:none;border:none;color:var(--mut);text-decoration:underline;font:700 13px Manrope,sans-serif;cursor:pointer;padding:4px}
+.sync{font-size:12px;color:var(--mut);font-weight:700;text-align:center;margin-top:16px}
+.sw{display:flex;gap:6px;margin:0 0 12px}
+.sw a{flex:1;text-align:center;padding:9px 6px;border-radius:12px;border:1px solid var(--line);color:var(--tx);text-decoration:none;font:800 13px Manrope,sans-serif}
+.sw a.on{background:rgba(73,230,255,.16);border-color:var(--cian);color:#fff}
+details.more{margin-top:18px;border:1px solid var(--line);border-radius:14px;padding:10px 12px}
+details.more summary{font-weight:800;font-size:13.5px;color:var(--mut);cursor:pointer}
+details.more a{display:block;padding:10px 2px;border-top:1px solid var(--line);color:var(--tx);text-decoration:none;font-weight:700;font-size:14px}
+details.more a span{display:block;color:var(--mut);font-size:12px;font-weight:600}
+</style>
+<style>
+.f{display:grid;gap:8px}
+.f input,.f textarea{width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);background:rgba(3,10,30,.7);color:#fff;font:700 15px Manrope,sans-serif}
+.chk{display:flex;align-items:center;gap:10px;padding:11px 2px;border-top:1px solid var(--line);font-weight:700;font-size:14.5px}
+.chk:first-child{border-top:0}
+.chk .ok{color:var(--ok)}.chk .no{color:var(--warn)}
+.chk a{margin-left:auto}
+.rep{display:grid;grid-template-columns:1fr auto;gap:4px 10px;padding:10px 2px;border-top:1px solid var(--line)}
+.rep:first-child{border-top:0}
+.rep .bar{grid-column:1/-1;height:6px;border-radius:6px;background:rgba(255,255,255,.1);overflow:hidden}
+.rep .bar i{display:block;height:100%;background:var(--cian)}
+.listo{background:var(--ok);color:#03210f}
+</style>
+</head>
+<body>
+<main>
+  <div class="top"><img src="../img/pulso-logo.png" alt="PULSO by Lacteol"><span class="clk" id="clk"></span></div>
+  <nav class="sw"><a href="../blanca/">Blanca · invitados</a><a class="on" href="../vero/">Vero · cliente y cierre</a></nav>
+  <div id="app"></div>
+</main>
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const st={get(k){try{return localStorage.getItem(k)||''}catch(e){return''}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+let API='',CODE=st.get('pulso.staff.code'),WHO=st.get('pulso.staff.who')||'',D=null,TAB=st.get('pulso.vero.tab')||'cliente',msg='',busy=0;
+const PE=['Por llegar','Llegó','Montado','Retrasado','No llegó'];
+async function api(action,body){if(!API){const c=await fetch('../config.json',{cache:'no-store'}).then(r=>r.json());API=c.appsScriptUrl}
+ const r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action,idToken:'codigo:'+CODE,who:WHO,...body}),redirect:'follow'});return r.json()}
+function login(){$('#app').innerHTML=`<div class="card"><h1>Consola de Vero</h1><p>Asistencia para reportar a Carnot, proveedores al minuto y el cierre para facturar, en una sola pantalla.</p>
+ <form id="f"><label for="c">Código de staff</label><input id="c" inputmode="numeric" autocomplete="off"><label for="w">Tu nombre</label><input id="w" value="${esc(WHO||'Vero')}"><div class="err">${esc(msg)}</div><button class="btn full">Entrar</button></form></div>`;
+ $('#f').onsubmit=async e=>{e.preventDefault();CODE=$('#c').value.trim();WHO=$('#w').value.trim()||'Vero';try{const r=await api('vero',{});if(!r.success){CODE='';msg='Ese código no es correcto.';login();return}st.set('pulso.staff.code',CODE);st.set('pulso.staff.who',WHO);msg='';D=r;render()}catch(x){CODE='';msg='Sin conexión. Intenta de nuevo.';login()}}}
+function textoCliente(){const c=D.counts;return `PULSO by Lacteol · ${new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',hour12:false})} h\nLlegaron ${c.llegaron} médicos de ${c.esperados} esperados (${c.confirmados} confirmados con Carnot).\n${c.enSitio} se registraron en la entrada.`}
+function render(){if(!D)return;const c=D.counts,pct=c.esperados?Math.min(100,Math.round(c.llegaron/c.esperados*100)):0,P=D.proveedores,K=D.cierre;
+ const pend=P.filter(p=>p['Estado']==='Por llegar'||p['Estado']==='Retrasado');
+ $('#app').innerHTML=`<div class="card"><div class="big"><span class="n">${c.llegaron}</span><span class="of">de ${c.esperados} esperados · ${pct}%</span></div><div class="meter"><i style="width:${pct}%"></i></div>
+ <div class="mini"><div><b>${c.confirmados}</b><span>confirmados con Carnot</span></div><div><b>${c.enSitio}</b><span>registrados en la entrada</span></div><div><b>${pend.length}</b><span>proveedores por llegar</span></div><div><b>${c.extras}</b><span>extras de alimentos</span></div></div>
+ <div class="acts"><a class="btn wa sm" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(textoCliente())}">Mandar el número a Carnot</a></div></div>
+ <div class="tabs">${[['cliente','Carnot por representante'],['prov','Proveedores ('+P.length+')'],['cierre','Cierre para facturar']].map(t=>`<button data-tab="${t[0]}" class="${TAB===t[0]?'on':''}">${t[1]}</button>`).join('')}</div>
+ <div class="${TAB==='cliente'?'':'hide'}"><div class="card">${D.byRep.length?D.byRep.map(r=>{const p=r.confirmados?Math.round(r.asistieron/r.confirmados*100):0;return `<div class="rep"><b>${esc(r.rep)}</b><span class="meta">${r.asistieron} de ${r.confirmados}</span><div class="bar"><i style="width:${p}%"></i></div></div>`}).join(''):'<p>Aún no hay datos por representante.</p>'}</div></div>
+ <div class="${TAB==='prov'?'':'hide'}">${P.map(p=>`<div class="p ${p['Estado']==='Retrasado'?'alert':''}"><div class="row"><div><div class="nm">${esc(p['Proveedor'])}</div><div class="meta">${esc(p['Qué entrega'])}${p['Hora']?' · '+esc(p['Hora'])+' h':''}</div></div><span class="chip ${p['Estado']==='Llegó'||p['Estado']==='Montado'?'c-land':p['Estado']==='Retrasado'?'c-delay':p['Estado']==='No llegó'?'c-cancel':''}">${esc(p['Estado']||'Por llegar')}</span></div>
+  <div class="states" style="margin-top:10px">${PE.map(e=>`<button data-row="${p._row}" data-e="${e}" class="${(p['Estado']||'Por llegar')===e?'on':''}">${e}</button>`).join('')}</div>
+  ${p['Hora real']?`<div class="by">${esc(p['Hora real'])}</div>`:''}${p['Nota']?`<div class="by">${esc(p['Nota'])}</div>`:''}${p['Contacto']?`<div class="acts"><a class="btn ghost sm" href="tel:${esc(p['Contacto'].replace(/[^\d+]/g,''))}">Llamar</a></div>`:''}</div>`).join('')}
+  <div class="card"><h2>Agregar proveedor</h2><div class="f"><input id="ph" placeholder="Hora (ej. 09:00)"><input id="pn" placeholder="Proveedor"><input id="pq" placeholder="Qué entrega"><input id="pc" placeholder="Teléfono de contacto"></div><button class="btn full" id="padd">Agregar</button></div></div>
+ <div class="${TAB==='cierre'?'':'hide'}"><div class="card"><h2>Lo que necesitas para facturar</h2>
+  <div class="chk"><span class="${K.fotos?'ok':'no'}">${K.fotos?'✓':'○'}</span>Fotos del evento: ${K.fotos}${K.fotosUrl?`<a class="btn ghost sm" target="_blank" rel="noopener" href="${esc(K.fotosUrl)}">Abrir</a>`:''}</div>
+  <div class="chk"><span class="ok">✓</span>Lista de asistencia: ${c.llegaron} médicos<a class="btn ghost sm" target="_blank" rel="noopener" href="${esc(K.hoja)}">Abrir hoja</a></div>
+  <div class="chk"><span class="${c.extras?'ok':'no'}">${c.extras?'✓':'○'}</span>Extras de alimentos: ${c.extras} (los cuenta Blanca)</div>
+  <div class="chk"><span class="${c.constancias?'ok':'no'}">${c.constancias?'✓':'○'}</span>Constancias enviadas: ${c.constancias}</div>
+  <div class="chk"><span class="${K.oc?'ok':'no'}">${K.oc?'✓':'○'}</span>Orden de compra${K.oc?': '+esc(K.oc):''}</div>
+  <div class="chk"><span class="ok">✓</span>Reporte final para Carnot<a class="btn ghost sm" target="_blank" rel="noopener" href="${esc(K.reporte)}">Ver</a></div>
+  <div class="f" style="margin-top:10px"><input id="coc" placeholder="Número de orden de compra" value="${esc(K.oc)}"><input id="cmo" placeholder="Monto a facturar (MXN, sin IVA)" value="${esc(K.monto)}"><textarea id="cno" rows="3" placeholder="Notas para la factura">${esc(K.nota)}</textarea></div>
+  <button class="btn full ghost" id="csave">Guardar</button>
+  <button class="btn full ${K.listo?'listo':''}" id="clisto">${K.listo?'Listo para facturar · '+esc(K.listo):'Marcar: listo para facturar'}</button>
+  <p class="note">Solo tú decides cuándo el cierre está completo. Si lo marcas por error, tócalo otra vez para quitarlo.</p></div></div>
+ <div class="sync">Se actualiza cada 30 s<br><button class="lnk" id="out">Salir</button></div>
+ <details class="more"><summary>Más pantallas del equipo (para cubrir a Roberto)</summary>
+ <a href="../acceso/">Acceso · escáner de la entrada<span>Registrar llegadas y registrar en sitio</span></a>
+ <a href="../reto/#productor">Productor del Reto y de la Sala<span>Pide el PIN de producción</span></a>
+ <a href="../fotos/">Subir fotos al reporte<span>Con el momento o el ponente</span></a>
+ <a href="https://polar-multimedia.github.io/trineo/carnot-pulso-reporte-2026/?c=prueba&nt=1">Reporte final (vista de prueba)<span>Así lo recibe la cadena de Carnot</span></a></details>`}
+async function save(body){busy++;try{const r=await api('veroSet',body);if(!r.success)alert(r.message||'No se guardó');}catch(e){alert('No se guardó: revisa tu conexión.')}busy--;refresh(true)}
+async function refresh(force){if(!CODE||(busy&&!force))return;try{const r=await api('vero',{});if(r.success){D=r;if(force||!document.activeElement||!/INPUT|TEXTAREA/.test(document.activeElement.tagName))render()}else if(r.expired){CODE='';login()}}catch(e){}}
+document.addEventListener('click',e=>{
+ const t=e.target.closest('[data-tab]');if(t){TAB=t.dataset.tab;st.set('pulso.vero.tab',TAB);render();return}
+ const pb=e.target.closest('[data-row]');if(pb){const p=D.proveedores.find(x=>x._row==pb.dataset.row);if(p){p['Estado']=pb.dataset.e;render()}save({type:'prov',row:+pb.dataset.row,estado:pb.dataset.e});return}
+ if(e.target.id==='padd'){const n=$('#pn').value.trim();if(!n)return alert('Escribe el nombre del proveedor');save({type:'provAdd',hora:$('#ph').value,nombre:n,que:$('#pq').value,contacto:$('#pc').value});return}
+ if(e.target.id==='csave'){save({type:'cierre',oc:$('#coc').value,monto:$('#cmo').value,nota:$('#cno').value});return}
+ if(e.target.id==='clisto'){const on=!D.cierre.listo;if(on&&!confirm('¿Confirmas que el cierre está completo y listo para facturar?'))return;save({type:'cierre',oc:$('#coc').value,monto:$('#cmo').value,nota:$('#cno').value,listo:on});return}
+ if(e.target.id==='out'){CODE='';st.set('pulso.staff.code','');D=null;login()}});
+const tick=()=>{$('#clk').textContent=new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'America/Mexico_City'})};tick();setInterval(tick,15000);
+setInterval(refresh,30000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh()});
+if(CODE){$('#app').innerHTML='<div class="card"><p>Cargando…</p></div>';api('vero',{}).then(r=>{if(r.success){D=r;render()}else login()}).catch(()=>{msg='Sin conexión. Intenta de nuevo.';login()})}else login();
+</script>
+</body>
+</html>

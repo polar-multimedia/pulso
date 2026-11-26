@@ -87,11 +87,19 @@ input{width:100%;padding:13px 14px;border-radius:12px;border:1px solid var(--lin
 .note{font-size:12.5px;color:var(--mut);font-weight:600;margin-top:10px;line-height:1.5}
 .lnk{background:none;border:none;color:var(--mut);text-decoration:underline;font:700 13px Manrope,sans-serif;cursor:pointer;padding:4px}
 .sync{font-size:12px;color:var(--mut);font-weight:700;text-align:center;margin-top:16px}
+.sw{display:flex;gap:6px;margin:0 0 12px}
+.sw a{flex:1;text-align:center;padding:9px 6px;border-radius:12px;border:1px solid var(--line);color:var(--tx);text-decoration:none;font:800 13px Manrope,sans-serif}
+.sw a.on{background:rgba(73,230,255,.16);border-color:var(--cian);color:#fff}
+details.more{margin-top:18px;border:1px solid var(--line);border-radius:14px;padding:10px 12px}
+details.more summary{font-weight:800;font-size:13.5px;color:var(--mut);cursor:pointer}
+details.more a{display:block;padding:10px 2px;border-top:1px solid var(--line);color:var(--tx);text-decoration:none;font-weight:700;font-size:14px}
+details.more a span{display:block;color:var(--mut);font-size:12px;font-weight:600}
 </style>
 </head>
 <body>
 <main>
   <div class="top"><img src="../img/pulso-logo.png" alt="PULSO by Lacteol"><span class="clk" id="clk"></span></div>
+  <nav class="sw"><a class="on" href="../blanca/">Blanca · invitados</a><a href="../vero/">Vero · cliente y cierre</a></nav>
   <div id="app"></div>
 </main>
 <script>
@@ -150,14 +158,24 @@ function render(){if(!D)return;const c=D.counts,pct=c.esperados?Math.min(100,Mat
  <div class="extras"><div><b>${c.extras}</b><br><span class="meta">extras de alimentos</span></div><div class="pm"><button data-x="-1" aria-label="Restar uno">−</button><button data-x="1" aria-label="Sumar uno">+</button></div></div>
  <p class="note">«Esperados» son los que tienen boleto más los que confirmaron con Carnot sin registrarse. Cupo: ${c.capacidad}.</p></div>`+
  (up.length?`<div class="card now"><h2>Ahora toca</h2>${up.map(u=>`<div class="item"><b>${esc(u.t)}</b><div class="why">${esc(u.why)}</div><div class="acts">${u.acts.map(x=>x[0]==='wa'?`<a class="btn wa sm" target="_blank" rel="noopener" href="${x[1]}">${esc(x[2])}</a>`:x[0]==='set'?`<button class="btn sm" data-set="${x[1]}">${esc(x[2])}</button>`:`<button class="btn ghost sm" data-tab="${x[1]}">${esc(x[2])}</button>`).join('')}</div></div>`).join('')}</div>`:'')+
- `<div class="tabs">${[['llegadas','Traslados hoy'],['salidas','Salidas mañana'],['sin','Sin registro ('+D.sinRegistro.length+')'],['foraneos','Foráneos ('+D.foraneos.length+')'],['fuera','Fuera de lista ('+D.fueraDeLista.length+')']].map(t=>`<button data-tab="${t[0]}" class="${TAB===t[0]?'on':''}">${t[1]}</button>`).join('')}</div>
+ `<div class="tabs">${[['agenda','Agenda de hoy'],['llegadas','Traslados hoy'],['salidas','Salidas mañana'],['hotel','Hotel'],['sin','Sin registro ('+D.sinRegistro.length+')'],['foraneos','Foráneos ('+D.foraneos.length+')'],['fuera','Fuera de lista ('+D.fueraDeLista.length+')']].map(t=>`<button data-tab="${t[0]}" class="${TAB===t[0]?'on':''}">${t[1]}</button>`).join('')}</div>
+ <div id="t-agenda" class="${TAB==='agenda'?'':'hide'}">${agenda()}</div>
  <div id="t-llegadas" class="${TAB==='llegadas'?'':'hide'}">${llegadas()}</div>
+ <div id="t-hotel" class="${TAB==='hotel'?'':'hide'}">${hotel()}</div>
  <div id="t-salidas" class="${TAB==='salidas'?'':'hide'}">${salidas()}</div>
  <div id="t-sin" class="${TAB==='sin'?'':'hide'}">${lista(D.sinRegistro,'Confirmaron con Carnot pero no tienen boleto. Si llegan, en la entrada los registran en un minuto.',true)}</div>
  <div id="t-foraneos" class="${TAB==='foraneos'?'':'hide'}">${lista(D.foraneos,'Médicos que viajan desde otra ciudad.',true)}</div>
  <div id="t-fuera" class="${TAB==='fuera'?'':'hide'}">${D.fueraDeLista.length?`<div class="card">${D.fueraDeLista.map(x=>`<div class="li"><div><div class="nm">${esc(x.name)}</div><div class="meta">${esc(x.origin||'')}</div></div></div>`).join('')}</div>`:'<div class="card"><p>Todavía nadie ha llegado sin estar en la lista de Carnot.</p></div>'}</div>
- <div class="sync">${D.rastreo?'Los vuelos se revisan solos cada 10 minutos'+(D.lastTrack?' · última revisión '+new Date(D.lastTrack).toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',hour12:false}):''):'Los estados de los vuelos los marca el equipo a mano y los ven todos'} · se actualiza cada 20 s<br><button class="lnk" id="out">Salir</button></div>`}
+ <div class="sync">${D.rastreo?'Los vuelos se revisan solos cada 10 minutos'+(D.lastTrack?' · última revisión '+new Date(D.lastTrack).toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',hour12:false}):''):'Los estados de los vuelos los marca el equipo a mano y los ven todos'} · se actualiza cada 20 s<br><button class="lnk" id="out">Salir</button></div><details class="more"><summary>Más pantallas del equipo (para cubrir a Roberto)</summary>
+ <a href="../acceso/">Acceso · escáner de la entrada<span>Registrar llegadas y registrar en sitio</span></a>
+ <a href="../reto/#productor">Productor del Reto y de la Sala<span>Pide el PIN de producción</span></a>
+ <a href="../fotos/">Subir fotos al reporte<span>Con el momento o el ponente</span></a>
+ <a href="https://polar-multimedia.github.io/trineo/carnot-pulso-reporte-2026/?c=prueba&nt=1">Reporte final (vista de prueba)<span>Así lo recibe la cadena de Carnot</span></a></details>`}
 
+function agenda(){const A=D.agenda||[],now=nowMin();let cur=-1;A.forEach((x,i)=>{const m=toMin(x[0]);if(m&&m<=now)cur=i});
+ return `<div class="card"><p>Jueves 26. Lo que ya pasó se ve más tenue; lo que está pasando, resaltado.</p>${A.map((x,i)=>`<div class="li" style="${i<cur?'opacity:.55':''}${i===cur?';background:rgba(73,230,255,.10);border-radius:12px;padding-left:8px':''}"><div><div class="nm">${esc(x[0])} · ${esc(x[1])}</div><div class="meta">${esc(x[2])}</div><div class="meta" style="font-weight:600">${esc(x[3])}</div></div>${i===cur?'<span class="chip c-air">Ahora</span>':''}</div>`).join('')}</div>`}
+function hotel(){const R=D.rooming||[];if(!R.length)return '<div class="card"><p>No hay rooming capturado.</p></div>';
+ return `<div class="card"><p>${esc(D.hotel)} · ${R.length} habitaciones · 26 → 27 nov · check-in 15:00 · check-out 12:00. Early check-in cuando llegan antes de las 15:00; late checkout si salen después de las 12:00.</p>${R.map(r=>`<div class="li"><div><div class="nm">${esc(r['Huésped'])}</div><div class="meta">${esc(r['Origen'])} · ${esc(r['Habitación']||'')} · Early check-in: ${esc(r['Early check-in']||'—')}</div>${r['Nota']?`<div class="meta" style="color:var(--warn)">${esc(r['Nota'])}</div>`:''}</div></div>`).join('')}</div>`}
 function llegadas(){const T=D.traslados;if(!T.length)return '<div class="card"><p>No hay traslados capturados.</p></div>';
  const blocks=[...new Set(T.map(p=>p.block))].sort((x,y)=>x-y);
  return blocks.map(b=>{const ps=T.filter(p=>p.block===b),pk=Math.max(...ps.map(pickup)),moved=pk!==toMin(ps[0].pick);

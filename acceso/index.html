@@ -196,7 +196,7 @@ function start(){
 async function stats(){
   try{const s=await api('staffStats');if(!s.success)return;CAP=s.capacity;
     $('#cIn').textContent=s.inside;$('#cCap').textContent=s.capacity;
-    $('#cMeta').innerHTML=s.registered+' registrados<br>'+s.walkins+' en sitio';
+    $('#cMeta').innerHTML=(s.expected?'de '+s.expected+' esperados<br>':'')+s.registered+' con boleto · '+s.walkins+' en sitio'+(s.extras?'<br>'+s.extras+' extras de alimentos':'');
     const pct=Math.min(100,s.inside/s.capacity*100);$('#cBar').style.width=pct+'%';
     $('#cBar').style.background=s.inside>=s.capacity?'var(--coral)':(s.inside>=s.capacity-10?'var(--naranja)':'var(--cian)');
   }catch(e){}
