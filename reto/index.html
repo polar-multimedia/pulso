@@ -464,7 +464,10 @@ let lastTap={};function act(a){if(NET&&MODE==="productor"&&(a.t==="next"||a.t===
 const ROOM=QS.get("sala")||"pulso26";const NS="polar/retopulso/"+ROOM;
 const BROKERS=QS.get("broker")?[QS.get("broker")]:["wss://broker.emqx.io:8084/mqtt","wss://broker.hivemq.com:8884/mqtt"];
 let cli=null,netUp=false,lastPub=0,pubT=null;
-function netStatus(t){if(!NET)return;let e=document.getElementById("net");if(!e){e=document.createElement("div");e.id="net";e.className="net";document.body.appendChild(e)}e.textContent=t;e.style.display=MODE==="participante"&&netUp?"none":"block"}
+function netStatus(t){if(!NET)return;let e=document.getElementById("net");if(!e){e=document.createElement("div");e.id="net";e.className="net";document.body.appendChild(e)}e.textContent=t;
+ /* En la señal (lo que se proyecta) el aviso solo aparece si hay un problema; cuando todo está bien se ve 4 s al conectar y se esconde. */
+ const okSenal=MODE==="senal"&&/^Señal en línea/.test(t),same=netStatus.last===t;netStatus.last=t;
+ if(MODE==="participante"&&netUp)e.style.display="none";else if(okSenal){if(!same){clearTimeout(netStatus.t);e.style.display="block";netStatus.t=setTimeout(()=>{e.style.display="none"},4000)}}else{clearTimeout(netStatus.t);e.style.display="block"}}
 function netConnect(ix=0){if(!NET||!window.mqtt)return;const url=BROKERS[ix%BROKERS.length];netStatus("Conectando…");let up=false;
  try{cli=mqtt.connect(url,{clientId:"rp_"+ME+"_"+Math.random().toString(36).slice(2,6),clean:true,keepalive:20,reconnectPeriod:2500,connectTimeout:7000})}catch(e){netStatus("Sin conexión");return}
  cli.on("connect",()=>{up=true;netUp=true;netStatus(MASTER?"Señal en línea · sala "+ROOM:"En línea");
