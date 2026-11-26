@@ -482,25 +482,26 @@ const USE_FB=NET&&!QS.has("mqtt");
 const FBNS="retopulso/"+ROOM;
 const MID=(()=>{try{let v=sessionStorage.getItem("retoMID");if(!v){v=Math.random().toString(36).slice(2,8);sessionStorage.setItem("retoMID",v)}return v}catch(e){return Math.random().toString(36).slice(2,8)}})(),HBS={};
 function sigStat(){if(!USE_FB)return;if(!netUp){netStatus("Reconectando…");return}const t=performance.now(),live=Object.keys(HBS).filter(k=>t-HBS[k]<9000&&(!MASTER||k!==MID));
+ if(MASTER&&PASSIVE){netStatus("⚠ SEÑAL DUPLICADA · esta pantalla no controla nada, ciérrala");return}
  if(MASTER){netStatus(live.length?"⚠ HAY OTRA SEÑAL ABIERTA · ciérrala":"Señal en línea · sala "+ROOM);return}
  if(MODE==="productor"||MODE==="ponente")netStatus(live.length>1?"⚠ Hay "+live.length+" señales abiertas · deja solo una":live.length?"En línea · señal activa":"En línea · SIN SEÑAL abierta");else netStatus("En línea")}
 let EPSEEN=0;try{EPSEEN=+localStorage.getItem("retoEp_"+ROOM)||0}catch(e){}
-let fdb=null,fbLast=0,fbT=null,bigKey="",fbPend=[],LOCAL_ME=null;
+let fdb=null,fbLast=0,fbT=null,bigKey="",fbPend=[],LOCAL_ME=null,PASSIVE=false;const SIG_T0=Date.now();
 try{LOCAL_ME=JSON.parse(localStorage.getItem("retoMe_"+ROOM)||"null")}catch(e){}
 function fbLoad(){const add=src=>new Promise((ok,no)=>{const x=document.createElement("script");x.src=src;x.onload=ok;x.onerror=no;document.head.appendChild(x)});
  add("firebase-app-compat.js").then(()=>add("firebase-database-compat.js")).then(fbConnect).catch(()=>netStatus("Sin conexión"))}
 function fbConnect(){firebase.initializeApp(FBCFG);fdb=firebase.database();const R=p=>fdb.ref(FBNS+"/"+p);netStatus("Conectando…");
  fdb.ref(".info/connected").on("value",sn=>{netUp=!!sn.val();sigStat();if(netUp&&MASTER)netShare(true)});
  R("hb").on("value",sn=>{let v=null;try{v=JSON.parse(sn.val())}catch(e){}if(!v)return;HBS[v.id]=performance.now();sigStat()});
- if(MASTER)R("state").on("value",sn=>{let v=null;try{v=JSON.parse(sn.val())}catch(e){}if(v&&v.ep&&S.ep&&v.ep>S.ep){S.ep=v.ep;share()}});
- if(MASTER)setInterval(()=>{if(netUp)R("hb").set(JSON.stringify({id:MID,t:Date.now()}))},3000);
+ if(MASTER)R("state").on("value",sn=>{let v=null;try{v=JSON.parse(sn.val())}catch(e){}if(!v)return;if(v.w&&v.w!==SIG_T0+"-"+MID&&parseInt(v.w,10)>SIG_T0&&!PASSIVE){PASSIVE=true;sigStat()}/* la señal abierta más reciente manda; la vieja se queda quieta */if(!PASSIVE&&v.ep&&S.ep&&v.ep>S.ep){S.ep=v.ep;share()}});
+ if(MASTER)setInterval(()=>{if(netUp&&!PASSIVE)R("hb").set(JSON.stringify({id:MID,t:Date.now()}))},3000);
  setInterval(sigStat,2000);
  fbPend.splice(0).forEach(a=>R("acts").push(a));
  if(MASTER){R("big").once("value",sn=>{let v=null;try{v=JSON.parse(sn.val())}catch(e){}if(v&&v.players&&!Object.keys(S.players||{}).length){S.players=v.players;S.played=Object.assign({},v.played||{},S.played||{});if(v.ans)Object.keys(v.ans).forEach(k=>{S.ans[k]=Object.assign({},v.ans[k],S.ans[k]||{})});renderAll()}});/* si la señal se abre en otra compu, recupera el marcador */
-  R("acts").on("child_added",sn=>{let a=null;try{a=JSON.parse(sn.val())}catch(e){}sn.ref.remove();if(a&&Date.now()-(a.ts||0)<120000)apply(a)})}
+  R("acts").on("child_added",sn=>{if(PASSIVE)return;let a=null;try{a=JSON.parse(sn.val())}catch(e){}sn.ref.remove();if(a&&Date.now()-(a.ts||0)<120000)apply(a)})}
  else{R("state").on("value",sn=>{let v=null;try{v=JSON.parse(sn.val())}catch(e){}if(!v)return;if(v.ep&&v.ep>EPSEEN){EPSEEN=v.ep;LOCAL_ME=null;delete S.players[ME];S.ans={};try{localStorage.setItem("retoEp_"+ROOM,String(v.ep));localStorage.removeItem("retoMe_"+ROOM)}catch(e){}}Object.assign(S,v);S.rx=performance.now();renderAll()});
   R("big").on("value",sn=>{let v=null;try{v=JSON.parse(sn.val())}catch(e){}if(!v)return;S.players=v.players||{};S.played=v.played||{};if(v.ans)Object.assign(S.ans,v.ans);if(LOCAL_ME&&!S.players[ME])S.players[ME]=LOCAL_ME;renderAll()})}}
-function fbShare(force){if(!fdb)return;const go=()=>{fbLast=Date.now();fbT=null;const o=snapshot();delete o.players;delete o.ans;delete o.played;o.pc=nPlayers();
+function fbShare(force){if(!fdb||PASSIVE)return;const go=()=>{fbLast=Date.now();fbT=null;const o=snapshot();delete o.players;delete o.ans;delete o.played;o.pc=nPlayers();o.w=SIG_T0+"-"+MID;
   fdb.ref(FBNS+"/state").set(JSON.stringify(o));
   if(P().k!=="tiempo"&&P().k!=="intro"){const k=P().qi!=null?qkey(P()):null;const big=JSON.stringify({players:S.players,ans:k?{[k]:S.ans[k]||{}}:{},played:S.played});if(big!==bigKey){bigKey=big;fdb.ref(FBNS+"/big").set(big)}}};
  const w=400-(Date.now()-fbLast);if(force||w<=0){clearTimeout(fbT);go()}else if(!fbT)fbT=setTimeout(go,w)}
