@@ -189,13 +189,24 @@ function foraneosCard(){const F=foraneosData(),n=F.length,ok=F.filter(x=>x.ord==
  <button class="btn ghost sm" style="margin-top:8px" data-tab="foraneos">Ver vuelos y traslados de los ${n}</button></div>`}
 function foraneosLista(){const F=foraneosData();if(!F.length)return '<div class="card"><p>No hay foráneos en la lista.</p></div>';
  return `<div class="card"><p>Médicos que viajan desde otra ciudad, ordenados por lo que necesita atención primero.</p>${F.map(x=>`<div class="li"><div><div class="nm">${esc(x.t?x.t.trato+' '+x.t.name:x.f.name)}</div><div class="meta">${esc([x.f.city||(x.t&&x.t.from),x.f.rep?'Repre: '+x.f.rep:''].filter(Boolean).join(' · '))}</div>${x.t?`<div class="meta">${esc(x.t.flight)} · aterriza ${fmt(eta(x.t))} · recogida ${fmt(pickup(x.t))} → ${x.t.to==='hotel'?'hotel':'InSpace'}</div>`:`<div class="meta">${x.f.registered?'Tiene boleto':'Sin boleto'} · sin vuelo capturado (viaja por su cuenta o falta su vuelo)</div>`}</div><div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end"><span class="chip ${x.cls}">${esc(x.st)}</span>${x.f.phone?`<a class="btn ghost sm" href="tel:${esc(String(x.f.phone).replace(/\D/g,''))}">Llamar</a>`:''}</div></div>`).join('')}</div>`}
+let ASF='in',ASQ='';
+function asistencia(){const A=D.asistencia;if(!A)return '<div class="card"><p>La lista completa aparece en cuanto Roberto actualice el servidor. Mientras, «Sin registro» y «Fuera de lista» sí funcionan.</p></div>';
+ const nn=x=>String(x||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+ const S={in:A.filter(x=>x.in).sort((a,b)=>b.at.localeCompare(a.at)),falta:A.filter(x=>!x.in).sort((a,b)=>a.name.localeCompare(b.name,'es')),sin:D.sinRegistro.map(x=>({name:x.name,city:x.city,rep:x.rep,phone:x.phone}))};
+ const L=S[ASF].filter(x=>!ASQ||nn(x.name+' '+x.city+' '+x.rep).includes(nn(ASQ)));
+ return `<div class="card"><div class="tabs" style="margin:0 0 10px">${[['in','Ya están ('+S.in.length+')'],['falta','Con boleto, por llegar ('+S.falta.length+')'],['sin','Sin boleto ('+S.sin.length+')']].map(t=>`<button data-asf="${t[0]}" class="${ASF===t[0]?'on':''}">${t[1]}</button>`).join('')}</div>
+ <input id="asq" placeholder="Buscar por nombre, ciudad o representante" value="${esc(ASQ)}" style="margin-bottom:6px">
+ ${L.length?L.map(x=>`<div class="li"><div><div class="nm">${esc(x.name)}</div><div class="meta">${esc([x.city,x.rep?'Repre: '+x.rep:''].filter(Boolean).join(' · '))}</div>${ASF==='in'?`<div class="meta">Llegó ${esc(x.at||'')}${/reto/i.test(x.how)?' · por el Reto':x.origin==='En sitio'?' · se registró en la entrada':''}</div>`:''}</div>${ASF==='in'?'<span class="chip c-done">Aquí</span>':x.phone?`<a class="btn ghost sm" href="tel:${esc(String(x.phone).replace(/\D/g,''))}">Llamar</a>`:''}</div>`).join(''):'<p>No hay nadie en esta lista.</p>'}</div>`}
 function render(){if(!D)return;const c=D.counts,pct=c.esperados?Math.min(100,Math.round(c.llegaron/c.esperados*100)):0;const up=nextUp();
  $('#app').innerHTML=foraneosCard()+
  (up.length?`<div class="card now"><h2>Ahora toca</h2>${up.map(u=>`<div class="item"><b>${esc(u.t)}</b><div class="why">${esc(u.why)}</div><div class="acts">${u.acts.map(x=>x[0]==='wa'?`<a class="btn wa sm" target="_blank" rel="noopener" href="${x[1]}">${esc(x[2])}</a>`:x[0]==='set'?`<button class="btn sm" data-set="${x[1]}">${esc(x[2])}</button>`:`<button class="btn ghost sm" data-tab="${x[1]}">${esc(x[2])}</button>`).join('')}</div></div>`).join('')}</div>`:'')+
- `<div class="card"><div class="row"><div><h2 style="margin:0">En total: ${c.llegaron} de ${c.esperados} esperados</h2><div class="meta">${c.registrados} con boleto · ${D.sinRegistro.length} confirmaron sin boleto · ${c.enSitio} en la entrada · ${D.fueraDeLista.length} fuera de lista · cupo ${c.capacidad}</div></div></div>
+ `<div class="card"><h2 style="margin:0 0 2px">Asistencia en vivo</h2><div class="meta">${c.llegaron} de ${c.esperados} esperados ya están en el evento · cupo ${c.capacidad}</div>
  <div class="meter"><i style="width:${pct}%"></i></div>
- <div class="extras" style="margin-top:4px"><div><b>${c.extras}</b><br><span class="meta">extras de alimentos</span></div><div class="pm"><button data-x="-1" aria-label="Restar uno">−</button><button data-x="1" aria-label="Sumar uno">+</button></div></div></div>`+
- `<div class="tabs">${[['foraneos','Foráneos · vuelos y traslados'],['agenda','Agenda de hoy'],['hotel','Hotel'],['salidas','Salidas mañana'],['sin','Sin registro ('+D.sinRegistro.length+')'],['fuera','Fuera de lista ('+D.fueraDeLista.length+')']].map(t=>`<button data-tab="${t[0]}" class="${TAB===t[0]?'on':''}">${t[1]}</button>`).join('')}</div>
+ <div class="mini" style="grid-template-columns:repeat(3,1fr)"><div data-asis="in" style="cursor:pointer"><b>${c.llegaron}</b><span>ya están aquí</span></div><div data-asis="falta" style="cursor:pointer"><b>${Math.max(0,c.registrados-c.llegaron)}</b><span>con boleto, por llegar</span></div><div data-asis="sin" style="cursor:pointer"><b>${D.sinRegistro.length}</b><span>confirmaron sin boleto</span></div></div>
+ <button class="btn ghost sm" style="margin-top:10px" data-asis="in">Ver quién está y quién falta</button>
+ <div class="extras" style="margin-top:12px"><div><b>${c.extras}</b><br><span class="meta">extras de alimentos</span></div><div class="pm"><button data-x="-1" aria-label="Restar uno">−</button><button data-x="1" aria-label="Sumar uno">+</button></div></div></div>`+
+ `<div class="tabs">${[['foraneos','Foráneos · vuelos y traslados'],['asis','Asistencia'],['agenda','Agenda de hoy'],['hotel','Hotel'],['salidas','Salidas mañana'],['sin','Sin registro ('+D.sinRegistro.length+')'],['fuera','Fuera de lista ('+D.fueraDeLista.length+')']].map(t=>`<button data-tab="${t[0]}" class="${TAB===t[0]?'on':''}">${t[1]}</button>`).join('')}</div>
+  <div id="t-asis" class="${TAB==='asis'?'':'hide'}">${asistencia()}</div>
  <div id="t-agenda" class="${TAB==='agenda'?'':'hide'}">${agenda()}</div>
  
  <div id="t-hotel" class="${TAB==='hotel'?'':'hide'}">${hotel()}</div>
@@ -256,12 +267,15 @@ function lista(L,intro,phone){return `<div class="card"><p>${esc(intro)}</p>${L.
 async function refresh(){if(!CODE||busy)return;try{const r=await api('blanca',{});if(r.success){D=r;guarda(r);lastOk=Date.now();if(!document.activeElement||document.activeElement.tagName!=='INPUT')render()}else if(r.expired){CODE='';login()}}catch(e){}}
 async function setState(key,s,d){const p=D.traslados.find(x=>x.key===key);if(!p)return;p.s=s;if(d!=null)p.d=d;else if(s==='delay'&&!p.d)p.d=20;p.by=WHO;p.at=new Date().toISOString();p.src='Manual';render();busy++;try{await api('trasladoSet',{key,s,d:p.d})}catch(e){alert('No se guardó: revisa tu conexión.')}busy--}
 document.addEventListener('click',async e=>{
+ const as=e.target.closest('[data-asis]');if(as){ASF=as.dataset.asis;TAB='asis';st.set('pulso.blanca.tab',TAB);render();window.scrollTo({top:document.querySelector('.tabs').offsetTop-10,behavior:'smooth'});return}
+ const af=e.target.closest('[data-asf]');if(af){ASF=af.dataset.asf;render();return}
  const h=e.target.closest('[data-hello]');if(h){st.set('pulso.blanca.hello','1');render();return}
  const b=e.target.closest('.states button');if(b){setState(b.dataset.k,b.dataset.s);return}
  const sb=e.target.closest('[data-set]');if(sb){const [k,s]=sb.dataset.set.split('|');setState(k,s);return}
  const t=e.target.closest('[data-tab]');if(t){TAB=t.dataset.tab;st.set('pulso.blanca.tab',TAB);render();window.scrollTo({top:document.querySelector('.tabs').offsetTop-10,behavior:'smooth'});return}
  const x=e.target.closest('[data-x]');if(x){const dl=+x.dataset.x;D.counts.extras=Math.max(0,D.counts.extras+dl);render();busy++;try{const r=await api('extras',{delta:dl});if(r.success){D.counts.extras=r.extras;render()}}catch(err){}busy--;return}
  if(e.target.id==='out'){try{sessionStorage.clear()}catch(x){}CODE='';st.set('pulso.staff.code','');st.set('pulso.equipo.to','');D=null;location.replace('../equipo/')}});
+document.addEventListener('input',e=>{if(e.target.id==='asq'){ASQ=e.target.value;const pos=e.target.selectionStart;render();const i=document.getElementById('asq');if(i){i.focus();i.setSelectionRange(pos,pos)}}});
 document.addEventListener('change',e=>{const i=e.target.closest('[data-d]');if(i){setState(i.dataset.d,'delay',Math.max(0,+i.value||0))}});
 const tick=()=>{$('#clk').textContent=new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'America/Mexico_City'})};tick();setInterval(tick,15000);
 setInterval(refresh,20000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh()});
