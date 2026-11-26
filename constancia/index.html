@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#071433">
+<meta name="robots" content="noindex">
+<title>Mi constancia · PULSO</title>
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#030A1E;--card:#071433;--tx:#EAF1FF;--mut:#A9B7D3;--cian:#49E6FF;--coral:#FF6B5B;--line:rgba(255,255,255,.14)}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--tx);font-family:Manrope,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+body{background:radial-gradient(70vmax 50vmax at 50% -10%,rgba(30,70,168,.5),transparent 65%),linear-gradient(180deg,#071433,#030A1E);min-height:100vh}
+main{max-width:520px;margin:0 auto;padding:28px 16px 48px}
+.logo{display:block;height:40px;margin:0 auto 22px}
+.card{background:rgba(7,20,51,.82);border:1px solid var(--line);border-radius:20px;padding:22px 18px}
+h1{font-size:20px;font-weight:800;margin:0 0 6px}
+p{font-size:14px;line-height:1.55;font-weight:600;color:var(--mut);margin:0 0 14px}
+.name{font-size:22px;font-weight:800;color:#fff;margin:6px 0 16px}
+label{display:block;font-size:12px;font-weight:800;color:var(--mut);margin:14px 0 6px}
+input{width:100%;padding:13px 14px;border-radius:12px;border:1px solid var(--line);background:rgba(3,10,30,.7);color:#fff;font:700 15px Manrope,system-ui,sans-serif}
+input:focus{outline:none;border-color:var(--cian)}
+.btn{display:block;width:100%;margin-top:14px;padding:15px;border-radius:999px;border:none;background:var(--cian);color:#071433;font:800 15px Manrope,system-ui,sans-serif;cursor:pointer;text-align:center;text-decoration:none}
+.btn.ghost{background:transparent;color:var(--tx);border:1px solid var(--line)}
+.btn:disabled{opacity:.55}
+.err{color:var(--coral);font-weight:700;font-size:13px;min-height:18px;margin-top:10px}
+.ok{color:var(--cian);font-weight:700;font-size:13px;margin-top:10px}
+.lnk{background:none;border:none;color:var(--mut);text-decoration:underline;font:700 13px Manrope,system-ui,sans-serif;margin-top:14px;cursor:pointer;padding:4px}
+.foot{font-size:11px;color:var(--mut);text-align:center;margin-top:22px;font-weight:600;line-height:1.5}
+.foot a{color:var(--cian)}
+</style>
+</head>
+<body>
+<main>
+  <img class="logo" src="../img/pulso-logo.png" alt="PULSO by Lacteol">
+  <div class="card" id="app"><p>Cargando…</p></div>
+  <div class="foot">Polar Multimedia es responsable de sus datos · <a href="../privacidad/">Aviso de privacidad</a><br>Dudas o correcciones: <a href="mailto:pulso@polarmultimedia.com">pulso@polarmultimedia.com</a></div>
+</main>
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let API='',U=null,st={err:'',ok:'',busy:false,edit:false};
+async function api(action,body){if(!API){const c=await fetch('../config.json',{cache:'no-store'}).then(r=>r.json());API=c.appsScriptUrl}
+  const r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action,...body}),redirect:'follow'});
+  if(!r.ok)throw new Error('Sin respuesta del servidor');return r.json()}
+function tid(){const q=(new URLSearchParams(location.search).get('t')||'').toUpperCase();if(/^PL-[A-Z0-9]{6}$/.test(q)){try{localStorage.setItem('pulso.ticket',q)}catch(e){}return q}
+  try{const v=String(localStorage.getItem('pulso.ticket')||'').replace(/"/g,'').toUpperCase();return /^PL-[A-Z0-9]{6}$/.test(v)?v:''}catch(e){return''}}
+function render(){const a=$('#app');const m=`<div class="err">${esc(st.err)}</div>${st.ok?`<div class="ok">${esc(st.ok)}</div>`:''}`;
+  if(!U){a.innerHTML=`<form id="f"><h1>Mi constancia</h1><p>Escriba el correo con el que se registró a PULSO.</p><label for="em">Correo electrónico</label><input id="em" type="email" inputmode="email" autocapitalize="none" autocomplete="email">${m}<button class="btn" ${st.busy?'disabled':''}>${st.busy?'Buscando…':'Continuar'}</button></form>`;
+    $('#f').onsubmit=async e=>{e.preventDefault();const em=$('#em').value.trim().toLowerCase();if(!em)return;st.busy=true;st.err='';render();
+      try{const r=await api('get',{email:em});if(r.success&&r.user){await load(r.user.id)}else{st.busy=false;st.err='No encontramos ese correo.';render()}}catch(x){st.busy=false;st.err=x.message;render()}};return}
+  if(st.edit){a.innerHTML=`<form id="f"><h1>Corregir mi nombre</h1><p>Así saldrá en su constancia. Escriba nombre(s) y apellidos, sin "Dr." ni "Dra.".</p><label for="nm">Nombre completo</label><input id="nm" value="${esc(U.name.replace(/^dra?\.?\s+/i,''))}" autocomplete="name">${U.consent?'':`<label style="display:flex;gap:10px;align-items:flex-start;font-weight:600;font-size:13px;line-height:1.45;color:var(--tx)"><input type="checkbox" id="ok" style="width:20px;height:20px;flex:none;margin:1px 0 0;accent-color:#49E6FF"><span>Leí el <a href="../privacidad/" target="_blank" style="color:var(--cian)">aviso de privacidad</a> y acepto que Polar use mis datos para emitir mi constancia.</span></label>`}${m}
+    <button class="btn" ${st.busy?'disabled':''}>${st.busy?'Guardando…':'Guardar'}</button><button type="button" class="lnk" id="cx">Cancelar</button></form>`;
+    $('#cx').onclick=()=>{st.edit=false;st.err='';render()};
+    $('#f').onsubmit=async e=>{e.preventDefault();const nm=$('#nm').value.trim();if(nm.split(/\s+/).length<2){st.err='Escriba nombre y apellidos.';render();return}st.busy=true;st.err='';render();
+      try{const r=await api('updateProfile',{id:U.id,name:nm,email:U.email,specialty:U.specialty,phone:U.phone,cedula:U.cedula,consent:U.consent||!!($('#ok')&&$('#ok').checked),carnot:U.carnot,canal:'Página de constancia'});st.busy=false;
+        if(r.success){U=r.user;st.edit=false;st.ok='Nombre corregido. Su constancia ya sale con este nombre.'}else st.err=r.message;render()}catch(x){st.busy=false;st.err=x.message;render()}};return}
+  let body='';
+  if(!U.checkedIn)body=`<p>Su constancia estará disponible si registró su llegada al evento. Si asistió y no aparece, escríbanos.</p>`;
+  else if(!U.certReady)body=`<p>Su constancia estará disponible el <b>26 de noviembre a partir de las 20:40 h</b>. También le llegará a su correo.</p>`;
+  else body=`<p>Su constancia de asistencia, reconocida con 6 puntos de valor curricular (CMCP-PED-N26426).</p>
+    <button class="btn" id="dl" ${st.busy?'disabled':''}>${st.busy==='dl'?'Preparando…':'Descargar PDF'}</button>
+    <button class="btn ghost" id="ml" ${st.busy?'disabled':''}>${st.busy==='ml'?'Enviando…':'Enviármela por correo'}</button>`;
+  a.innerHTML=`<h1>Mi constancia</h1><div class="name">${esc(U.name)}</div>${body}${m}<button class="lnk" id="ed">¿Su nombre está mal escrito? Corríjalo aquí</button>`;
+  $('#ed').onclick=()=>{st.edit=true;st.ok='';st.err='';render()};
+  if($('#dl'))$('#dl').onclick=async()=>{st.busy='dl';st.err='';st.ok='';render();try{const r=await api('certificate',{id:U.id});st.busy=false;
+    if(r.success){const bin=atob(r.pdf),u8=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);const url=URL.createObjectURL(new Blob([u8],{type:'application/pdf'}));
+      const l=document.createElement('a');l.href=url;l.download=r.filename||'Constancia PULSO.pdf';document.body.appendChild(l);l.click();l.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);st.ok='Listo. Si no se abrió, revise sus descargas.'}else st.err=r.message;render()}catch(x){st.busy=false;st.err=x.message;render()}};
+  if($('#ml'))$('#ml').onclick=async()=>{st.busy='ml';st.err='';st.ok='';render();try{const r=await api('certificate',{id:U.id,mail:true});st.busy=false;if(r.success)st.ok=r.message;else st.err=r.message;render()}catch(x){st.busy=false;st.err=x.message;render()}};
+}
+async function load(id){try{const r=await api('me',{id});st.busy=false;if(r.success){U=r.user;try{localStorage.setItem('pulso.ticket',U.id)}catch(e){}}else st.err=r.message}catch(x){st.busy=false;st.err=x.message}render()}
+const t=tid();if(t)load(t);else render();
+</script>
+</body>
+</html>

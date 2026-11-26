@@ -71,6 +71,7 @@ label{display:block;font-size:12px;font-weight:800;color:var(--mut);margin:14px 
 #code{text-align:center;font-size:30px;letter-spacing:.3em;margin-top:18px}
 .err{color:var(--coral);font-weight:800;font-size:14px;margin-top:10px;min-height:18px}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--panel);border:1px solid var(--line);padding:12px 16px;border-radius:12px;font-weight:700;font-size:14px;z-index:60;display:none;max-width:90vw}
+.chk{display:flex;gap:10px;align-items:flex-start;margin:12px 0 4px;font-size:13px;font-weight:600;line-height:1.4;text-transform:none;letter-spacing:0}.chk input{width:20px;height:20px;flex:none;margin-top:1px;accent-color:#49E6FF}.chk a{color:#49E6FF}
 </style>
 </head>
 <body>
@@ -129,6 +130,13 @@ label{display:block;font-size:12px;font-weight:800;color:var(--mut);margin:14px 
         <input id="nSpec" class="field" autocomplete="off" placeholder="Ej. Pediatría">
         <label for="nCity">Ciudad</label>
         <input id="nCity" class="field" autocomplete="off">
+        <label for="nCed">Cédula profesional</label>
+        <input id="nCed" class="field" inputmode="numeric" autocomplete="off">
+        <label for="nRep">Representante de Carnot que lo invitó</label>
+        <input id="nRep" class="field" list="repList" autocomplete="off" placeholder="Escriba o elija">
+        <datalist id="repList"></datalist>
+        <label class="chk"><input type="checkbox" id="nOk"> <span>El médico leyó el <a href="../privacidad/" target="_blank" rel="noopener">aviso de privacidad</a> y acepta que Polar use sus datos para su acceso, el Reto, la beca y su constancia. *</span></label>
+        <label class="chk"><input type="checkbox" id="nCarnot"> <span>Acepta que Carnot lo contacte después del evento (opcional).</span></label>
         <div class="err" id="newErr"></div>
         <button class="btn block" id="newBtn">Registrar y dar acceso</button>
       </div>
@@ -196,7 +204,7 @@ async function stats(){
 
 // ── Pestañas
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>show(b.dataset.v));
-function show(v){
+function show(v){if(v==='new')loadReps();
   document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
   document.querySelectorAll('.view').forEach(x=>x.classList.toggle('on',x.id==='v-'+v));
   if(v==='scan')startScan();else stopScan();
@@ -260,13 +268,13 @@ function personCard(u){
     (u.origin==='En sitio'?'<span class="tag site">Registro en sitio</span>':'')+
     (u.invited?'<span class="tag site">Lista de invitados · sin registro</span>':'');
   if(u.invited){const meta2=[u.email,u.phone,[u.specialty,u.city].filter(Boolean).join(' · '),u.note].filter(Boolean).map(esc).join('<br>');
-    return `<div class="p"><div class="i"><div class="n">${esc(u.name)}</div><div class="m">${meta2}</div>${tags}</div><button class="btn warn" data-inv="${esc(JSON.stringify({name:u.name,email:u.email,phone:u.phone,specialty:u.specialty,city:u.city}))}">Registrar</button></div>`}
+    return `<div class="p"><div class="i"><div class="n">${esc(u.name)}</div><div class="m">${meta2}</div>${tags}</div><button class="btn warn" data-inv="${esc(JSON.stringify({name:u.name,email:u.email,phone:u.phone,specialty:u.specialty,city:u.city,rep:(String(u.note||'').match(/Repre:\s*([^·]+)/i)||[,''])[1].trim()}))}">Registrar</button></div>`}
   const meta=[u.email,u.phone,[u.specialty,u.city].filter(Boolean).join(' · '),u.id].filter(Boolean).map(esc).join('<br>');
   return `<div class="p"><div class="i"><div class="n">${esc(u.name)}</div><div class="m">${meta}</div>${tags}</div>${u.checkedIn?'':`<button class="btn" data-id="${esc(u.id)}">Dar acceso</button>`}</div>`;
 }
 function bindPersonBtns(root,after){
   root.querySelectorAll('button[data-inv]').forEach(b=>b.onclick=()=>{const v=JSON.parse(b.dataset.inv);
-    $('#nName').value=v.name||'';$('#nEmail').value=v.email||'';$('#nPhone').value=v.phone||'';$('#nSpec').value=v.specialty||'';$('#nCity').value=v.city||'';
+    $('#nName').value=v.name||'';$('#nEmail').value=v.email||'';$('#nPhone').value=v.phone||'';$('#nSpec').value=v.specialty||'';$('#nCity').value=v.city||'';$('#nRep').value=v.rep||'';
     show('new');$('#newErr').textContent='Datos de la lista de Carnot: confirme con el médico cómo quiere su nombre en la constancia (nombre y apellidos, en ese orden)'+(v.email?' y su correo.':' y pídale su correo.');setTimeout(()=>$((v.email?'#newBtn':'#nEmail')).focus(),100)});
   root.querySelectorAll('button[data-id]').forEach(b=>b.onclick=async()=>{
     b.disabled=true;await checkin(b.dataset.id);const t=setInterval(()=>{if(!busy){clearInterval(t);after&&after()}},300)});
@@ -275,10 +283,11 @@ function bindPersonBtns(root,after){
 // ── Registro nuevo
 $('#newBtn').onclick=()=>walkin(false,false);
 async function walkin(confirmNew,force){
-  const d={name:$('#nName').value.trim(),email:$('#nEmail').value.trim(),phone:$('#nPhone').value.trim(),specialty:$('#nSpec').value.trim(),city:$('#nCity').value.trim()};
+  const d={name:$('#nName').value.trim(),email:$('#nEmail').value.trim(),phone:$('#nPhone').value.trim(),specialty:$('#nSpec').value.trim(),city:$('#nCity').value.trim(),cedula:$('#nCed').value.trim(),rep:$('#nRep').value.trim(),consent:$('#nOk').checked,carnot:$('#nCarnot').checked};
   $('#newErr').textContent='';$('#newCands').innerHTML='';
   if(d.name.split(/\s+/).length<2){$('#newErr').textContent='Escriba nombre y apellidos completos.';return}
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.email)){$('#newErr').textContent='Escriba un correo válido.';return}
+  if(!d.consent){$('#newErr').textContent='Falta que el médico acepte el aviso de privacidad.';return}
   $('#newBtn').disabled=true;$('#newBtn').textContent='Registrando…';
   try{
     const r=await api('walkin',{...d,confirmNew,force});
@@ -295,7 +304,8 @@ async function walkin(confirmNew,force){
   }catch(e){if(e.message!=='expired')$('#newErr').textContent=e.message}
   $('#newBtn').disabled=false;$('#newBtn').textContent='Registrar y dar acceso';
 }
-function clearNew(){['#nName','#nEmail','#nPhone','#nSpec','#nCity'].forEach(s=>$(s).value='');$('#newCands').innerHTML=''}
+function clearNew(){['#nName','#nEmail','#nPhone','#nSpec','#nCity','#nCed','#nRep'].forEach(s=>$(s).value='');$('#nOk').checked=false;$('#nCarnot').checked=false;$('#newCands').innerHTML=''}
+let repsLoaded=false;async function loadReps(){if(repsLoaded)return;try{const r=await api('staffReps');if(r.success){repsLoaded=true;$('#repList').innerHTML=r.reps.map(n=>'<option value="'+esc(n)+'">').join('')}}catch(e){}}
 
 // ── Duplicados
 $('#dupBtn').onclick=async()=>{
