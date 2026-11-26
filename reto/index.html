@@ -153,7 +153,7 @@ body.solo.mob .phone.solo-target{max-width:none!important;width:100%!important;a
 .sig .count{font-weight:700;font-size:44px;color:#BFE9FF}
 .sig .ev{font-weight:600;line-height:1.25}
 .sig .cite{font-weight:600;font-size:32px;color:#BFE9FF;line-height:1.3}
-.sig .board{position:absolute;inset:0;background:rgba(10,24,64,.94);padding:56px 80px;display:flex;flex-direction:column;gap:18px}
+.sig .board{position:absolute;inset:0;z-index:5;background:#0B1A44;padding:56px 80px;display:flex;flex-direction:column;gap:18px}
 .sig .rk{display:grid;grid-template-columns:90px minmax(0,1fr) auto;gap:30px;align-items:center;padding:10px 30px;border-radius:20px;background:rgba(44,84,154,.6);font-weight:700;font-size:52px;font-variant-numeric:tabular-nums}
 .sig .rk span{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 .sig .rk i{font-style:normal;font-weight:600;font-size:36px;color:#BFE9FF;margin-left:18px}
@@ -616,7 +616,7 @@ function sigHTML(){const s=P();let h='<div class="fx"></div>';const p=PATIENTS[s
    <div class="pod">${cell(1,300)}${cell(0,420)}${cell(2,220)}</div></div>`;
  }
  if(S.board&&!s.k.startsWith("g")){const r=ranking().slice(0,8);
-  h+=`<div class="board"><div style="display:flex;justify-content:space-between;align-items:baseline"><span class="eyebrow">Marcador</span><span class="meta">${PRIZE}</span></div>
+  h+=`<div class="board"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:40px"><span class="eyebrow" style="white-space:nowrap">Ranking en vivo</span><span class="meta" style="font-size:30px;white-space:nowrap">${PRIZE}</span></div>
    ${r.map((x,i)=>`<div class="rk${i<3?" top":""}"><b>${i+1}</b><span>${x.name}${x.inst?`<i>${x.inst}</i>`:""}</span><b>${x.pts.toLocaleString("es-MX")}</b></div>`).join("")}</div>`}
  return h;
 }
@@ -697,7 +697,7 @@ function retoPanel(){const s=P(),nx=STEPS[S.i+1];
   ${sceneNext?`<div class="cue quiet"><small>Al avanzar, pide a InSpace</small>Escena ${sceneNext}</div>`:""}
   <div class="stat" id="cStat">${ctlStat()}</div>
   <button class="go" id="cGo" ${!nx&&!(s.k==="tiempo"&&!S.closed)?"disabled":""}><small>Siguiente</small>${goTxt}</button>
-  <div class="row"><button class="sec" id="cBack" ${S.i===0?"disabled":""}>Atrás</button><button class="sec" id="cBoard" aria-pressed="${S.board}" ${s.k.startsWith("g")?"disabled":""}>Marcador</button></div>
+  <div class="row"><button class="sec" id="cBack" ${S.i===0?"disabled":""}>Atrás</button><button class="sec" id="cBoard" aria-pressed="${S.board}" ${s.k.startsWith("g")?"disabled":""}>${S.board?"Ocultar ranking":"Ranking en vivo"}</button></div>
   <div class="pkl">Elegir paciente</div><div class="pk">${pickBtns("b")}</div>
   <div class="row"><button class="sec" id="cPause" aria-pressed="${S.paused}" ${s.k==="tiempo"&&!S.closed?"":"disabled"}>${S.paused?"Reanudar":"Pausar"}</button><button class="sec" id="cGoTo" disabled>${S.i+1} / ${STEPS.length}</button></div>`}
 function itemsPanel(){const e=ESC[S.es];if(!e.it.length)return `<div class="nota">Esta escena es solo ambiente en los muros: no hay cortinillas ni láminas en la señal.</div>`;
