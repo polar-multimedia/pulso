@@ -962,8 +962,12 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-eq]");if(!
 (function(){
  const LISTA=[["Pulso","pulso.mp3"],["Pulso by Lacteol","pulso-by-lacteol.mp3"],["Será la Melodía, Doctor","sera-la-melodia-doctor.mp3"],["Pulso, vamos a escuchar","pulso-vamos-a-escuchar.mp3"],["Lo pequeño también cuenta","lo-pequeno-tambien-cuenta.mp3"],["Nada Subliminal","nada-subliminal.mp3"]];
  const BASE=new URL("musica/",location.href).href;let ORDER=[],ready=false,open=false,box=null,sig="";
- if(QS.get("sonar")==="1")try{localStorage.setItem("pulso.sonarAqui","1")}catch(e){}
- const aqui=()=>{try{return localStorage.getItem("pulso.sonarAqui")==="1"}catch(e){return false}};
+ /* «Sonar aquí» vale solo para ESTA pestaña (sessionStorage), y si otra pestaña de la misma compu lo activa, esta se calla: nunca suenan dos a la vez */
+ try{localStorage.removeItem("pulso.sonarAqui")}catch(e){}
+ const TABID=Math.random().toString(36).slice(2,8),MBC=("BroadcastChannel" in window)?new BroadcastChannel("pulso-musica"):null;
+ const setAqui=on=>{try{sessionStorage.setItem("pulso.sonarAqui",on?"1":"0")}catch(e){}if(on&&MBC)try{MBC.postMessage({claim:TABID})}catch(e){}};
+ if(QS.get("sonar")==="1")setAqui(true);
+ const aqui=()=>{try{return sessionStorage.getItem("pulso.sonarAqui")==="1"}catch(e){return false}};
  Promise.all(LISTA.map(x=>fetch(BASE+x[1],{method:"HEAD",cache:"no-store"}).then(r=>r.ok?x:null).catch(()=>null))).then(L=>{const ok=L.filter(Boolean),P=ok.find(x=>x[1]==="pulso.mp3"),R=ok.filter(x=>x!==P);
   ORDER=[];if(P)ORDER.push(P);R.forEach((x,k)=>{ORDER.push(x);if(P&&k%2===1&&k<R.length-1)ORDER.push(P)});ready=true;draw();sync()});
  const M=()=>Object.assign({on:false,i:0,v:.8,k:0},S.mus||{}),cur=()=>ORDER.length?ORDER[((M().i%ORDER.length)+ORDER.length)%ORDER.length]:null;
@@ -977,6 +981,8 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-eq]");if(!
   if(m.on&&A.paused&&!A._starting){A._starting=1;A.volume=0;A.play().then(()=>{A._starting=0;if(M().on)fade(M().v,1500);else A.pause()}).catch(()=>{A._starting=0})}
   else if(!m.on&&!A.paused)fade(0,1500,()=>{if(!M().on)A.pause()});
   else if(m.on&&!A.paused&&!fadeT&&!A._out&&Math.abs(A.volume-m.v)>.02)fade(m.v,600)}
+ if(MBC)MBC.onmessage=e=>{if(e.data&&e.data.claim&&e.data.claim!==TABID&&aqui()){try{sessionStorage.setItem("pulso.sonarAqui","0")}catch(x){}clearInterval(fadeT);fadeT=null;A.pause();curI=-1;curK=-1;try{draw()}catch(x){}}};
+ if(aqui()&&MBC)try{MBC.postMessage({claim:TABID})}catch(e){}
  A.addEventListener("ended",()=>act({t:"mus",op:"next",from:M().i}));
  A.addEventListener("timeupdate",()=>{if(A.duration&&A.duration-A.currentTime<3&&!A._out){A._out=1;fade(0,2800)}});
  A.addEventListener("loadeddata",()=>{A._out=0});
@@ -1010,7 +1016,7 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-eq]");if(!
   g("mNext").onclick=()=>act({t:"mus",op:"next",from:M().i});
   g("mOpen").onclick=()=>{open=!open;draw()};
   if(g("mVol"))g("mVol").onchange=e=>act({t:"mus",op:"vol",v:+e.target.value});
-  if(g("mAqui"))g("mAqui").onclick=()=>{const on=!aqui();try{localStorage.setItem("pulso.sonarAqui",on?"1":"0")}catch(e){}if(on){A.src=BASE+(cur()||["","pulso.mp3"])[1];A.volume=0;A.play().then(()=>{if(!M().on)A.pause()}).catch(()=>{});curI=-1;curK=-1}else{fade(0,800,()=>A.pause())}sig="";draw();sync()};
+  if(g("mAqui"))g("mAqui").onclick=()=>{const on=!aqui();setAqui(on);if(on){A.src=BASE+(cur()||["","pulso.mp3"])[1];A.volume=0;A.play().then(()=>{if(!M().on)A.pause()}).catch(()=>{});curI=-1;curK=-1}else{fade(0,800,()=>A.pause())}sig="";draw();sync()};
   box.querySelectorAll("[data-k]").forEach(li=>li.onclick=()=>act({t:"mus",op:"goto",i:+li.dataset.k}))}
  setInterval(draw,700);draw();
 })();
